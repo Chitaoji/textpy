@@ -1,6 +1,12 @@
 # textpy
 Reads a python file/module and statically analyzes it.
 
+## Installation
+
+```sh
+pip install textpy
+```
+
 ## Examples
 Create a new file named `this_is_a_file.py`:
 
@@ -45,9 +51,25 @@ from textpy import textpy
 
 textpy("this_is_a_file.py").findall("var")
 ```
+
 and the output will be like:
 
 ![Alt text](images/example_1.png)
+
+Now suppose you've got a python module consists of a few files, for example, our `textpy` module itself, you can do almost the same thing:
+
+```py
+module_path = "textpy/" # you can type any path here
+pattern = "note.*k" # type any regular expression here
+
+res = textpy(module_path).findall(pattern, styler=False)
+print(res)
+# Output:
+# textpy_local/textpy/abc.py:158: '            in a Jupyter notebook, by default True.'
+# textpy_local/textpy/abc.py:375: '        in a Jupyter notebook.'
+```
+## License
+This project falls under the BSD 2-Clause License.
 
 ## v0.1.3
 * Initial release.

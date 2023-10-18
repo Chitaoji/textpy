@@ -355,7 +355,7 @@ class FindTextResult:
         Returns
         -------
         FindTextResult
-            A new instance..
+            A new instance.
 
         Raises
         ------
