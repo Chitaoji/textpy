@@ -46,6 +46,7 @@ from textpy import textpy
 textpy("this_is_a_file.py").findall("var")
 ```
 and the output will be like:
+
 ![Alt text](picture/example_1.png)
 
 ## v0.1.3
