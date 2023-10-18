@@ -53,16 +53,3 @@ except ImportError as e:
         raise e
     else:
         warnings.warn(e.msg, Warning)
-
-# import `utils` if exists
-try:
-    from . import utils
-
-    __all__.extend(utils.__all__)
-    from .utils import *
-
-except ImportError as e:
-    if isinstance(e, ModuleNotFoundError):
-        raise e
-    else:
-        warnings.warn(e.msg, Warning)
