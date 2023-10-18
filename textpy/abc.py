@@ -309,7 +309,9 @@ class FindTextResult:
         for _tp, _n, _group in self.res:
             string += f"\n{_tp.relpath}:{_n}: "
             _sub = re.sub(
-                self.pattern, lambda x: "\033[100m" + x.group() + "\033[0m", _group
+                self.pattern,
+                lambda x: "\033[100m" + x.group() + "\033[0m",
+                " " * _tp.spaces + _group,
             )
             string += re.sub("\\\\x1b\[", "\033[", _sub.__repr__())
         return string.lstrip()
