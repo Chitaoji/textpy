@@ -1,4 +1,6 @@
-# ./examples/this_is_a_file.py
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from typing import *
 
 
@@ -9,7 +11,7 @@ class MyClass:
         self.var_2 = "blabla"
 
 
-def myfunction(a: MyClass):
+def print_my_class(a: MyClass):
     """
     Print something.
 

@@ -18,6 +18,7 @@ class PyText(ABC):
     text: str = ""
     name: str = ""
     path: Path = Path("NULL.py")
+    home: Path = Path(".")
     parent: Union["PyText", None] = None
     start_line: int = 0
     spaces: int = 0
@@ -54,7 +55,7 @@ class PyText(ABC):
             An instance of `TextPy`.
 
         """
-        return self.__class__("", parent=self)
+        return self.__class__()
 
     @cached_property
     def children_dict(self) -> Dict[str, "PyText"]:
@@ -139,7 +140,7 @@ class PyText(ABC):
         if self.path.stem == "NULL":
             return self.path if self.parent is None else self.parent.relpath
         else:
-            return self.path.absolute().relative_to(self.path.home())
+            return self.path.absolute().relative_to(self.home.absolute())
 
     def findall(
         self, pattern: str, regex: bool = True, styler: bool = True

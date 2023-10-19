@@ -14,10 +14,12 @@ attrs>=23.1.0
 ```
 
 ## Examples
-Create a new file named `this_is_a_file.py` under dir `./examples/`:
+Create a new file named `myfile.py` under `./examples/` (or any dir, just for an example):
 
 ```py
-# ./examples/this_is_a_file.py
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from typing import *
 
 
@@ -28,7 +30,7 @@ class MyClass:
         self.var_2 = "blabla"
 
 
-def myfunction(a: MyClass):
+def print_my_class(a: MyClass):
     """
     Print something.
 
@@ -41,17 +43,17 @@ def myfunction(a: MyClass):
     print(a.var_1, a.var_2)
 ```
 
-Run the following codes to find all the occurrences of the pattern `"var"` in `this_is_a_file.py`:
+Run the following codes to find all the occurrences of the pattern `"va"` in `myfile.py`:
 
 ```py
 from textpy import textpy
 
-textpy.textpy("./examples/this_is_a_file.py").findall("var", styler=False)
+res = textpy("./examples/myfile.py").findall("va", styler=False)
 print(res)
 # Output:
-# examples/this_is_a_file.py '        self.var_1 = "hahaha"'
-# examples/this_is_a_file.py '        self.var_2 = "blabla"'
-# examples/this_is_a_file.py '    print(a.var_1, a.var_2)'
+# examples/myfile.py:10: '        self.var_1 = "hahaha"'
+# examples/myfile.py:11: '        self.var_2 = "blabla"'
+# examples/myfile.py:24: '    print(a.var_1, a.var_2)'
 ```
 
 Also, when using a Jupyter notebook, you can run a cell like this:
@@ -59,7 +61,7 @@ Also, when using a Jupyter notebook, you can run a cell like this:
 ```py
 from textpy import textpy
 
-textpy("./examples/this_is_a_file.py").findall("var")
+textpy("./examples/myfile.py").findall("va")
 ```
 
 and the output will be like:
@@ -73,16 +75,16 @@ and the output will be like:
   </thead>
   <tbody>
     <tr>
-      <td id="T_ea36f_row0_col0" class="data row0 col0" ><a href='examples/this_is_a_file.py' style='text-decoration:none;color:inherit'>this_is_a_file</a>.<a href='examples/this_is_a_file.py' style='text-decoration:none;color:inherit'>MyClass</a>.<a href='examples/this_is_a_file.py' style='text-decoration:none;color:inherit'>__init__</a>:<a href='examples/this_is_a_file.py' style='text-decoration:none;color:inherit'>8</a></td>
-      <td id="T_ea36f_row0_col1" class="data row0 col1" >    self.<a href='examples/this_is_a_file.py' style='text-decoration:none;color:#cccccc;background-color:#595959'>var</a>_1 = "hahaha"</td>
+      <td id="T_ea36f_row0_col0" class="data row0 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>MyClass</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>__init__</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>10</a></td>
+      <td id="T_ea36f_row0_col1" class="data row0 col1" >    self.<a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#595959'>va</a>r_1 = "hahaha"</td>
     </tr>
     <tr>
-      <td id="T_ea36f_row1_col0" class="data row1 col0" ><a href='examples/this_is_a_file.py' style='text-decoration:none;color:inherit'>this_is_a_file</a>.<a href='examples/this_is_a_file.py' style='text-decoration:none;color:inherit'>MyClass</a>.<a href='examples/this_is_a_file.py' style='text-decoration:none;color:inherit'>__init__</a>:<a href='examples/this_is_a_file.py' style='text-decoration:none;color:inherit'>9</a></td>
-      <td id="T_ea36f_row1_col1" class="data row1 col1" >    self.<a href='examples/this_is_a_file.py' style='text-decoration:none;color:#cccccc;background-color:#595959'>var</a>_2 = "blabla"</td>
+      <td id="T_ea36f_row1_col0" class="data row1 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>MyClass</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>__init__</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>11</a></td>
+      <td id="T_ea36f_row1_col1" class="data row1 col1" >    self.<a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#595959'>va</a>r_2 = "blabla"</td>
     </tr>
     <tr>
-      <td id="T_ea36f_row2_col0" class="data row2 col0" ><a href='examples/this_is_a_file.py' style='text-decoration:none;color:inherit'>this_is_a_file</a>.<a href='examples/this_is_a_file.py' style='text-decoration:none;color:inherit'>myfunction</a>:<a href='examples/this_is_a_file.py' style='text-decoration:none;color:inherit'>22</a></td>
-      <td id="T_ea36f_row2_col1" class="data row2 col1" >    print(a.<a href='examples/this_is_a_file.py' style='text-decoration:none;color:#cccccc;background-color:#595959'>var</a>_1, a.<a href='examples/this_is_a_file.py' style='text-decoration:none;color:#cccccc;background-color:#595959'>var</a>_2)</td>
+      <td id="T_ea36f_row2_col0" class="data row2 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfunction</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>24</a></td>
+      <td id="T_ea36f_row2_col1" class="data row2 col1" >    print(a.<a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#595959'>va</a>r_1, a.<a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#595959'>va</a>r_2)</td>
     </tr>
   </tbody>
 </table>
@@ -98,8 +100,8 @@ pattern = "note.*k" # type any regular expression here
 res = textpy(module_path).findall(pattern, styler=False)
 print(res)
 # Output:
-# textpy_local/textpy/abc.py '            in a Jupyter notebook, by default True.'
-# textpy_local/textpy/abc.py '        in a Jupyter notebook.'
+# textpy/abc.py:159: '            in a Jupyter notebook, this only takes effect when'
+# textpy/abc.py:377: '        in a Jupyter notebook.'
 ```
 ## License
 This project falls under the BSD 2-Clause License.

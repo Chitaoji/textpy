@@ -2,12 +2,12 @@ from pathlib import Path
 from typing import *
 
 from .abc import PyText
-from .element import PyFile, PyModule, is_path
+from .element import PyFile, PyModule, as_path
 
 __all__ = ["textpy"]
 
 
-def textpy(path_or_text: Union[Path, str]) -> PyText:
+def textpy(path_or_text: Union[Path, str], home: Union[Path, str] = ".") -> PyText:
     """
     Statically analyzes a python file or a python module. Each python
     file is recommended to be formatted with `black` and `Auto Docstring
@@ -17,6 +17,9 @@ def textpy(path_or_text: Union[Path, str]) -> PyText:
     ----------
     path_or_text : Union[Path, str]
         File path, module path or file text.
+    home : Union[Path, str], optional
+        Sets the home path if `path_or_text` is relative, by default
+        ".".
 
     Returns
     -------
@@ -38,11 +41,10 @@ def textpy(path_or_text: Union[Path, str]) -> PyText:
     NumpyFormatDocstring : Stores a numpy-formatted docstring.
 
     """
-    if is_path(path_or_text):
-        path_or_text = Path(path_or_text)
+    path_or_text = as_path(path_or_text, home=home)
     if isinstance(path_or_text, str) or path_or_text.is_file():
-        return PyFile(path_or_text)
+        return PyFile(path_or_text, home=home)
     elif path_or_text.is_dir():
-        return PyModule(path_or_text)
+        return PyModule(path_or_text, home=home)
     else:
         raise ValueError(f"path not exists: {path_or_text}")
