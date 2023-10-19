@@ -71,5 +71,10 @@ print(res)
 ## License
 This project falls under the BSD 2-Clause License.
 
-## v0.1.3
+## History
+
+### v0.1.4
+* Fixed the display of images on PyPI.
+
+### v0.1.3
 * Initial release.
