@@ -103,6 +103,11 @@ print(res)
 # textpy/abc.py:159: '            in a Jupyter notebook, this only takes effect when'
 # textpy/abc.py:377: '        in a Jupyter notebook.'
 ```
+
+## See Also
+### Github repository
+* https://github.com/Chitaoji/textpy
+
 ## License
 This project falls under the BSD 2-Clause License.
 
