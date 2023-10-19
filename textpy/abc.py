@@ -155,7 +155,8 @@ class PyText(ABC):
             Whether to use regular expression, by default True.
         styler : bool, optional
             Whether to return a `Styler` object in convenience of displaying
-            in a Jupyter notebook, by default True.
+            in a Jupyter notebook, this only takes effect when
+            `pandas.__version__ >= 1.4.0`, by default True.
 
         Returns
         -------
@@ -184,7 +185,7 @@ class PyText(ABC):
             res = res.join(self.header.findall(pattern, styler=False))
             for c in self.children:
                 res = res.join(c.findall(pattern, styler=False))
-        if styler:
+        if styler and pd.__version__ >= "1.4.0":
             return res.to_styler()
         else:
             return res
