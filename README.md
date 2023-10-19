@@ -64,9 +64,9 @@ textpy("./temp/this_is_a_file.py").findall("var")
 
 and the output will be like:
 
-![](https://raw.githubusercontent.com/Chitaoji/textpy/develop/images/example_1.png)
+<div align=center><img src=https://raw.githubusercontent.com/Chitaoji/textpy/develop/images/example_1.png></div>
 
-Note that in the Jupyter notebook case, the matched substrings are **clickable**, linking to where the patterns are found.
+Note that in the Jupyter notebook case, the matched substrings are **clickable**, linking to where the patterns were found.
 
 Now suppose you've got a python module consists of a few files, for example, our `textpy` module itself, you can do almost the same thing:
 
