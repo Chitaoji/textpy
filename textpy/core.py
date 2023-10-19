@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import *
 
 from .abc import PyText
-from .element import PyFile, PyModule
+from .element import PyFile, PyModule, is_path
 
 __all__ = ["textpy"]
 
@@ -38,7 +38,7 @@ def textpy(path_or_text: Union[Path, str]) -> PyText:
     NumpyFormatDocstring : Stores a numpy-formatted docstring.
 
     """
-    if len(path_or_text) < 256 and Path(path_or_text).exists():
+    if is_path(path_or_text):
         path_or_text = Path(path_or_text)
     if isinstance(path_or_text, str) or path_or_text.is_file():
         return PyFile(path_or_text)

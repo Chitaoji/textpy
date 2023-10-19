@@ -69,6 +69,8 @@ class PyFile(PyText):
             Parent node (if exists), by default None.
 
         """
+        if is_path(path_or_text):
+            path_or_text = Path(path_or_text)
         if isinstance(path_or_text, Path):
             self.path = path_or_text
             self.text = self.path.read_text().strip()
@@ -224,3 +226,28 @@ class PyMethod(PyFunc):
         """
         super().__init__(text, parent=parent, start_line=start_line)
         self.spaces = 4
+
+
+def is_path(path_or_text: Union[Path, str]) -> bool:
+    """
+    If the input is a string, checks if it represents an existing
+    path. If the input is an instance of `Path`, returns true.
+
+    Parameters
+    ----------
+    path_or_text : Union[Path, str]
+        A string or an instance of `Path`.
+
+    Returns
+    -------
+    bool
+        Whether the input represents a path.
+
+    """
+    is_path = False
+    if isinstance(path_or_text, str):
+        if len(path_or_text) < 256 and Path(path_or_text).exists():
+            is_path = True
+    else:
+        is_path = True
+    return is_path

@@ -6,11 +6,13 @@ Reads a python file/module and statically analyzes it.
 ```sh
 pip install textpy
 ```
+
 ## Requirements
 ```txt
-pandas>=1.4.0 # Lower version is also acceptable, but some features will be invalid
+pandas>=1.4.0 # A lower version is also acceptable, but some features will be invalid
 attrs>=23.1.0
 ```
+
 ## Examples
 Create a new file named `this_is_a_file.py`:
 
