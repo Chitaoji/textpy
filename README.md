@@ -14,19 +14,23 @@ attrs>=23.1.0
 ```
 
 ## Examples
-Create a new file named `this_is_a_file.py`:
+Create a new file named `this_is_a_file.py` under dir `./temp/`:
 
 ```py
-class ThisIsAClass:
+# ./temp/this_is_a_file.py
+from typing import *
+
+
+class MyClass:
     def __init__(self):
         """Write something."""
         self.var_1 = "hahaha"
         self.var_2 = "blabla"
 
 
-def this_is_a_function(a: ThisIsAClass):
+def myfunction(a: MyClass):
     """
-    Write something.
+    Print something.
 
     Parameters
     ----------
@@ -42,12 +46,12 @@ Run the following codes to find all the occurrences of the pattern `"var"` in `t
 ```py
 from textpy import textpy
 
-res = textpy("this_is_a_file.py").findall("var", styler=False)
+textpy.textpy("./temp/this_is_a_file.py").findall("var", styler=False)
 print(res)
 # Output:
-# this_is_a_file.py:4: '        self.var_1 = "hahaha"'
-# this_is_a_file.py:5: '        self.var_2 = "blabla"'
-# this_is_a_file.py:18: '    print(a.var_1, a.var_2)'
+# temp/this_is_a_file.py:8: '        self.var_1 = "hahaha"'
+# temp/this_is_a_file.py:9: '        self.var_2 = "blabla"'
+# temp/this_is_a_file.py:22: '    print(a.var_1, a.var_2)'
 ```
 
 Also, when using a Jupyter notebook, you can run a cell like this:
@@ -55,12 +59,12 @@ Also, when using a Jupyter notebook, you can run a cell like this:
 ```py
 from textpy import textpy
 
-textpy("this_is_a_file.py").findall("var")
+textpy("./temp/this_is_a_file.py").findall("var")
 ```
 
 and the output will be like:
 
-![](https://raw.githubusercontent.com/Chitaoji/textpy/v0.1.3/images/example_1.png)
+![](https://raw.githubusercontent.com/Chitaoji/textpy/develop/images/example_1.png)
 
 Now suppose you've got a python module consists of a few files, for example, our `textpy` module itself, you can do almost the same thing:
 
