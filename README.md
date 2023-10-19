@@ -54,7 +54,7 @@ textpy("this_is_a_file.py").findall("var")
 
 and the output will be like:
 
-![Alt text](images/example_1.png)
+![](https://raw.githubusercontent.com/Chitaoji/textpy/v0.1.3/images/example_1.png)
 
 Now suppose you've got a python module consists of a few files, for example, our `textpy` module itself, you can do almost the same thing:
 
