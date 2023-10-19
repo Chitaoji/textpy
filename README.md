@@ -79,6 +79,10 @@ This project falls under the BSD 2-Clause License.
 
 ## History
 
+### v0.1.5 (not published yet)
+* Compatible with pandas version lower than 1.4.0.
+* Now `textpy.textpy` accepts either a string or a `Path` object as its parameter.
+
 ### v0.1.4
 * Fixed the display of images on PyPI.
 
