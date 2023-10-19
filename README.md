@@ -14,10 +14,10 @@ attrs>=23.1.0
 ```
 
 ## Examples
-Create a new file named `this_is_a_file.py` under dir `./temp/`:
+Create a new file named `this_is_a_file.py` under dir `./examples/`:
 
 ```py
-# ./temp/this_is_a_file.py
+# ./examples/this_is_a_file.py
 from typing import *
 
 
@@ -46,12 +46,12 @@ Run the following codes to find all the occurrences of the pattern `"var"` in `t
 ```py
 from textpy import textpy
 
-textpy.textpy("./temp/this_is_a_file.py").findall("var", styler=False)
+textpy.textpy("./examples/this_is_a_file.py").findall("var", styler=False)
 print(res)
 # Output:
-# temp/this_is_a_file.py:8: '        self.var_1 = "hahaha"'
-# temp/this_is_a_file.py:9: '        self.var_2 = "blabla"'
-# temp/this_is_a_file.py:22: '    print(a.var_1, a.var_2)'
+# examples/this_is_a_file.py:8: '        self.var_1 = "hahaha"'
+# examples/this_is_a_file.py:9: '        self.var_2 = "blabla"'
+# examples/this_is_a_file.py:22: '    print(a.var_1, a.var_2)'
 ```
 
 Also, when using a Jupyter notebook, you can run a cell like this:
@@ -59,12 +59,41 @@ Also, when using a Jupyter notebook, you can run a cell like this:
 ```py
 from textpy import textpy
 
-textpy("./temp/this_is_a_file.py").findall("var")
+textpy("./examples/this_is_a_file.py").findall("var")
 ```
 
 and the output will be like:
 
-<div align=center><img src=https://raw.githubusercontent.com/Chitaoji/textpy/develop/images/example_1.png></div>
+<style type="text/css">
+#T_ea36f th {
+  text-align: center;
+}
+#T_ea36f_row0_col0, #T_ea36f_row0_col1, #T_ea36f_row1_col0, #T_ea36f_row1_col1, #T_ea36f_row2_col0, #T_ea36f_row2_col1 {
+  text-align: left;
+}
+</style>
+<table id="T_ea36f">
+  <thead>
+    <tr>
+      <th id="T_ea36f_level0_col0" class="col_heading level0 col0" >source</th>
+      <th id="T_ea36f_level0_col1" class="col_heading level0 col1" >match</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_ea36f_row0_col0" class="data row0 col0" ><a href='examples/this_is_a_file.py:1:1' style='text-decoration:none;color:inherit'>this_is_a_file</a>.<a href='examples/this_is_a_file.py:5:1' style='text-decoration:none;color:inherit'>MyClass</a>.<a href='examples/this_is_a_file.py:6:5' style='text-decoration:none;color:inherit'>__init__</a>:<a href='examples/this_is_a_file.py:8' style='text-decoration:none;color:inherit'>8</a></td>
+      <td id="T_ea36f_row0_col1" class="data row0 col1" >    self.<a href='examples/this_is_a_file.py:8:14' style='text-decoration:none;color:#cccccc;background-color:#595959'>var</a>_1 = "hahaha"</td>
+    </tr>
+    <tr>
+      <td id="T_ea36f_row1_col0" class="data row1 col0" ><a href='examples/this_is_a_file.py:1:1' style='text-decoration:none;color:inherit'>this_is_a_file</a>.<a href='examples/this_is_a_file.py:5:1' style='text-decoration:none;color:inherit'>MyClass</a>.<a href='examples/this_is_a_file.py:6:5' style='text-decoration:none;color:inherit'>__init__</a>:<a href='examples/this_is_a_file.py:9' style='text-decoration:none;color:inherit'>9</a></td>
+      <td id="T_ea36f_row1_col1" class="data row1 col1" >    self.<a href='examples/this_is_a_file.py:9:14' style='text-decoration:none;color:#cccccc;background-color:#595959'>var</a>_2 = "blabla"</td>
+    </tr>
+    <tr>
+      <td id="T_ea36f_row2_col0" class="data row2 col0" ><a href='examples/this_is_a_file.py:1:1' style='text-decoration:none;color:inherit'>this_is_a_file</a>.<a href='examples/this_is_a_file.py:12:1' style='text-decoration:none;color:inherit'>myfunction</a>:<a href='examples/this_is_a_file.py:22' style='text-decoration:none;color:inherit'>22</a></td>
+      <td id="T_ea36f_row2_col1" class="data row2 col1" >    print(a.<a href='examples/this_is_a_file.py:22:13' style='text-decoration:none;color:#cccccc;background-color:#595959'>var</a>_1, a.<a href='examples/this_is_a_file.py:22:22' style='text-decoration:none;color:#cccccc;background-color:#595959'>var</a>_2)</td>
+    </tr>
+  </tbody>
+</table>
 
 Note that in the Jupyter notebook case, the matched substrings are **clickable**, linking to where the patterns were found.
 
