@@ -128,7 +128,7 @@ This project falls under the BSD 2-Clause License.
 
 ## History
 
-### v0.1.5 (not published yet)
+### v0.1.5
 * Compatible with pandas version lower than 1.4.0.
 * Updated `textpy`:
   * `Path` objects are now acceptable as parameters, which could only be strings previously.
