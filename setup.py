@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # Note: To use the 'upload' functionality of this file, you must:
@@ -88,7 +89,7 @@ setup(
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
     url=URL,
-    packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
+    packages=find_packages(exclude=["examples"]),
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     include_package_data=True,

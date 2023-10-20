@@ -11,7 +11,12 @@ __all__ = ["PyModule", "PyFile", "PyClass", "PyFunc", "PyMethod"]
 
 
 class PyModule(PyText):
-    def __init__(self, path: Union[Path, str], parent: Union[PyText, None] = None):
+    def __init__(
+        self,
+        path: Union[Path, str],
+        parent: Union[PyText, None] = None,
+        home: Union[Path, str] = ".",
+    ):
         """
         A python module including multiple python files.
 
@@ -21,6 +26,8 @@ class PyModule(PyText):
             File path.
         parent : Union[TextPy, None], optional
             Parent node (if exists), by default None.
+        home : Union[Path, str], optional
+            Specifies the home path if `path` is relative, by default ".".
 
         Raises
         ------
@@ -28,11 +35,12 @@ class PyModule(PyText):
             Raised when `path` is not a directory.
 
         """
-        self.path = Path(path)
+        self.path = as_path(path, home=home)
         if not self.path.is_dir():
             raise NotADirectoryError(f"not a dicretory: '{self.path}'")
         self.name = self.path.stem
         self.parent = parent
+        self.home = Path(home).absolute()
 
     @cached_property
     def header(self) -> PyText:
@@ -43,9 +51,9 @@ class PyModule(PyText):
         children_dict: Dict[str, PyText] = {}
         for _path in self.path.iterdir():
             if _path.suffix == ".py":
-                children_dict[_path.stem] = PyFile(_path, parent=self)
+                children_dict[_path.stem] = PyFile(_path, parent=self, home=self.home)
             elif _path.is_dir():
-                _module = PyModule(_path, parent=self)
+                _module = PyModule(_path, parent=self, home=self.home)
                 if len(_module.children) > 0:
                     children_dict[_path.stem] = _module
         return children_dict
@@ -57,6 +65,7 @@ class PyFile(PyText):
         path_or_text: Union[Path, str],
         parent: Union[PyText, None] = None,
         start_line: int = 1,
+        home: Union[Path, str] = ".",
     ):
         """
         Python file.
@@ -67,10 +76,18 @@ class PyFile(PyText):
             File path or file text.
         parent : Union[TextPy, None], optional
             Parent node (if exists), by default None.
+        home : Union[Path, str], optional
+            Specifies the home path if `path_or_text` is relative, by
+            default ".".
 
         """
+        self.home = Path(home).absolute()
+
         if isinstance(path_or_text, Path):
-            self.path = path_or_text
+            if not path_or_text.is_absolute():
+                self.path = self.home / path_or_text
+            else:
+                self.path = path_or_text
             self.text = self.path.read_text().strip()
         else:
             self.text = path_or_text.strip()
@@ -127,8 +144,6 @@ class PyClass(PyText):
         """
         self.text = text.strip()
         self.name = re.search("class .*?[(:]", self.text).group()[6:-1]
-        if self.parent is not None:
-            self.path = self.parent.path
         self.parent = parent
         self.start_line = start_line
         self.__header: Union[str, None] = None
@@ -186,8 +201,6 @@ class PyFunc(PyText):
         """
         self.text = text.strip()
         self.name = re.search("def .*?\(", self.text).group()[4:-1]
-        if self.parent is not None:
-            self.path = self.parent.path
         self.parent = parent
         self.start_line = start_line
 
@@ -224,3 +237,39 @@ class PyMethod(PyFunc):
         """
         super().__init__(text, parent=parent, start_line=start_line)
         self.spaces = 4
+
+
+def as_path(
+    path_or_text: Union[Path, str], home: Union[Path, str] = "."
+) -> Union[Path, str]:
+    """
+    If the input is a string, check if it represents an existing
+    path, if true, convert it to a `Path` object, otherwise return
+    itself. If the input is already a `Path` object, return itself,
+    too.
+
+    Parameters
+    ----------
+    path_or_text : Union[Path, str]
+        An instance of `Path` or a string.
+    home : Union[Path, str], optional
+        Specifies the home path if `path_or_text` is relative, by
+        default ".".
+
+    Returns
+    -------
+    Union[Path, str]
+        A path or a string.
+
+    """
+    home = Path(home).absolute()
+
+    if isinstance(path_or_text, str):
+        if len(path_or_text) < 256 and (home / path_or_text).exists():
+            path_or_text = Path(path_or_text)
+        else:
+            return path_or_text
+
+    if not path_or_text.is_absolute():
+        path_or_text = home / path_or_text
+    return path_or_text
