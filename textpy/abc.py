@@ -142,8 +142,28 @@ class PyText(ABC):
         else:
             return self.path.absolute().relative_to(self.home.absolute())
 
+    @cached_property
+    def execpath(self) -> Path:
+        """
+        Find the relative path to the working environment.
+
+        Returns
+        -------
+        Path
+            Relative path.
+
+        """
+        if self.path.stem == "NULL":
+            return self.path if self.parent is None else self.parent.execpath
+        else:
+            return self.path.absolute().relative_to(self.path.home())
+
     def findall(
-        self, pattern: str, regex: bool = True, styler: bool = True
+        self,
+        pattern: str,
+        regex: bool = True,
+        styler: bool = True,
+        line_numbers: bool = True,
     ) -> Union[Styler, "FindTextResult"]:
         """
         Search for `pattern`.
@@ -158,6 +178,8 @@ class PyText(ABC):
             Whether to return a `Styler` object in convenience of displaying
             in a Jupyter notebook, this only takes effect when
             `pandas.__version__ >= 1.4.0`, by default True.
+        line_numbers : bool, optional
+            Whether to display the line numbers, by default True.
 
         Returns
         -------
@@ -174,7 +196,7 @@ class PyText(ABC):
             raise ValueError(f"pattern should not end with a '\\': {pattern}")
         if not regex:
             pattern = pattern_inreg(pattern)
-        res = FindTextResult(pattern)
+        res = FindTextResult(pattern, line_numbers=line_numbers)
         if self.children == []:
             to_match = self.text
             for _line, _, _group in real_findall(
@@ -293,7 +315,7 @@ class Docstring(ABC):
 
 
 class FindTextResult:
-    def __init__(self, pattern: str):
+    def __init__(self, pattern: str, line_numbers: bool = True):
         """
         Result of text finding, only as a return of `TextPy.find_text`.
 
@@ -301,15 +323,18 @@ class FindTextResult:
         ----------
         pattern : str
             Pattern string.
+        line_numbers : bool, optional
+            Whether to display the line numbers, by default True.
 
         """
         self.pattern = pattern
+        self.line_numbers = line_numbers
         self.res: List[Tuple[PyText, int, str]] = []
 
     def __repr__(self) -> str:
         string: str = ""
         for _tp, _n, _group in self.res:
-            string += f"\n{_tp.relpath}:{_n}: "
+            string += f"\n{_tp.relpath}" + f":{_n}" * self.line_numbers + ": "
             _sub = re.sub(
                 self.pattern,
                 lambda x: "\033[100m" + x.group() + "\033[0m",
@@ -367,7 +392,7 @@ class FindTextResult:
         """
         if other.pattern != self.pattern:
             raise ValueError("joined instances must have the same pattern")
-        obj = self.__class__(self.pattern)
+        obj = self.__class__(self.pattern, line_numbers=self.line_numbers)
         obj.extend(self.res + other.res)
         return obj
 
@@ -390,7 +415,8 @@ class FindTextResult:
                     "NULL"
                     if x.name == "NULL"
                     else make_ahref(
-                        f"{x.relpath}:{x.start_line}:{1+x.spaces}",
+                        f"{x.execpath}"
+                        + f":{x.start_line}:{1+x.spaces}" * self.line_numbers,
                         x.name,
                         color="inherit",
                     )
@@ -398,14 +424,17 @@ class FindTextResult:
                 ]
             ).replace(".NULL", "")
             df.iloc[i, 0] += ":" + make_ahref(
-                f"{_tp.relpath}:{_n}", str(_n), color="inherit"
+                f"{_tp.execpath}" + f":{_n}" * self.line_numbers,
+                str(_n),
+                color="inherit",
             )
             df.iloc[i, 1] = re.sub(
                 self.pattern,
                 lambda x: ""
                 if x.group() == ""
                 else make_ahref(
-                    f"{_tp.relpath}:{_n}:{1+_tp.spaces+x.span()[0]}",
+                    f"{_tp.execpath}"
+                    + f":{_n}:{1+_tp.spaces+x.span()[0]}" * self.line_numbers,
                     x.group(),
                     color="#cccccc",
                     background_color="#595959",

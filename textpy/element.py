@@ -27,7 +27,7 @@ class PyModule(PyText):
         parent : Union[TextPy, None], optional
             Parent node (if exists), by default None.
         home : Union[Path, str], optional
-            Sets the home path if `path` is relative, by default ".".
+            Specifies the home path if `path` is relative, by default ".".
 
         Raises
         ------
@@ -77,8 +77,8 @@ class PyFile(PyText):
         parent : Union[TextPy, None], optional
             Parent node (if exists), by default None.
         home : Union[Path, str], optional
-            Sets the home path if `path_or_text` is relative, by default
-            ".".
+            Specifies the home path if `path_or_text` is relative, by
+            default ".".
 
         """
         self.home = Path(home).absolute()
@@ -253,8 +253,8 @@ def as_path(
     path_or_text : Union[Path, str]
         An instance of `Path` or a string.
     home : Union[Path, str], optional
-        Sets the home path if `path_or_text` is relative, by default
-        ".".
+        Specifies the home path if `path_or_text` is relative, by
+        default ".".
 
     Returns
     -------

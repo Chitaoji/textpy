@@ -66,25 +66,40 @@ textpy("./examples/myfile.py").findall("va")
 
 and the output will be like:
 
-<table id="T_ea36f">
+<table id="T_eb71c">
   <thead>
     <tr>
-      <th id="T_ea36f_level0_col0" class="col_heading level0 col0" >source</th>
-      <th id="T_ea36f_level0_col1" class="col_heading level0 col1" >match</th>
+      <th id="T_eb71c_level0_col0" class="col_heading level0 col0">source</th>
+      <th id="T_eb71c_level0_col1" class="col_heading level0 col1">match</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td id="T_ea36f_row0_col0" class="data row0 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>MyClass</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>__init__</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>10</a></td>
-      <td id="T_ea36f_row0_col1" class="data row0 col1" >    self.<a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#595959'>va</a>r_1 = "hahaha"</td>
+      <td id="T_eb71c_row0_col0" class="data row0 col0"><a href='examples/myfile.py'
+          style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py'
+          style='text-decoration:none;color:inherit'>MyClass</a>.<a href='examples/myfile.py'
+          style='text-decoration:none;color:inherit'>__init__</a>:<a href='examples/myfile.py'
+          style='text-decoration:none;color:inherit'>10</a></td>
+      <td id="T_eb71c_row0_col1" class="data row0 col1"> self.<a href='examples/myfile.py'
+          style='text-decoration:none;color:#cccccc;background-color:#595959'>va</a>r_1 = "hahaha"</td>
     </tr>
     <tr>
-      <td id="T_ea36f_row1_col0" class="data row1 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>MyClass</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>__init__</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>11</a></td>
-      <td id="T_ea36f_row1_col1" class="data row1 col1" >    self.<a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#595959'>va</a>r_2 = "blabla"</td>
+      <td id="T_eb71c_row1_col0" class="data row1 col0"><a href='examples/myfile.py'
+          style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py'
+          style='text-decoration:none;color:inherit'>MyClass</a>.<a href='examples/myfile.py'
+          style='text-decoration:none;color:inherit'>__init__</a>:<a href='examples/myfile.py'
+          style='text-decoration:none;color:inherit'>11</a></td>
+      <td id="T_eb71c_row1_col1" class="data row1 col1"> self.<a href='examples/myfile.py'
+          style='text-decoration:none;color:#cccccc;background-color:#595959'>va</a>r_2 = "blabla"</td>
     </tr>
     <tr>
-      <td id="T_ea36f_row2_col0" class="data row2 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfunction</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>24</a></td>
-      <td id="T_ea36f_row2_col1" class="data row2 col1" >    print(a.<a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#595959'>va</a>r_1, a.<a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#595959'>va</a>r_2)</td>
+      <td id="T_eb71c_row2_col0" class="data row2 col0"><a href='examples/myfile.py'
+          style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py'
+          style='text-decoration:none;color:inherit'>print_my_class</a>:<a href='examples/myfile.py'
+          style='text-decoration:none;color:inherit'>24</a></td>
+      <td id="T_eb71c_row2_col1" class="data row2 col1"> print(a.<a href='examples/myfile.py'
+          style='text-decoration:none;color:#cccccc;background-color:#595959'>va</a>r_1, a.<a href='examples/myfile.py'
+          style='text-decoration:none;color:#cccccc;background-color:#595959'>va</a>r_2)</td>
     </tr>
   </tbody>
 </table>
@@ -97,11 +112,11 @@ Now suppose you've got a python module consists of a few files, for example, our
 module_path = "textpy/" # you can type any path here
 pattern = "note.*k" # type any regular expression here
 
-res = textpy(module_path).findall(pattern, styler=False)
+res = textpy(module_path).findall("note.*k", styler=False, line_numbers=False)
 print(res)
 # Output:
-# textpy/abc.py:158: '            in a Jupyter notebook, this only takes effect when'
-# textpy/abc.py:376: '        in a Jupyter notebook.'
+# textpy/abc.py: '            in a Jupyter notebook, this only takes effect when'
+# textpy/abc.py: '        in a Jupyter notebook.'
 ```
 
 ## See Also
@@ -115,10 +130,13 @@ This project falls under the BSD 2-Clause License.
 
 ### v0.1.5 (not published yet)
 * Compatible with pandas version lower than 1.4.0.
-* Now `textpy.textpy` accepts either a string or a `Path` object as its parameter.
+* Updated `textpy`:
+  * `Path` objects are now acceptable as parameters, which could only be strings previously.
+  * New optional parameter `home` to specify the home path.
+* More flexible presentation of output when using `TextPy.findall`.
 
 ### v0.1.4
-* Fixed the display of images on PyPI.
+* Fixed a display problem of `README.md` on PyPI.
 
 ### v0.1.3
 * Initial release.

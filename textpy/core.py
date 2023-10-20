@@ -18,8 +18,8 @@ def textpy(path_or_text: Union[Path, str], home: Union[Path, str] = ".") -> PyTe
     path_or_text : Union[Path, str]
         File path, module path or file text.
     home : Union[Path, str], optional
-        Sets the home path if `path_or_text` is relative, by default
-        ".".
+        Specifies the home path if `path_or_text` is relative, by
+        default ".".
 
     Returns
     -------
