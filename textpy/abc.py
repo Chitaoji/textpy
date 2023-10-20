@@ -173,7 +173,7 @@ class PyText(ABC):
         pattern : str
             Pattern string.
         regex : bool, optional
-            Whether to use regular expression, by default True.
+            Whether to enable regular expressions, by default True.
         styler : bool, optional
             Whether to return a `Styler` object in convenience of displaying
             in a Jupyter notebook, this only takes effect when
