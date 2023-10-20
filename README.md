@@ -100,8 +100,8 @@ pattern = "note.*k" # type any regular expression here
 res = textpy(module_path).findall(pattern, styler=False)
 print(res)
 # Output:
-# textpy/abc.py:159: '            in a Jupyter notebook, this only takes effect when'
-# textpy/abc.py:377: '        in a Jupyter notebook.'
+# textpy/abc.py:158: '            in a Jupyter notebook, this only takes effect when'
+# textpy/abc.py:376: '        in a Jupyter notebook.'
 ```
 
 ## See Also

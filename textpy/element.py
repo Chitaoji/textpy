@@ -144,8 +144,6 @@ class PyClass(PyText):
         """
         self.text = text.strip()
         self.name = re.search("class .*?[(:]", self.text).group()[6:-1]
-        if self.parent is not None:
-            self.path = self.parent.path
         self.parent = parent
         self.start_line = start_line
         self.__header: Union[str, None] = None
@@ -203,8 +201,6 @@ class PyFunc(PyText):
         """
         self.text = text.strip()
         self.name = re.search("def .*?\(", self.text).group()[4:-1]
-        if self.parent is not None:
-            self.path = self.parent.path
         self.parent = parent
         self.start_line = start_line
 
