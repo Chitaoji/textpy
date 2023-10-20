@@ -423,11 +423,10 @@ class FindTextResult:
                     for x in _tp.track()
                 ]
             ).replace(".NULL", "")
-            df.iloc[i, 0] += ":" + make_ahref(
-                f"{_tp.execpath}" + f":{_n}" * self.line_numbers,
-                str(_n),
-                color="inherit",
-            )
+            if self.line_numbers:
+                df.iloc[i, 0] += ":" + make_ahref(
+                    f"{_tp.execpath}:{_n}", str(_n), color="inherit"
+                )
             df.iloc[i, 1] = re.sub(
                 self.pattern,
                 lambda x: ""
