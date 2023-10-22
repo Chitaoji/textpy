@@ -123,6 +123,9 @@ print(res)
 ### Github repository
 * https://github.com/Chitaoji/textpy
 
+### PyPI project
+* https://pypi.org/project/textpy/
+
 ## License
 This project falls under the BSD 2-Clause License.
 
