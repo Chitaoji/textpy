@@ -108,7 +108,7 @@ class PyFile(PyText):
         children_dict: Dict[str, PyText] = {}
         _cnt: int = 0
         self.__header = ""
-        for i, _text in line_count_iter(rsplit("\n\n\n", self.text)):
+        for i, _text in line_count_iter(rsplit("\n\n+[^\s]", self.text)):
             _text = "\n" + _text.strip()
             if re.match("(?:\n@.*)*\ndef ", _text):
                 _node = PyFunc(_text, parent=self, start_line=int(i + 3 * (_cnt > 0)))

@@ -12,7 +12,7 @@ from .utils.re_extended import pattern_inreg, real_findall
 
 __all__ = ["PyText", "Docstring"]
 
-NULL = "NULL"
+NULL = "NULL" # Path stems or filenames should avoid this.
 
 
 @attrs.define(auto_attribs=False)
