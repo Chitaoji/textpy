@@ -124,7 +124,10 @@ class PyText(ABC):
             Absolute path.
 
         """
-        return self.path.absolute()
+        if self.path.stem == "NULL":
+            return self.path if self.parent is None else self.parent.abspath
+        else:
+            return self.path.absolute()
 
     @cached_property
     def relpath(self) -> Path:
@@ -156,7 +159,7 @@ class PyText(ABC):
         if self.path.stem == "NULL":
             return self.path if self.parent is None else self.parent.execpath
         else:
-            return self.path.absolute().relative_to(self.path.home())
+            return self.path.absolute().relative_to(self.path.cwd())
 
     def findall(
         self,
@@ -238,15 +241,15 @@ class PyText(ABC):
         splits = re.split("\.", target, maxsplit=1)
         if len(splits) == 1:
             splits.append("")
-        if self.name == splits[0]:
-            return self.jumpto(splits[1])
-        elif splits[0] == "":
+        if splits[0] == "":
             if self.parent is not None:
                 return self.parent.jumpto(splits[1])
             raise ValueError(f"`{self.absname}` hasn't got a parent")
+        elif splits[0] in self.children_dict:
+            return self.children_dict[splits[0]].jumpto(splits[1])
+        elif self.name == splits[0]:
+            return self.jumpto(splits[1])
         else:
-            if splits[0] in self.children_dict:
-                return self.children_dict[splits[0]].jumpto(splits[1])
             raise ValueError(f"`{splits[0]}` is not a child of `{self.absname}`")
 
     def as_header(self):
@@ -415,7 +418,7 @@ class FindTextResult:
                     "NULL"
                     if x.name == "NULL"
                     else make_ahref(
-                        f"{x.execpath}"
+                        f"{x.abspath}"
                         + f":{x.start_line}:{1+x.spaces}" * self.line_numbers,
                         x.name,
                         color="inherit",
@@ -425,14 +428,14 @@ class FindTextResult:
             ).replace(".NULL", "")
             if self.line_numbers:
                 df.iloc[i, 0] += ":" + make_ahref(
-                    f"{_tp.execpath}:{_n}", str(_n), color="inherit"
+                    f"{_tp.abspath}:{_n}", str(_n), color="inherit"
                 )
             df.iloc[i, 1] = re.sub(
                 self.pattern,
                 lambda x: ""
                 if x.group() == ""
                 else make_ahref(
-                    f"{_tp.execpath}"
+                    f"{_tp.abspath}"
                     + f":{_n}:{1+_tp.spaces+x.span()[0]}" * self.line_numbers,
                     x.group(),
                     color="#cccccc",
