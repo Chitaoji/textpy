@@ -192,7 +192,7 @@ class PyText(ABC):
         Raises
         ------
         ValueError
-            Raised when `pattern` ends with a '\\\\'.
+            Raised when `pattern` ends with a `"\\"`.
 
         """
         if len(pattern) > 0 and pattern[-1] == "\\":
@@ -401,13 +401,13 @@ class FindTextResult:
 
     def to_styler(self) -> Styler:
         """
-        Convert `self` to a dataframe `Styler` in convenience of displaying
+        Convert `self` to a `Styler` of dataframe in convenience of displaying
         in a Jupyter notebook.
 
         Returns
         -------
         Styler
-            A dataframe `Styler`.
+            A `Styler` of dataframe.
 
         """
         df = pd.DataFrame("", index=range(len(self.res)), columns=["source", "match"])
@@ -482,4 +482,8 @@ def make_ahref(
     if background_color is not None:
         style_list.append(f"background-color:{background_color}")
     style = ";".join(style_list)
-    return f"<a href='{url}' style='{style}'>{display}</a>"
+    if Path(url).stem=="NULL":
+        href = ""
+    else:
+        href = f"href='{url}' "
+    return f"<a {href}style='{style}'>{display}</a>"
