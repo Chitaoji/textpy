@@ -12,12 +12,14 @@ from .utils.re_extended import pattern_inreg, real_findall
 
 __all__ = ["PyText", "Docstring"]
 
+NULL = "NULL"
+
 
 @attrs.define(auto_attribs=False)
 class PyText(ABC):
     text: str = ""
     name: str = ""
-    path: Path = Path("NULL.py")
+    path: Path = Path(NULL + ".py")
     home: Path = Path(".")
     parent: Union["PyText", None] = None
     start_line: int = 0
@@ -124,7 +126,7 @@ class PyText(ABC):
             Absolute path.
 
         """
-        if self.path.stem == "NULL":
+        if self.path.stem == NULL:
             return self.path if self.parent is None else self.parent.abspath
         else:
             return self.path.absolute()
@@ -140,7 +142,7 @@ class PyText(ABC):
             Relative path.
 
         """
-        if self.path.stem == "NULL":
+        if self.path.stem == NULL:
             return self.path if self.parent is None else self.parent.relpath
         else:
             return self.path.absolute().relative_to(self.home.absolute())
@@ -156,7 +158,7 @@ class PyText(ABC):
             Relative path.
 
         """
-        if self.path.stem == "NULL":
+        if self.path.stem == NULL:
             return self.path if self.parent is None else self.parent.execpath
         else:
             return self.path.absolute().relative_to(self.path.cwd())
@@ -262,7 +264,7 @@ class PyText(ABC):
             An instance of self.
 
         """
-        self.name = "NULL"
+        self.name = NULL
         return self
 
     def track(self) -> List["PyText"]:
@@ -415,8 +417,8 @@ class FindTextResult:
             _tp, _n, _match = self.res[i]
             df.iloc[i, 0] = ".".join(
                 [
-                    "NULL"
-                    if x.name == "NULL"
+                    NULL
+                    if x.name == NULL
                     else make_ahref(
                         f"{x.abspath}"
                         + f":{x.start_line}:{1+x.spaces}" * self.line_numbers,
@@ -482,7 +484,7 @@ def make_ahref(
     if background_color is not None:
         style_list.append(f"background-color:{background_color}")
     style = ";".join(style_list)
-    if Path(url).stem=="NULL":
+    if Path(url).stem == NULL:
         href = ""
     else:
         href = f"href='{url}' "

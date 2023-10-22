@@ -3,7 +3,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import *
 
-from .abc import Docstring, PyText
+from .abc import Docstring, PyText, NULL
 from .format import NumpyFormatDocstring
 from .utils.re_extended import line_count_iter, rsplit
 
@@ -120,7 +120,7 @@ class PyFile(PyText):
                 self.__header = _text
             else:
                 _node = PyFile(_text, parent=self, start_line=int(i + 3 * (_cnt > 0)))
-                children_dict[f"NULL-{i}"] = _node
+                children_dict[f"{NULL}-{i}"] = _node
             _cnt += 1
         return children_dict
 

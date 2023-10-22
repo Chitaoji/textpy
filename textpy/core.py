@@ -7,7 +7,9 @@ from .element import PyFile, PyModule, as_path
 __all__ = ["textpy"]
 
 
-def textpy(path_or_text: Union[Path, str], home: Union[Path, str, None] = None) -> PyText:
+def textpy(
+    path_or_text: Union[Path, str], home: Union[Path, str, None] = None
+) -> PyText:
     """
     Statically analyzes a python file or a python module. Each python
     file is recommended to be formatted with `black` and `Auto Docstring
