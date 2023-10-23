@@ -123,15 +123,21 @@ print(res)
 ### Github repository
 * https://github.com/Chitaoji/textpy
 
+### PyPI project
+* https://pypi.org/project/textpy/
+
 ## License
 This project falls under the BSD 2-Clause License.
 
 ## History
 
+### v0.1.6
+* Bugfix for windows.
+
 ### v0.1.5
 * Compatible with pandas versions lower than 1.4.0.
 * Updated `textpy`:
-  * `Path` objects are now acceptable as parameters, which could only be strings previously.
+  * `Path` objects are now acceptable as parameters.
   * New optional parameter `home` to specify the home path.
 * More flexible presentation of output when using `TextPy.findall`.
 

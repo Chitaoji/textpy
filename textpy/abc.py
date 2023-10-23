@@ -12,12 +12,14 @@ from .utils.re_extended import pattern_inreg, real_findall
 
 __all__ = ["PyText", "Docstring"]
 
+NULL = "NULL"  # Path stems or filenames should avoid this.
+
 
 @attrs.define(auto_attribs=False)
 class PyText(ABC):
     text: str = ""
     name: str = ""
-    path: Path = Path("NULL.py")
+    path: Path = Path(NULL + ".py")
     home: Path = Path(".")
     parent: Union["PyText", None] = None
     start_line: int = 0
@@ -124,7 +126,10 @@ class PyText(ABC):
             Absolute path.
 
         """
-        return self.path.absolute()
+        if self.path.stem == NULL:
+            return self.path if self.parent is None else self.parent.abspath
+        else:
+            return self.path.absolute()
 
     @cached_property
     def relpath(self) -> Path:
@@ -137,7 +142,7 @@ class PyText(ABC):
             Relative path.
 
         """
-        if self.path.stem == "NULL":
+        if self.path.stem == NULL:
             return self.path if self.parent is None else self.parent.relpath
         else:
             return self.path.absolute().relative_to(self.home.absolute())
@@ -153,10 +158,10 @@ class PyText(ABC):
             Relative path.
 
         """
-        if self.path.stem == "NULL":
+        if self.path.stem == NULL:
             return self.path if self.parent is None else self.parent.execpath
         else:
-            return self.path.absolute().relative_to(self.path.home())
+            return self.path.absolute().relative_to(self.path.cwd())
 
     def findall(
         self,
@@ -189,7 +194,7 @@ class PyText(ABC):
         Raises
         ------
         ValueError
-            Raised when `pattern` ends with a '\\\\'.
+            Raised when `pattern` ends with a `"\\"`.
 
         """
         if len(pattern) > 0 and pattern[-1] == "\\":
@@ -238,15 +243,15 @@ class PyText(ABC):
         splits = re.split("\.", target, maxsplit=1)
         if len(splits) == 1:
             splits.append("")
-        if self.name == splits[0]:
-            return self.jumpto(splits[1])
-        elif splits[0] == "":
+        if splits[0] == "":
             if self.parent is not None:
                 return self.parent.jumpto(splits[1])
             raise ValueError(f"`{self.absname}` hasn't got a parent")
+        elif splits[0] in self.children_dict:
+            return self.children_dict[splits[0]].jumpto(splits[1])
+        elif self.name == splits[0]:
+            return self.jumpto(splits[1])
         else:
-            if splits[0] in self.children_dict:
-                return self.children_dict[splits[0]].jumpto(splits[1])
             raise ValueError(f"`{splits[0]}` is not a child of `{self.absname}`")
 
     def as_header(self):
@@ -259,7 +264,7 @@ class PyText(ABC):
             An instance of self.
 
         """
-        self.name = "NULL"
+        self.name = NULL
         return self
 
     def track(self) -> List["PyText"]:
@@ -398,13 +403,13 @@ class FindTextResult:
 
     def to_styler(self) -> Styler:
         """
-        Convert `self` to a dataframe `Styler` in convenience of displaying
+        Convert `self` to a `Styler` of dataframe in convenience of displaying
         in a Jupyter notebook.
 
         Returns
         -------
         Styler
-            A dataframe `Styler`.
+            A `Styler` of dataframe.
 
         """
         df = pd.DataFrame("", index=range(len(self.res)), columns=["source", "match"])
@@ -412,8 +417,8 @@ class FindTextResult:
             _tp, _n, _match = self.res[i]
             df.iloc[i, 0] = ".".join(
                 [
-                    "NULL"
-                    if x.name == "NULL"
+                    NULL
+                    if x.name == NULL
                     else make_ahref(
                         f"{x.execpath}"
                         + f":{x.start_line}:{1+x.spaces}" * self.line_numbers,
@@ -479,4 +484,8 @@ def make_ahref(
     if background_color is not None:
         style_list.append(f"background-color:{background_color}")
     style = ";".join(style_list)
-    return f"<a href='{url}' style='{style}'>{display}</a>"
+    if Path(url).stem == NULL:
+        href = ""
+    else:
+        href = f"href='{url}' "
+    return f"<a {href}style='{style}'>{display}</a>"
