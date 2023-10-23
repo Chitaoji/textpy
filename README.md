@@ -131,7 +131,7 @@ This project falls under the BSD 2-Clause License.
 
 ## History
 
-### v0.1.6
+### v0.1.8
 * Bugfix for Windows.
 
 ### v0.1.5

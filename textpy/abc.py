@@ -158,9 +158,9 @@ class PyText(ABC):
             The relative path.
 
         """
-        if self.abspath.is_relative_to(self.home.absolute()):
+        try:
             return self.abspath.relative_to(self.home.absolute())
-        else:
+        except ValueError as e:
             return self.abspath
 
     @cached_property
@@ -174,9 +174,9 @@ class PyText(ABC):
             The relative path to the working environment.
 
         """
-        if self.abspath.is_relative_to(self.abspath.cwd()):
+        try:
             return self.abspath.relative_to(self.abspath.cwd())
-        else:
+        except ValueError as e:
             return self.abspath
 
     @overload
