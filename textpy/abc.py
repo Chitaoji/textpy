@@ -21,7 +21,7 @@ class PyText(ABC):
     name: str = ""
     path: Path = Path(NULL + ".py")
     home: Path = Path(".")
-    parent: Union["PyText", None] = None
+    parent: Optional["PyText"] = None
     start_line: int = 0
     spaces: int = 0
 
@@ -278,7 +278,7 @@ class PyText(ABC):
 
         """
         track: List["PyText"] = []
-        obj: Union["PyText", None] = self
+        obj: Optional["PyText"] = self
         while obj is not None:
             track.append(obj)
             obj = obj.parent
@@ -287,7 +287,7 @@ class PyText(ABC):
 
 
 class Docstring(ABC):
-    def __init__(self, text: str, parent: Union[PyText, None] = None):
+    def __init__(self, text: str, parent: Optional[PyText] = None):
         """
         Stores the docstring of a function / class / method, then divides
         it into different sections accaording to its titles.
@@ -296,7 +296,7 @@ class Docstring(ABC):
         ----------
         text : str
             Docstring text.
-        parent : Union[TextPy, None], optional
+        parent : Optional[PyText], optional
             Parent node (if exists), by default None.
 
         """
@@ -455,8 +455,8 @@ class FindTextResult:
 def make_ahref(
     url: str,
     display: str,
-    color: Union[str, None] = None,
-    background_color: Union[str, None] = None,
+    color: Optional[str] = None,
+    background_color: Optional[str] = None,
 ) -> str:
     """
     Makes an HTML <a> tag.
@@ -467,9 +467,9 @@ def make_ahref(
         URL to link.
     display : str
         Word to display.
-    color : Union[str, None], optional
+    color : Optional[str], optional
         Text color, by default None.
-    background_color : Union[str, None], optional
+    background_color : Optional[str], optional
         Background color, by default None.
 
     Returns

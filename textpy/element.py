@@ -3,7 +3,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import *
 
-from .abc import Docstring, PyText, NULL
+from .abc import NULL, Docstring, PyText
 from .format import NumpyFormatDocstring
 from .utils.re_extended import line_count_iter, rsplit
 
@@ -14,7 +14,7 @@ class PyModule(PyText):
     def __init__(
         self,
         path: Union[Path, str],
-        parent: Union[PyText, None] = None,
+        parent: Optional[PyText] = None,
         home: Union[Path, str, None] = None,
     ):
         """
@@ -24,9 +24,9 @@ class PyModule(PyText):
         ----------
         path : Union[Path, str]
             File path.
-        parent : Union[TextPy, None], optional
+        parent : Optional[TextPy], optional
             Parent node (if exists), by default None.
-        home :  home: Union[Path, str, None], optional
+        home : Union[Path, str, None], optional
             Specifies the home path if `path` is relative, by default None.
 
         Raises
@@ -63,7 +63,7 @@ class PyFile(PyText):
     def __init__(
         self,
         path_or_text: Union[Path, str],
-        parent: Union[PyText, None] = None,
+        parent: Optional[PyText] = None,
         start_line: int = 1,
         home: Union[Path, str, None] = None,
     ):
@@ -74,7 +74,7 @@ class PyFile(PyText):
         ----------
         path_or_text : Union[Path, str]
             File path or file text.
-        parent : Union[TextPy, None], optional
+        parent : Optional[TextPy], optional
             Parent node (if exists), by default None.
         home : Union[Path, str, None], optional
             Specifies the home path if `path_or_text` is relative, by
@@ -95,7 +95,7 @@ class PyFile(PyText):
         self.name = self.path.stem
         self.parent = parent
         self.start_line = start_line
-        self.__header: Union[str, None] = None
+        self.__header: Optional[str] = None
 
     @cached_property
     def header(self) -> PyText:
@@ -126,9 +126,7 @@ class PyFile(PyText):
 
 
 class PyClass(PyText):
-    def __init__(
-        self, text: str, parent: Union[PyText, None] = None, start_line: int = 1
-    ):
+    def __init__(self, text: str, parent: Optional[PyText] = None, start_line: int = 1):
         """
         Python class.
 
@@ -136,7 +134,7 @@ class PyClass(PyText):
         ----------
         text : str
             Class text.
-        parent : Union[TextPy, None], optional
+        parent : Optional[TextPy], optional
             Parent node (if exists), by default None.
         start_line : int, optional
             Starting line number, by default 1.
@@ -146,7 +144,7 @@ class PyClass(PyText):
         self.name = re.search("class .*?[(:]", self.text).group()[6:-1]
         self.parent = parent
         self.start_line = start_line
-        self.__header: Union[str, None] = None
+        self.__header: Optional[str] = None
 
     @cached_property
     def doc(self) -> Docstring:
@@ -183,9 +181,7 @@ class PyClass(PyText):
 
 
 class PyFunc(PyText):
-    def __init__(
-        self, text: str, parent: Union[PyText, None] = None, start_line: int = 1
-    ):
+    def __init__(self, text: str, parent: Optional[PyText] = None, start_line: int = 1):
         """
         Python function.
 
@@ -193,7 +189,7 @@ class PyFunc(PyText):
         ----------
         text : str
             Funtion text.
-        parent : Union[TextPy, None], optional
+        parent : Optional[TextPy], optional
             Parent node (if exists), by default None.
         start_line : int, optional
             Starting line number, by default 1.
@@ -219,9 +215,7 @@ class PyFunc(PyText):
 
 
 class PyMethod(PyFunc):
-    def __init__(
-        self, text: str, parent: Union[PyText, None] = None, start_line: int = 1
-    ):
+    def __init__(self, text: str, parent: Optional[PyText] = None, start_line: int = 1):
         """
         Python class method.
 
@@ -229,7 +223,7 @@ class PyMethod(PyFunc):
         ----------
         text : str
             Method text.
-        parent : Union[TextPy, None], optional
+        parent : Optional[TextPy], optional
             Parent node (if exists), by default None.
         start_line : int, optional
             Starting line number, by default 1.
