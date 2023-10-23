@@ -108,7 +108,7 @@ class PyFile(PyText):
         children: List[PyText] = []
         _cnt: int = 0
         self.__header = ""
-        for i, _str in line_count_iter(rsplit("\n\n+[^\s]", self.text)):
+        for i, _str in line_count_iter(rsplit("\n\n\n+[^\s]", self.text)):
             _str = "\n" + _str.strip()
             if re.match("(?:\n@.*)*\ndef ", _str):
                 children.append(
