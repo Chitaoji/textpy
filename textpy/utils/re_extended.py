@@ -102,6 +102,26 @@ def lsplit(
     return splits
 
 
+@overload
+def real_findall(
+    pattern: Union[str, re.Pattern],
+    string: str,
+    flags: Union[int, re.RegexFlag] = 0,
+    linemode: Literal[False] = False,
+) -> List[SpanNGroup]:
+    ...
+
+
+@overload
+def real_findall(
+    pattern: Union[str, re.Pattern],
+    string: str,
+    flags: Union[int, re.RegexFlag] = 0,
+    linemode: Literal[True] = True,
+) -> List[LineSpanNGroup]:
+    ...
+
+
 def real_findall(
     pattern: Union[str, re.Pattern],
     string: str,

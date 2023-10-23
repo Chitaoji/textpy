@@ -186,7 +186,7 @@ class PyText(ABC):
         styler: Literal[True] = True,
         line_numbers: bool = True,
     ) -> Styler:
-        pass
+        ...
 
     @overload
     def findall(
@@ -196,7 +196,7 @@ class PyText(ABC):
         styler: Literal[False] = False,
         line_numbers: bool = True,
     ) -> "FindTextResult":
-        pass
+        ...
 
     def findall(
         self,
@@ -206,7 +206,7 @@ class PyText(ABC):
         line_numbers: bool = True,
     ) -> Union[Styler, "FindTextResult"]:
         """
-        Search for `pattern`.
+        Finds all non-overlapping matches of `pattern`.
 
         Parameters
         ----------

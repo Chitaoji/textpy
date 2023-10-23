@@ -235,6 +235,16 @@ class PyMethod(PyFunc):
         self.spaces = 4
 
 
+@overload
+def as_path(path_or_text: Path, home: Union[Path, str, None] = None) -> Path:
+    ...
+
+
+@overload
+def as_path(path_or_text: str, home: Union[Path, str, None] = None) -> Union[Path, str]:
+    ...
+
+
 def as_path(
     path_or_text: Union[Path, str], home: Union[Path, str, None] = None
 ) -> Union[Path, str]:
