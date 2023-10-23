@@ -136,10 +136,10 @@ This project falls under the BSD 2-Clause License.
 
 ### v0.1.5
 * Compatible with pandas versions lower than 1.4.0.
-* Updated `textpy`:
+* Updated `textpy.textpy`:
   * `Path` objects are now acceptable as parameters.
   * New optional parameter `home` to specify the home path.
-* More flexible presentation of output when using `TextPy.findall`.
+* More flexible presentation of output when using `textpy.TextPy.findall`.
 
 ### v0.1.4
 * Fixed a display problem of `README.md` on PyPI.
