@@ -47,16 +47,16 @@ class PyModule(PyText):
         return PyFile("", parent=self)
 
     @cached_property
-    def children_dict(self) -> Dict[str, PyText]:
-        children_dict: Dict[str, PyText] = {}
+    def children(self) -> List[PyText]:
+        children: List[PyText] = []
         for _path in self.path.iterdir():
             if _path.suffix == ".py":
-                children_dict[_path.stem] = PyFile(_path, parent=self, home=self.home)
+                children.append(PyFile(_path, parent=self, home=self.home))
             elif _path.is_dir():
                 _module = PyModule(_path, parent=self, home=self.home)
                 if len(_module.children) > 0:
-                    children_dict[_path.stem] = _module
-        return children_dict
+                    children.append(_module)
+        return children
 
 
 class PyFile(PyText):
@@ -100,29 +100,32 @@ class PyFile(PyText):
     @cached_property
     def header(self) -> PyText:
         if self.__header is None:
-            _ = self.children_dict
+            _ = self.children
         return self.__class__(self.__header, parent=self).as_header()
 
     @cached_property
-    def children_dict(self) -> Dict[str, PyText]:
-        children_dict: Dict[str, PyText] = {}
+    def children(self) -> List[PyText]:
+        children: List[PyText] = []
         _cnt: int = 0
         self.__header = ""
-        for i, _text in line_count_iter(rsplit("\n\n+[^\s]", self.text)):
-            _text = "\n" + _text.strip()
-            if re.match("(?:\n@.*)*\ndef ", _text):
-                _node = PyFunc(_text, parent=self, start_line=int(i + 3 * (_cnt > 0)))
-                children_dict[_node.name] = _node
-            elif re.match("(?:\n@.*)*\nclass ", _text):
-                _node = PyClass(_text, parent=self, start_line=int(i + 3 * (_cnt > 0)))
-                children_dict[_node.name] = _node
+        for i, _str in line_count_iter(rsplit("\n\n+[^\s]", self.text)):
+            _str = "\n" + _str.strip()
+            if re.match("(?:\n@.*)*\ndef ", _str):
+                children.append(
+                    PyFunc(_str, parent=self, start_line=int(i + 3 * (_cnt > 0)))
+                )
+            elif re.match("(?:\n@.*)*\nclass ", _str):
+                children.append(
+                    PyClass(_str, parent=self, start_line=int(i + 3 * (_cnt > 0)))
+                )
             elif _cnt == 0:
-                self.__header = _text
+                self.__header = _str
             else:
-                _node = PyFile(_text, parent=self, start_line=int(i + 3 * (_cnt > 0)))
-                children_dict[f"{NULL}-{i}"] = _node
+                children.append(
+                    PyFile(_str, parent=self, start_line=int(i + 3 * (_cnt > 0)))
+                )
             _cnt += 1
-        return children_dict
+        return children
 
 
 class PyClass(PyText):
@@ -148,11 +151,9 @@ class PyClass(PyText):
 
     @cached_property
     def doc(self) -> Docstring:
-        if (
-            "__init__" in self.children_dict
-            and self.children_dict["__init__"].doc.text != ""
-        ):
-            _doc = self.children_dict["__init__"].doc.text
+        _init = self.jumpto("__init__")
+        if "__init__" in self.children_names and _init.doc.text != "":
+            _doc = _init.doc.text
         else:
             _doc = self.header.text
         return NumpyFormatDocstring(_doc, parent=self)
@@ -160,24 +161,25 @@ class PyClass(PyText):
     @cached_property
     def header(self) -> PyText:
         if self.__header is None:
-            _ = self.children_dict
+            _ = self.children
         return self.__class__(
             self.__header, parent=self, start_line=self.start_line
         ).as_header()
 
     @cached_property
-    def children_dict(self) -> Dict[str, PyText]:
-        children_dict: Dict[str, PyText] = {}
+    def children(self) -> List[PyText]:
+        children: List[PyText] = []
         sub_text = re.sub("\n    ", "\n", self.text)
         _cnt: int = 0
         for i, _str in line_count_iter(rsplit("(?:\n@.*)*\ndef ", sub_text)):
             if _cnt == 0:
                 self.__header = _str.replace("\n", "\n    ")
             else:
-                _node = PyMethod(_str, parent=self, start_line=self.start_line + i)
-                children_dict[_node.name] = _node
+                children.append(
+                    PyMethod(_str, parent=self, start_line=self.start_line + i)
+                )
             _cnt += 1
-        return children_dict
+        return children
 
 
 class PyFunc(PyText):

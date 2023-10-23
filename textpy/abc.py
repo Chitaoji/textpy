@@ -70,31 +70,46 @@ class PyText(ABC):
             Dictionary of children nodes.
 
         """
-        return {}
+        children_dict: Dict[str, "PyText"] = {}
+        for child, childname in zip(self.children, self.children_names):
+            children_dict[childname] = child
+        return children_dict
 
     @cached_property
     def children(self) -> List["PyText"]:
         """
-        List of children nodes.
+        Children nodes.
 
         Returns
         -------
         Dict[str, TextPy]
-            List of children nodes.
+            List of the children nodes.
 
         """
-        return list(self.children_dict.values())
+        return []
+
+    @cached_property
+    def children_names(self) -> List[str]:
+        """
+        Children names.
+
+        Returns
+        -------
+        List[str]
+            List of the children nodes' names.
+
+        """
+        return [x.name for x in self.children]
 
     @cached_property
     def absname(self) -> str:
         """
-        Returns a full-name including all the parent's name, connected with
-        `"."`'s.
+        The full-name including all the parent's name, connected with `"."`'s.
 
         Returns
         -------
         str
-            Absolute name.
+            The absolute name.
 
         """
         if self.parent is None:
@@ -110,7 +125,7 @@ class PyText(ABC):
         Returns
         -------
         str
-            Relative name.
+            The relative name.
 
         """
         return self.absname.split(".", maxsplit=1)[-1]
@@ -123,7 +138,7 @@ class PyText(ABC):
         Returns
         -------
         Path
-            Absolute path.
+            The absolute path.
 
         """
         if self.path.stem == NULL:
@@ -139,7 +154,7 @@ class PyText(ABC):
         Returns
         -------
         Path
-            Relative path.
+            The relative path.
 
         """
         if self.path.stem == NULL:
@@ -155,13 +170,33 @@ class PyText(ABC):
         Returns
         -------
         Path
-            Relative path.
+            The relative path to the working environment.
 
         """
         if self.path.stem == NULL:
             return self.path if self.parent is None else self.parent.execpath
         else:
             return self.path.absolute().relative_to(self.path.cwd())
+
+    @overload
+    def findall(
+        self,
+        pattern: str,
+        regex: bool = True,
+        styler: Literal[True] = True,
+        line_numbers: bool = True,
+    ) -> Styler:
+        pass
+
+    @overload
+    def findall(
+        self,
+        pattern: str,
+        regex: bool = True,
+        styler: Literal[False] = False,
+        line_numbers: bool = True,
+    ) -> "FindTextResult":
+        pass
 
     def findall(
         self,
@@ -204,11 +239,11 @@ class PyText(ABC):
         res = FindTextResult(pattern, line_numbers=line_numbers)
         if self.children == []:
             to_match = self.text
-            for _line, _, _group in real_findall(
+            for nline, _, group in real_findall(
                 ".*" + pattern + ".*", to_match, linemode=True
             ):
-                if _group != "":
-                    res.append((self, self.start_line + _line - 1, _group))
+                if group != "":
+                    res.append((self, self.start_line + nline - 1, group))
         else:
             res = res.join(self.header.findall(pattern, styler=False))
             for c in self.children:
@@ -274,7 +309,7 @@ class PyText(ABC):
         Returns
         -------
         List[TextPy]
-            A list of `TextPy` instances.
+            List of `TextPy` instances.
 
         """
         track: List["PyText"] = []
@@ -338,12 +373,12 @@ class FindTextResult:
 
     def __repr__(self) -> str:
         string: str = ""
-        for _tp, _n, _group in self.res:
-            string += f"\n{_tp.relpath}" + f":{_n}" * self.line_numbers + ": "
+        for tp, nline, group in self.res:
+            string += f"\n{tp.relpath}" + f":{nline}" * self.line_numbers + ": "
             _sub = re.sub(
                 self.pattern,
                 lambda x: "\033[100m" + x.group() + "\033[0m",
-                " " * _tp.spaces + _group,
+                " " * tp.spaces + group,
             )
             string += re.sub("\\\\x1b\[", "\033[", _sub.__repr__())
         return string.lstrip()
