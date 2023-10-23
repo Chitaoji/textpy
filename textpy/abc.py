@@ -157,10 +157,10 @@ class PyText(ABC):
             The relative path.
 
         """
-        if self.path.stem == NULL:
-            return self.path if self.parent is None else self.parent.relpath
+        if self.abspath.is_relative_to(self.home.absolute()):
+            return self.abspath.relative_to(self.home.absolute())
         else:
-            return self.path.absolute().relative_to(self.home.absolute())
+            return self.abspath
 
     @cached_property
     def execpath(self) -> Path:
@@ -173,10 +173,10 @@ class PyText(ABC):
             The relative path to the working environment.
 
         """
-        if self.path.stem == NULL:
-            return self.path if self.parent is None else self.parent.execpath
+        if self.abspath.is_relative_to(self.abspath.cwd()):
+            return self.abspath.relative_to(self.abspath.cwd())
         else:
-            return self.path.absolute().relative_to(self.path.cwd())
+            return self.abspath
 
     @overload
     def findall(
