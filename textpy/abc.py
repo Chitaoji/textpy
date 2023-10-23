@@ -12,7 +12,7 @@ from .utils.re_extended import pattern_inreg, real_findall
 
 __all__ = ["PyText", "Docstring"]
 
-NULL = "NULL" # Path stems or filenames should avoid this.
+NULL = "NULL"  # Path stems or filenames should avoid this.
 
 
 @attrs.define(auto_attribs=False)
@@ -420,7 +420,7 @@ class FindTextResult:
                     NULL
                     if x.name == NULL
                     else make_ahref(
-                        f"{x.abspath}"
+                        f"{x.execpath}"
                         + f":{x.start_line}:{1+x.spaces}" * self.line_numbers,
                         x.name,
                         color="inherit",
@@ -430,14 +430,14 @@ class FindTextResult:
             ).replace(".NULL", "")
             if self.line_numbers:
                 df.iloc[i, 0] += ":" + make_ahref(
-                    f"{_tp.abspath}:{_n}", str(_n), color="inherit"
+                    f"{_tp.execpath}:{_n}", str(_n), color="inherit"
                 )
             df.iloc[i, 1] = re.sub(
                 self.pattern,
                 lambda x: ""
                 if x.group() == ""
                 else make_ahref(
-                    f"{_tp.abspath}"
+                    f"{_tp.execpath}"
                     + f":{_n}:{1+_tp.spaces+x.span()[0]}" * self.line_numbers,
                     x.group(),
                     color="#cccccc",
