@@ -7,6 +7,7 @@ from typing import *
 import attrs
 import pandas as pd
 from pandas.io.formats.style import Styler
+from typing_extensions import *
 
 from .utils.re_extended import pattern_inreg, real_findall
 
@@ -26,11 +27,11 @@ class PyText(ABC):
     spaces: int = 0
 
     @abstractclassmethod
-    def __init__(self):
+    def __init__(self) -> None:
         """Abstract class for python code analysis."""
         pass
 
-    def __repr__(self):
+    def __repr__(self) -> None:
         return f"{self.__class__.__name__}('{self.absname}')"
 
     @cached_property
@@ -289,7 +290,7 @@ class PyText(ABC):
         else:
             raise ValueError(f"`{splits[0]}` is not a child of `{self.absname}`")
 
-    def as_header(self):
+    def as_header(self) -> Self:
         """
         Declare `self` as a class header (rather than the class itself).
 
@@ -322,7 +323,7 @@ class PyText(ABC):
 
 
 class Docstring(ABC):
-    def __init__(self, text: str, parent: Optional[PyText] = None):
+    def __init__(self, text: str, parent: Optional[PyText] = None) -> None:
         """
         Stores the docstring of a function / class / method, then divides
         it into different sections accaording to its titles.
@@ -355,7 +356,7 @@ class Docstring(ABC):
 
 
 class FindTextResult:
-    def __init__(self, pattern: str, line_numbers: bool = True):
+    def __init__(self, pattern: str, line_numbers: bool = True) -> None:
         """
         Result of text finding, only as a return of `TextPy.find_text`.
 
@@ -383,7 +384,7 @@ class FindTextResult:
             string += re.sub("\\\\x1b\[", "\033[", _sub.__repr__())
         return string.lstrip()
 
-    def append(self, finding: Tuple[PyText, int, str]):
+    def append(self, finding: Tuple[PyText, int, str]) -> None:
         """
         Append a new finding.
 
@@ -396,7 +397,7 @@ class FindTextResult:
         """
         self.res.append(finding)
 
-    def extend(self, findings: List[Tuple[PyText, int, str]]):
+    def extend(self, findings: List[Tuple[PyText, int, str]]) -> None:
         """
         Extend a few new findings.
 

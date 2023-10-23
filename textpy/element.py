@@ -129,7 +129,9 @@ class PyFile(PyText):
 
 
 class PyClass(PyText):
-    def __init__(self, text: str, parent: Optional[PyText] = None, start_line: int = 1):
+    def __init__(
+        self, text: str, parent: Optional[PyText] = None, start_line: int = 1
+    ) -> None:
         """
         Python class.
 
@@ -183,7 +185,9 @@ class PyClass(PyText):
 
 
 class PyFunc(PyText):
-    def __init__(self, text: str, parent: Optional[PyText] = None, start_line: int = 1):
+    def __init__(
+        self, text: str, parent: Optional[PyText] = None, start_line: int = 1
+    ) -> None:
         """
         Python function.
 
@@ -217,7 +221,9 @@ class PyFunc(PyText):
 
 
 class PyMethod(PyFunc):
-    def __init__(self, text: str, parent: Optional[PyText] = None, start_line: int = 1):
+    def __init__(
+        self, text: str, parent: Optional[PyText] = None, start_line: int = 1
+    ) -> None:
         """
         Python class method.
 
