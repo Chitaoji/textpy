@@ -131,6 +131,9 @@ This project falls under the BSD 2-Clause License.
 
 ## History
 
+### v0.1.6
+* Bugfix for windows.
+
 ### v0.1.5
 * Compatible with pandas versions lower than 1.4.0.
 * Updated `textpy`:
