@@ -46,16 +46,16 @@ def rsplit(
     """
     splits: List[str] = []
     searched = re.search(pattern, string, flags=flags)
-    _lstr: str = ""
+    _left: str = ""
     while searched:
-        _span = searched.span()
-        splits.append(_lstr + string[: _span[0]])
-        _lstr = searched.group()
-        string = string[_span[1] :]
+        span = searched.span()
+        splits.append(_left + string[: span[0]])
+        _left = searched.group()
+        string = string[span[1] :]
         if maxsplit > 0 and len(splits) >= maxsplit:
             break
         searched = re.search(pattern, string, flags=flags)
-    splits.append(_lstr + string)
+    splits.append(_left + string)
     return splits
 
 
@@ -92,9 +92,9 @@ def lsplit(
     splits: List[str] = []
     searched = re.search(pattern, string, flags=flags)
     while searched:
-        _span = searched.span()
-        splits.append(string[: _span[1]])
-        string = string[_span[1] :]
+        span = searched.span()
+        splits.append(string[: span[1]])
+        string = string[span[1] :]
         if maxsplit > 0 and len(splits) >= maxsplit:
             break
         searched = re.search(pattern, string, flags=flags)
@@ -135,45 +135,44 @@ def real_findall(
 
     """
     finds: List[SpanNGroup] = []
-    _sum: int = 0
-    _line: int = 1
-    _inline_pos: int = 0
+    nline: int = 1
+    total_pos: int = 0
+    inline_pos: int = 0
     searched = re.search(pattern, string, flags=flags)
     while searched:
-        _len_string = len(string)
-        _span, _group = searched.span(), searched.group()
+        span, group = searched.span(), searched.group()
         if linemode:
-            _lsting = string[: _span[0]]
-            _lline = line_count(_lsting) - 1
-            _line += _lline
-            if _lline > 0:
-                _inline_pos = 0
-            _lastline_pos = len(_lsting) - 1 - _lsting.rfind("\n")
+            _left = string[: span[0]]
+            _lcleft = line_count(_left) - 1
+            nline += _lcleft
+            if _lcleft > 0:
+                inline_pos = 0
+            _lastline_pos = len(_left) - 1 - _left.rfind("\n")
             finds.append(
                 (
-                    _line,
+                    nline,
                     (
-                        _inline_pos + _lastline_pos,
-                        _inline_pos + _lastline_pos + _span[1] - _span[0],
+                        inline_pos + _lastline_pos,
+                        inline_pos + _lastline_pos + span[1] - span[0],
                     ),
-                    _group,
+                    group,
                 )
             )
-            _line += line_count(_group) - 1
-            if "\n" in _group:
-                _inline_pos = len(_group) - 1 - _group.rfind("\n")
+            nline += line_count(group) - 1
+            if "\n" in group:
+                inline_pos = len(group) - 1 - group.rfind("\n")
             else:
-                _inline_pos += max(_lastline_pos + _span[1] - _span[0], 1)
+                inline_pos += max(_lastline_pos + span[1] - span[0], 1)
         else:
-            finds.append(((_span[0] + _sum, _span[1] + _sum), _group))
-            _sum += max(_span[1], 1)
-        if _len_string == 0:
+            finds.append(((span[0] + total_pos, span[1] + total_pos), group))
+            total_pos += max(span[1], 1)
+        if len(string) == 0:
             break
-        if _span[1] == 0:
-            _line += 1 if string[0] == "\n" else 0
+        if span[1] == 0:
+            nline += 1 if string[0] == "\n" else 0
             string = string[1:]
         else:
-            string = string[_span[1] :]
+            string = string[span[1] :]
         searched = re.search(pattern, string, flags=flags)  # search again
     return finds
 
@@ -231,7 +230,7 @@ def line_count_iter(iter: Iterable[str]) -> Iterable[Tuple[int, str]]:
         with a string found in `iter`, until `iter` is traversed.
 
     """
-    _cnt = 1
+    _cnt: int = 1
     for _str in iter:
         yield _cnt, _str
         _cnt += len(re.findall("\n", _str))
