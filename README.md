@@ -56,7 +56,7 @@ print(res)
 # examples/myfile.py:24: '    print(a.var_1, a.var_2)'
 ```
 
-Also, when using a Jupyter notebook, you can run a cell like this:
+Also, when using a Jupyter notebook in VScode, you can run a cell like this:
 
 ```py
 from textpy import textpy
