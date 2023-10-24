@@ -3,7 +3,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import *
 
-from .abc import NULL, Docstring, PyText
+from .abc import NULL, Docstring, PyText, as_path
 from .format import NumpyFormatDocstring
 from .utils.re_extended import line_count_iter, rsplit
 
@@ -11,26 +11,14 @@ __all__ = ["PyModule", "PyFile", "PyClass", "PyFunc", "PyMethod"]
 
 
 class PyModule(PyText):
-    def __init__(
-        self,
-        path: Union[Path, str],
-        parent: Optional[PyText] = None,
-        home: Union[Path, str, None] = None,
-        encoding: Optional[str] = None,
-    ):
+    def init_attrs(self, path_or_text: Union[Path, str]) -> None:
         """
-        A python module including multiple python files.
+        Initialize the instance.
 
         Parameters
         ----------
-        path : Union[Path, str]
-            File path.
-        parent : Optional[TextPy], optional
-            Parent node (if exists), by default None.
-        home : Union[Path, str, None], optional
-            Specifies the home path if `path` is relative, by default None.
-        encoding : Optional[str]
-            Specifies encoding, by default None.
+        path_or_text : Union[Path, str]
+            File path, module path or file text.
 
         Raises
         ------
@@ -38,13 +26,10 @@ class PyModule(PyText):
             Raised when `path` is not a directory.
 
         """
-        self.path = as_path(path, home=home)
+        self.path = as_path(path_or_text, home=self.home)
         if not self.path.is_dir():
             raise NotADirectoryError(f"not a dicretory: '{self.path}'")
         self.name = self.path.stem
-        self.parent = parent
-        self.home = as_path(Path(""), home=home)
-        self.encoding = encoding
 
     @cached_property
     def header(self) -> PyText:
@@ -68,45 +53,17 @@ class PyModule(PyText):
 
 
 class PyFile(PyText):
-    def __init__(
-        self,
-        path_or_text: Union[Path, str],
-        parent: Optional[PyText] = None,
-        start_line: int = 1,
-        home: Union[Path, str, None] = None,
-        encoding: Optional[str] = None,
-    ):
-        """
-        Python file.
-
-        Parameters
-        ----------
-        path_or_text : Union[Path, str]
-            File path or file text.
-        parent : Optional[TextPy], optional
-            Parent node (if exists), by default None.
-        home : Union[Path, str, None], optional
-            Specifies the home path if `path_or_text` is relative, by
-            default None.
-        encoding : Optional[str]
-            Specifies encoding, by default None.
-
-        """
-        self.home = as_path(Path(""), home=home)
-
+    def init_attrs(self, path_or_text: Union[Path, str]) -> None:
         if isinstance(path_or_text, Path):
             if not path_or_text.is_absolute():
                 self.path = self.home / path_or_text
             else:
                 self.path = path_or_text
-            self.text = self.path.read_text(encoding=encoding).strip()
+            self.text = self.path.read_text(encoding=self.encoding).strip()
         else:
             self.text = path_or_text.strip()
 
         self.name = self.path.stem
-        self.parent = parent
-        self.start_line = start_line
-        self.encoding = encoding
         self.__header: Optional[str] = None
 
     @cached_property
@@ -141,26 +98,9 @@ class PyFile(PyText):
 
 
 class PyClass(PyText):
-    def __init__(
-        self, text: str, parent: Optional[PyText] = None, start_line: int = 1
-    ) -> None:
-        """
-        Python class.
-
-        Parameters
-        ----------
-        text : str
-            Class text.
-        parent : Optional[TextPy], optional
-            Parent node (if exists), by default None.
-        start_line : int, optional
-            Starting line number, by default 1.
-
-        """
-        self.text = text.strip()
+    def init_attrs(self, path_or_text: Union[Path, str]) -> None:
+        self.text = path_or_text.strip()
         self.name = re.search("class .*?[(:]", self.text).group()[6:-1]
-        self.parent = parent
-        self.start_line = start_line
         self.__header: Optional[str] = None
 
     @cached_property
@@ -197,26 +137,9 @@ class PyClass(PyText):
 
 
 class PyFunc(PyText):
-    def __init__(
-        self, text: str, parent: Optional[PyText] = None, start_line: int = 1
-    ) -> None:
-        """
-        Python function.
-
-        Parameters
-        ----------
-        text : str
-            Funtion text.
-        parent : Optional[TextPy], optional
-            Parent node (if exists), by default None.
-        start_line : int, optional
-            Starting line number, by default 1.
-
-        """
-        self.text = text.strip()
+    def init_attrs(self, path_or_text: Union[Path, str]) -> None:
+        self.text = path_or_text.strip()
         self.name = re.search("def .*?\(", self.text).group()[4:-1]
-        self.parent = parent
-        self.start_line = start_line
 
     @cached_property
     def doc(self) -> Docstring:
@@ -233,70 +156,6 @@ class PyFunc(PyText):
 
 
 class PyMethod(PyFunc):
-    def __init__(
-        self, text: str, parent: Optional[PyText] = None, start_line: int = 1
-    ) -> None:
-        """
-        Python class method.
-
-        Parameters
-        ----------
-        text : str
-            Method text.
-        parent : Optional[TextPy], optional
-            Parent node (if exists), by default None.
-        start_line : int, optional
-            Starting line number, by default 1.
-
-        """
-        super().__init__(text, parent=parent, start_line=start_line)
+    def init_attrs(self, path_or_text: Union[Path, str]) -> None:
+        super().init_attrs(path_or_text=path_or_text)
         self.spaces = 4
-
-
-@overload
-def as_path(path_or_text: Path, home: Union[Path, str, None] = None) -> Path:
-    ...
-
-
-@overload
-def as_path(path_or_text: str, home: Union[Path, str, None] = None) -> Union[Path, str]:
-    ...
-
-
-def as_path(
-    path_or_text: Union[Path, str], home: Union[Path, str, None] = None
-) -> Union[Path, str]:
-    """
-    If the input is a string, check if it represents an existing
-    path, if true, convert it to a `Path` object, otherwise return
-    itself. If the input is already a `Path` object, return itself,
-    too.
-
-    Parameters
-    ----------
-    path_or_text : Union[Path, str]
-        An instance of `Path` or a string.
-    home : Union[Path, str, None], optional
-        Specifies the home path if `path_or_text` is relative, by
-        default None.
-
-    Returns
-    -------
-    Union[Path, str]
-        A path or a string.
-
-    """
-    if home is None:
-        home = Path("").cwd()
-    else:
-        home = Path(home).absolute()
-
-    if isinstance(path_or_text, str):
-        if len(path_or_text) < 256 and (home / path_or_text).exists():
-            path_or_text = Path(path_or_text)
-        else:
-            return path_or_text
-
-    if not path_or_text.is_absolute():
-        path_or_text = home / path_or_text
-    return path_or_text

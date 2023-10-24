@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import *
 
-from .abc import PyText
-from .element import PyFile, PyModule, as_path
+from .abc import PyText, as_path
+from .element import PyFile, PyModule
 
 __all__ = ["textpy"]
 

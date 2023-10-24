@@ -16,22 +16,58 @@ NULL = "NULL"  # Path stems or filenames should avoid this.
 
 
 class PyText(ABC):
-    text: str = ""
-    name: str = ""
-    path: Path = Path(NULL + ".py")
-    home: Path = Path(".")
-    parent: Optional["PyText"] = None
-    start_line: int = 0
-    spaces: int = 0
-    encoding: Optional[str] = None
+    def __init__(
+        self,
+        path_or_text: Union[Path, str],
+        parent: Optional["PyText"] = None,
+        start_line: int = 1,
+        home: Union[Path, str, None] = None,
+        encoding: Optional[str] = None,
+    ) -> None:
+        """
+        Could be a python module, file, class, function, or method.
 
-    @abstractclassmethod
-    def __init__(self) -> None:
-        """Abstract class for python code analysis."""
-        pass
+        Parameters
+        ----------
+        path_or_text : Union[Path, str]
+            File path, module path or file text.
+        parent : Optional[&quot;PyText&quot;], optional
+            Parent node (if exists), by default None.
+        start_line : int, optional
+            Starting line number, by default 1.
+        home : Union[Path, str, None], optional
+            Specifies the home path if `path_or_text` is relative, by default None.
+        encoding : Optional[str], optional
+            Specifies encoding, by default None.
+
+        """
+        self.text: str = ""
+        self.name: str = ""
+        self.path: Path = Path(NULL + ".py")
+
+        self.parent: Optional["PyText"] = parent
+        self.start_line: int = start_line
+        self.home: Path = as_path(Path(""), home=home)
+        self.encoding: Optional[str] = encoding
+        self.spaces: int = 0
+
+        self.init_attrs(path_or_text)
 
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}('{self.absname}')"
+
+    @abstractclassmethod
+    def init_attrs(self, path_or_text: Union[Path, str]) -> None:
+        """
+        Initialize the instance.
+
+        Parameters
+        ----------
+        path_or_text : Union[Path, str]
+            File path, module path or file text.
+
+        """
+        pass
 
     @cached_property
     def doc(self) -> "Docstring":
@@ -524,3 +560,52 @@ def make_ahref(
     else:
         href = f"href='{url}' "
     return f"<a {href}style='{style}'>{display}</a>"
+
+
+@overload
+def as_path(path_or_text: Path, home: Union[Path, str, None] = None) -> Path:
+    ...
+
+
+@overload
+def as_path(path_or_text: str, home: Union[Path, str, None] = None) -> Union[Path, str]:
+    ...
+
+
+def as_path(
+    path_or_text: Union[Path, str], home: Union[Path, str, None] = None
+) -> Union[Path, str]:
+    """
+    If the input is a string, check if it represents an existing
+    path, if true, convert it to a `Path` object, otherwise return
+    itself. If the input is already a `Path` object, return itself,
+    too.
+
+    Parameters
+    ----------
+    path_or_text : Union[Path, str]
+        An instance of `Path` or a string.
+    home : Union[Path, str, None], optional
+        Specifies the home path if `path_or_text` is relative, by
+        default None.
+
+    Returns
+    -------
+    Union[Path, str]
+        A path or a string.
+
+    """
+    if home is None:
+        home = Path("").cwd()
+    else:
+        home = Path(home).absolute()
+
+    if isinstance(path_or_text, str):
+        if len(path_or_text) < 256 and (home / path_or_text).exists():
+            path_or_text = Path(path_or_text)
+        else:
+            return path_or_text
+
+    if not path_or_text.is_absolute():
+        path_or_text = home / path_or_text
+    return path_or_text
