@@ -67,7 +67,7 @@ class PyText(ABC):
             File path, module path or file text.
 
         """
-        pass
+        ...
 
     @cached_property
     def doc(self) -> "Docstring":
