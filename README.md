@@ -9,8 +9,8 @@ pip install textpy
 
 ## Requirements
 ```txt
-pandas>=1.4.0 # A lower version is also acceptable, but some features will be invalid
-attrs>=23.1.0
+pandas>=1.4.0 
+# A lower version is also acceptable, but some features will be invalid.
 ```
 
 ## Examples
@@ -130,6 +130,9 @@ print(res)
 This project falls under the BSD 2-Clause License.
 
 ## History
+
+### v0.1.8
+* Removed a dependency.
 
 ### v0.1.8
 * Bugfix for Windows.

@@ -19,7 +19,7 @@ EMAIL = "2360742040@qq.com"
 AUTHOR = "Chitaoji"
 REQUIRES_PYTHON = ">=3.8.13"
 VERSION = None
-REQUIRED = ["attrs", "pandas"]
+REQUIRED = ["pandas"]
 EXTRAS = {}
 
 
