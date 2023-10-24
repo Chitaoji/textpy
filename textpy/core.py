@@ -8,7 +8,9 @@ __all__ = ["textpy"]
 
 
 def textpy(
-    path_or_text: Union[Path, str], home: Union[Path, str, None] = None
+    path_or_text: Union[Path, str],
+    home: Union[Path, str, None] = None,
+    encoding: Optional[str] = None,
 ) -> PyText:
     """
     Statically analyzes a python file or a python module. Each python
@@ -20,8 +22,10 @@ def textpy(
     path_or_text : Union[Path, str]
         File path, module path or file text.
     home : Union[Path, str, None], optional
-        Specifies the home path if `path_or_text` is relative, by
+        Specifies the home path when `path_or_text` is relative, by
         default None.
+    encoding : Optional[str]
+        Specifies encoding, by default None.
 
     Returns
     -------
@@ -45,8 +49,8 @@ def textpy(
     """
     path_or_text = as_path(path_or_text, home=home)
     if isinstance(path_or_text, str) or path_or_text.is_file():
-        return PyFile(path_or_text, home=home)
+        return PyFile(path_or_text, home=home, encoding=encoding)
     elif path_or_text.is_dir():
-        return PyModule(path_or_text, home=home)
+        return PyModule(path_or_text, home=home, encoding=encoding)
     else:
         raise ValueError(f"path not exists: {path_or_text}")
