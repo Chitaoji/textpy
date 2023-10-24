@@ -1,5 +1,5 @@
 # textpy
-Reads a python file/module and statically analyzes it.
+Reads a python file/module and statically analyzes it, this works well with Jupyter extensions in VScode.
 
 ## Installation
 
