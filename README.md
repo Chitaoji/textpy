@@ -131,8 +131,8 @@ This project falls under the BSD 2-Clause License.
 
 ## History
 
-### v0.1.8
-* Removed a dependency.
+### v0.1.9
+* Removing unnecessary dependencies.
 
 ### v0.1.8
 * Bugfix for Windows.
