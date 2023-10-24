@@ -23,6 +23,7 @@ class PyText(ABC):
     parent: Optional["PyText"] = None
     start_line: int = 0
     spaces: int = 0
+    encoding: Optional[str] = None
 
     @abstractclassmethod
     def __init__(self) -> None:

@@ -16,6 +16,7 @@ class PyModule(PyText):
         path: Union[Path, str],
         parent: Optional[PyText] = None,
         home: Union[Path, str, None] = None,
+        encoding: Optional[str] = None,
     ):
         """
         A python module including multiple python files.
@@ -28,6 +29,8 @@ class PyModule(PyText):
             Parent node (if exists), by default None.
         home : Union[Path, str, None], optional
             Specifies the home path if `path` is relative, by default None.
+        encoding : Optional[str]
+            Specifies encoding, by default None.
 
         Raises
         ------
@@ -41,6 +44,7 @@ class PyModule(PyText):
         self.name = self.path.stem
         self.parent = parent
         self.home = as_path(Path(""), home=home)
+        self.encoding = encoding
 
     @cached_property
     def header(self) -> PyText:
@@ -51,9 +55,13 @@ class PyModule(PyText):
         children: List[PyText] = []
         for _path in self.path.iterdir():
             if _path.suffix == ".py":
-                children.append(PyFile(_path, parent=self, home=self.home))
+                children.append(
+                    PyFile(_path, parent=self, home=self.home, encoding=self.encoding)
+                )
             elif _path.is_dir():
-                _module = PyModule(_path, parent=self, home=self.home)
+                _module = PyModule(
+                    _path, parent=self, home=self.home, encoding=self.encoding
+                )
                 if len(_module.children) > 0:
                     children.append(_module)
         return children
@@ -66,6 +74,7 @@ class PyFile(PyText):
         parent: Optional[PyText] = None,
         start_line: int = 1,
         home: Union[Path, str, None] = None,
+        encoding: Optional[str] = None,
     ):
         """
         Python file.
@@ -79,6 +88,8 @@ class PyFile(PyText):
         home : Union[Path, str, None], optional
             Specifies the home path if `path_or_text` is relative, by
             default None.
+        encoding : Optional[str]
+            Specifies encoding, by default None.
 
         """
         self.home = as_path(Path(""), home=home)
@@ -88,13 +99,14 @@ class PyFile(PyText):
                 self.path = self.home / path_or_text
             else:
                 self.path = path_or_text
-            self.text = self.path.read_text().strip()
+            self.text = self.path.read_text(encoding=encoding).strip()
         else:
             self.text = path_or_text.strip()
 
         self.name = self.path.stem
         self.parent = parent
         self.start_line = start_line
+        self.encoding = encoding
         self.__header: Optional[str] = None
 
     @cached_property

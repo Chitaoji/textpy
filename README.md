@@ -131,6 +131,10 @@ This project falls under the BSD 2-Clause License.
 
 ## History
 
+### v0.1.10
+* Updated `textpy.textpy`:
+  * New optional parameter `encoding`.
+
 ### v0.1.9
 * Removing unnecessary dependencies.
 
