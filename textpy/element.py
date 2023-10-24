@@ -217,7 +217,7 @@ class PyFunc(PyText):
 
     @cached_property
     def header(self) -> PyText:
-        raise NotImplementedError("`PyFunc.header` not implemented yet")
+        return re.search(".*\n[^\s][^\n]*", self.text, re.DOTALL).group()
 
 
 class PyMethod(PyFunc):

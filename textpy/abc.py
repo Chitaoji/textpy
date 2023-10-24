@@ -4,7 +4,6 @@ from functools import cached_property
 from pathlib import Path
 from typing import *
 
-import attrs
 import pandas as pd
 from pandas.io.formats.style import Styler
 from typing_extensions import *
@@ -16,7 +15,6 @@ __all__ = ["PyText", "Docstring"]
 NULL = "NULL"  # Path stems or filenames should avoid this.
 
 
-@attrs.define(auto_attribs=False)
 class PyText(ABC):
     text: str = ""
     name: str = ""
@@ -50,7 +48,7 @@ class PyText(ABC):
     @cached_property
     def header(self) -> "PyText":
         """
-        Header of a class or a file.
+        Header of a file / function / class / method.
 
         Returns
         -------
@@ -59,22 +57,6 @@ class PyText(ABC):
 
         """
         return self.__class__()
-
-    @cached_property
-    def children_dict(self) -> Dict[str, "PyText"]:
-        """
-        Dictionary of children nodes.
-
-        Returns
-        -------
-        Dict[str, TextPy]
-            Dictionary of children nodes.
-
-        """
-        children_dict: Dict[str, "PyText"] = {}
-        for child, childname in zip(self.children, self.children_names):
-            children_dict[childname] = child
-        return children_dict
 
     @cached_property
     def children(self) -> List["PyText"]:
@@ -101,6 +83,22 @@ class PyText(ABC):
 
         """
         return [x.name for x in self.children]
+
+    @cached_property
+    def children_dict(self) -> Dict[str, "PyText"]:
+        """
+        Dictionary of children nodes.
+
+        Returns
+        -------
+        Dict[str, TextPy]
+            Dictionary of children nodes.
+
+        """
+        children_dict: Dict[str, "PyText"] = {}
+        for child, childname in zip(self.children, self.children_names):
+            children_dict[childname] = child
+        return children_dict
 
     @cached_property
     def absname(self) -> str:
@@ -339,7 +337,7 @@ class Docstring(ABC):
         self.text = text.strip()
         self.parent = parent
 
-    @cached_property
+    @property
     @abstractclassmethod
     def sections(self) -> Dict[str, str]:
         """
