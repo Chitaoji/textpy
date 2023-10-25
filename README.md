@@ -131,7 +131,7 @@ This project falls under the BSD 2-Clause License.
 
 ## History
 
-### v0.1.11
+### v0.1.12
 * New optional parameters for `textpy.TextPy.findall` :
   * `whole_word` : whether to match whole words only.
   * `case_sensitive` : specifies case sensitivity.
