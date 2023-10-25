@@ -272,17 +272,10 @@ class PyText(ABC):
         Union[Styler, FindTextResult]
             Searching result.
 
-        Raises
-        ------
-        ValueError
-            Raised when `pattern` ends with a `"\\"`.
-
         """
         flags: int = 0
         if isinstance(pattern, re.Pattern):
             pattern, flags = str(pattern.pattern), pattern.flags
-        if len(pattern) > 0 and pattern[-1] == "\\":
-            raise ValueError(f"pattern should not end with a '\\': {pattern}")
         if not regex:
             pattern = pattern_inreg(pattern)
         if not case_sensitive:
