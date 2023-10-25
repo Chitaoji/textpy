@@ -218,8 +218,9 @@ class PyText(ABC):
     def findall(
         self,
         pattern: Union[str, re.Pattern],
-        regex: bool = True,
+        whole_word: bool = False,
         case_sensitive: bool = True,
+        regex: bool = True,
         styler: Literal[True] = True,
         line_numbers: bool = True,
     ) -> Styler:
@@ -229,8 +230,9 @@ class PyText(ABC):
     def findall(
         self,
         pattern: Union[str, re.Pattern],
-        regex: bool = True,
+        whole_word: bool = False,
         case_sensitive: bool = True,
+        regex: bool = True,
         styler: Literal[False] = False,
         line_numbers: bool = True,
     ) -> "FindTextResult":
@@ -239,8 +241,9 @@ class PyText(ABC):
     def findall(
         self,
         pattern: Union[str, re.Pattern],
-        regex: bool = True,
+        whole_word: bool = False,
         case_sensitive: bool = True,
+        regex: bool = True,
         styler: bool = True,
         line_numbers: bool = True,
     ) -> Union[Styler, "FindTextResult"]:
@@ -251,10 +254,12 @@ class PyText(ABC):
         ----------
         pattern : Union[str, re.Pattern]
             Regex pattern.
-        regex : bool, optional
-            Whether to enable regular expressions, by default True.
+        whole_word : bool, optional
+            Whether to match whole words only, by default False.
         case_sensitive : bool, optional
             Specifies case sensitivity, by default True.
+        regex : bool, optional
+            Whether to enable regular expressions, by default True.
         styler : bool, optional
             Whether to return a `Styler` object in convenience of displaying
             in a Jupyter notebook, this only takes effect when
@@ -282,6 +287,8 @@ class PyText(ABC):
             pattern = pattern_inreg(pattern)
         if not case_sensitive:
             flags = flags | re.I
+        if whole_word:
+            pattern = "\\b" + pattern + "\\b"
         pattern = re.compile(pattern, flags=flags)
 
         res = FindTextResult(pattern, line_numbers=line_numbers)
