@@ -3,6 +3,7 @@ from typing import *
 
 SpanNGroup = Tuple[Tuple[int, int], str]
 LineSpanNGroup = Tuple[int, Tuple[int, int], str]
+StrPattern = TypeVar("StrPattern", str, re.Pattern)
 
 __all__ = [
     "rsplit",
@@ -197,22 +198,29 @@ def real_findall(
     return finds
 
 
-def pattern_inreg(pattern: str) -> str:
+def pattern_inreg(pattern: StrPattern) -> StrPattern:
     """
     Invalidates the regular expressions in `pattern`.
 
     Parameters
     ----------
-    pattern : str
+    pattern : StrPattern
         Pattern to be invalidated.
 
     Returns
     -------
-    str
+    StrPattern
         A new pattern.
 
     """
-    return re.sub("[$^.\[\]*+-?!{},|:#><=\\\\]", lambda x: "\\" + x.group(), pattern)
+    flags: int = -1
+    if isinstance(pattern, re.Pattern):
+        pattern, flags = str(pattern.pattern), pattern.flags
+    pattern = re.sub("[$^.\[\]*+-?!{},|:#><=\\\\]", lambda x: "\\" + x.group(), pattern)
+    if flags == -1:
+        return pattern
+    else:
+        return re.compile(pattern, flags=flags)
 
 
 def line_count(string: str) -> int:
