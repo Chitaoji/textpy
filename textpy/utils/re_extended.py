@@ -135,7 +135,7 @@ def real_findall(
     Parameters
     ----------
     pattern : Union[str, re.Pattern]
-        Pattern string.
+        Regex pattern.
     string : str
         String to be searched.
     flags : Union[int, re.RegexFlag], optional

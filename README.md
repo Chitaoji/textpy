@@ -1,5 +1,5 @@
 # textpy
-Reads a python file/module and statically analyzes it.
+Reads a python file/module and statically analyzes it, this works well with Jupyter extensions in VScode.
 
 ## Installation
 
@@ -56,7 +56,7 @@ print(res)
 # examples/myfile.py:24: '    print(a.var_1, a.var_2)'
 ```
 
-Also, when using a Jupyter notebook, you can run a cell like this:
+Also, when using a Jupyter notebook in VScode, you can run a cell like this:
 
 ```py
 from textpy import textpy
@@ -131,9 +131,14 @@ This project falls under the BSD 2-Clause License.
 
 ## History
 
+### v0.1.11
+* New optional parameters for `textpy.TextPy.findall` :
+  * `whole_word` : whether to match whole words only.
+  * `case_sensitive` : specifies case sensitivity.
+
 ### v0.1.10
-* Updated `textpy.textpy`:
-  * New optional parameter `encoding`.
+* New optional parameter for `textpy.textpy` :
+  * `encoding` : specifies encoding.
 
 ### v0.1.9
 * Removing unnecessary dependencies.
@@ -143,7 +148,7 @@ This project falls under the BSD 2-Clause License.
 
 ### v0.1.5
 * Compatible with pandas versions lower than 1.4.0.
-* Updated `textpy.textpy`:
+* Updated `textpy.textpy` :
   * `Path` objects are now acceptable as parameters.
   * New optional parameter `home` to specify the home path.
 * More flexible presentation of output when using `textpy.TextPy.findall`.

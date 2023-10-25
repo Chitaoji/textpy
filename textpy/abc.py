@@ -16,22 +16,58 @@ NULL = "NULL"  # Path stems or filenames should avoid this.
 
 
 class PyText(ABC):
-    text: str = ""
-    name: str = ""
-    path: Path = Path(NULL + ".py")
-    home: Path = Path(".")
-    parent: Optional["PyText"] = None
-    start_line: int = 0
-    spaces: int = 0
-    encoding: Optional[str] = None
+    def __init__(
+        self,
+        path_or_text: Union[Path, str],
+        parent: Optional["PyText"] = None,
+        start_line: int = 1,
+        home: Union[Path, str, None] = None,
+        encoding: Optional[str] = None,
+    ) -> None:
+        """
+        Could be a python module, file, class, function, or method.
 
-    @abstractclassmethod
-    def __init__(self) -> None:
-        """Abstract class for python code analysis."""
-        pass
+        Parameters
+        ----------
+        path_or_text : Union[Path, str]
+            File path, module path or file text.
+        parent : Optional[&quot;PyText&quot;], optional
+            Parent node (if exists), by default None.
+        start_line : int, optional
+            Starting line number, by default 1.
+        home : Union[Path, str, None], optional
+            Specifies the home path if `path_or_text` is relative, by default None.
+        encoding : Optional[str], optional
+            Specifies encoding, by default None.
+
+        """
+        self.text: str = ""
+        self.name: str = ""
+        self.path: Path = Path(NULL + ".py")
+
+        self.parent: Optional["PyText"] = parent
+        self.start_line: int = start_line
+        self.home: Path = as_path(Path(""), home=home)
+        self.encoding: Optional[str] = encoding
+        self.spaces: int = 0
+
+        self.init_attrs(path_or_text)
 
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}('{self.absname}')"
+
+    @abstractclassmethod
+    def init_attrs(self, path_or_text: Union[Path, str]) -> None:
+        """
+        Initialize the instance.
+
+        Parameters
+        ----------
+        path_or_text : Union[Path, str]
+            File path, module path or file text.
+
+        """
+        ...
 
     @cached_property
     def doc(self) -> "Docstring":
@@ -181,7 +217,9 @@ class PyText(ABC):
     @overload
     def findall(
         self,
-        pattern: str,
+        pattern: Union[str, re.Pattern],
+        whole_word: bool = False,
+        case_sensitive: bool = True,
         regex: bool = True,
         styler: Literal[True] = True,
         line_numbers: bool = True,
@@ -191,7 +229,9 @@ class PyText(ABC):
     @overload
     def findall(
         self,
-        pattern: str,
+        pattern: Union[str, re.Pattern],
+        whole_word: bool = False,
+        case_sensitive: bool = True,
         regex: bool = True,
         styler: Literal[False] = False,
         line_numbers: bool = True,
@@ -200,7 +240,9 @@ class PyText(ABC):
 
     def findall(
         self,
-        pattern: str,
+        pattern: Union[str, re.Pattern],
+        whole_word: bool = False,
+        case_sensitive: bool = True,
         regex: bool = True,
         styler: bool = True,
         line_numbers: bool = True,
@@ -210,8 +252,12 @@ class PyText(ABC):
 
         Parameters
         ----------
-        pattern : str
-            Pattern string.
+        pattern : Union[str, re.Pattern]
+            Regex pattern.
+        whole_word : bool, optional
+            Whether to match whole words only, by default False.
+        case_sensitive : bool, optional
+            Specifies case sensitivity, by default True.
         regex : bool, optional
             Whether to enable regular expressions, by default True.
         styler : bool, optional
@@ -232,15 +278,27 @@ class PyText(ABC):
             Raised when `pattern` ends with a `"\\"`.
 
         """
+        flags: int = 0
+        if isinstance(pattern, re.Pattern):
+            pattern, flags = str(pattern.pattern), pattern.flags
         if len(pattern) > 0 and pattern[-1] == "\\":
             raise ValueError(f"pattern should not end with a '\\': {pattern}")
         if not regex:
             pattern = pattern_inreg(pattern)
+        if not case_sensitive:
+            flags = flags | re.I
+        if whole_word:
+            pattern = "\\b" + pattern + "\\b"
+        pattern = re.compile(pattern, flags=flags)
+
         res = FindTextResult(pattern, line_numbers=line_numbers)
         if self.children == []:
             to_match = self.text
             for nline, _, group in real_findall(
-                ".*" + pattern + ".*", to_match, linemode=True
+                ".*" + pattern.pattern + ".*",
+                to_match,
+                linemode=True,
+                flags=pattern.flags,
             ):
                 if group != "":
                     res.append((self, self.start_line + nline - 1, group))
@@ -355,14 +413,16 @@ class Docstring(ABC):
 
 
 class FindTextResult:
-    def __init__(self, pattern: str, line_numbers: bool = True) -> None:
+    def __init__(
+        self, pattern: Union[str, re.Pattern], line_numbers: bool = True
+    ) -> None:
         """
         Result of text finding, only as a return of `TextPy.find_text`.
 
         Parameters
         ----------
-        pattern : str
-            Pattern string.
+        pattern : Union[str, re.Pattern]
+            Regex pattern.
         line_numbers : bool, optional
             Whether to display the line numbers, by default True.
 
@@ -524,3 +584,52 @@ def make_ahref(
     else:
         href = f"href='{url}' "
     return f"<a {href}style='{style}'>{display}</a>"
+
+
+@overload
+def as_path(path_or_text: Path, home: Union[Path, str, None] = None) -> Path:
+    ...
+
+
+@overload
+def as_path(path_or_text: str, home: Union[Path, str, None] = None) -> Union[Path, str]:
+    ...
+
+
+def as_path(
+    path_or_text: Union[Path, str], home: Union[Path, str, None] = None
+) -> Union[Path, str]:
+    """
+    If the input is a string, check if it represents an existing
+    path, if true, convert it to a `Path` object, otherwise return
+    itself. If the input is already a `Path` object, return itself,
+    too.
+
+    Parameters
+    ----------
+    path_or_text : Union[Path, str]
+        An instance of `Path` or a string.
+    home : Union[Path, str, None], optional
+        Specifies the home path if `path_or_text` is relative, by
+        default None.
+
+    Returns
+    -------
+    Union[Path, str]
+        A path or a string.
+
+    """
+    if home is None:
+        home = Path("").cwd()
+    else:
+        home = Path(home).absolute()
+
+    if isinstance(path_or_text, str):
+        if len(path_or_text) < 256 and (home / path_or_text).exists():
+            path_or_text = Path(path_or_text)
+        else:
+            return path_or_text
+
+    if not path_or_text.is_absolute():
+        path_or_text = home / path_or_text
+    return path_or_text
