@@ -217,8 +217,9 @@ class PyText(ABC):
     @overload
     def findall(
         self,
-        pattern: str,
+        pattern: Union[str, re.Pattern],
         regex: bool = True,
+        case_sensitive: bool = True,
         styler: Literal[True] = True,
         line_numbers: bool = True,
     ) -> Styler:
@@ -227,8 +228,9 @@ class PyText(ABC):
     @overload
     def findall(
         self,
-        pattern: str,
+        pattern: Union[str, re.Pattern],
         regex: bool = True,
+        case_sensitive: bool = True,
         styler: Literal[False] = False,
         line_numbers: bool = True,
     ) -> "FindTextResult":
@@ -236,8 +238,9 @@ class PyText(ABC):
 
     def findall(
         self,
-        pattern: str,
+        pattern: Union[str, re.Pattern],
         regex: bool = True,
+        case_sensitive: bool = True,
         styler: bool = True,
         line_numbers: bool = True,
     ) -> Union[Styler, "FindTextResult"]:
@@ -246,10 +249,12 @@ class PyText(ABC):
 
         Parameters
         ----------
-        pattern : str
-            Pattern string.
+        pattern : Union[str, re.Pattern]
+            Regex pattern.
         regex : bool, optional
             Whether to enable regular expressions, by default True.
+        case_sensitive : bool, optional
+            Specifies case sensitivity, by default True.
         styler : bool, optional
             Whether to return a `Styler` object in convenience of displaying
             in a Jupyter notebook, this only takes effect when
@@ -268,15 +273,25 @@ class PyText(ABC):
             Raised when `pattern` ends with a `"\\"`.
 
         """
+        flags: int = 0
+        if isinstance(pattern, re.Pattern):
+            pattern, flags = str(pattern.pattern), pattern.flags
         if len(pattern) > 0 and pattern[-1] == "\\":
             raise ValueError(f"pattern should not end with a '\\': {pattern}")
         if not regex:
             pattern = pattern_inreg(pattern)
+        if not case_sensitive:
+            flags = flags | re.I
+        pattern = re.compile(pattern, flags=flags)
+
         res = FindTextResult(pattern, line_numbers=line_numbers)
         if self.children == []:
             to_match = self.text
             for nline, _, group in real_findall(
-                ".*" + pattern + ".*", to_match, linemode=True
+                ".*" + pattern.pattern + ".*",
+                to_match,
+                linemode=True,
+                flags=pattern.flags,
             ):
                 if group != "":
                     res.append((self, self.start_line + nline - 1, group))
@@ -391,14 +406,16 @@ class Docstring(ABC):
 
 
 class FindTextResult:
-    def __init__(self, pattern: str, line_numbers: bool = True) -> None:
+    def __init__(
+        self, pattern: Union[str, re.Pattern], line_numbers: bool = True
+    ) -> None:
         """
         Result of text finding, only as a return of `TextPy.find_text`.
 
         Parameters
         ----------
-        pattern : str
-            Pattern string.
+        pattern : Union[str, re.Pattern]
+            Regex pattern.
         line_numbers : bool, optional
             Whether to display the line numbers, by default True.
 
