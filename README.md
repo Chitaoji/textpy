@@ -132,13 +132,13 @@ This project falls under the BSD 2-Clause License.
 ## History
 
 ### v0.1.11
-* New optional parameters for `textpy.TextPy.findall`:
+* New optional parameters for `textpy.TextPy.findall` :
   * `whole_word` : whether to match whole words only
   * `case_sensitive` : specifies case sensitivity.
 
 ### v0.1.10
-* New optional parameter for `textpy.textpy`:
-  * `encoding`: specifies encoding.
+* New optional parameter for `textpy.textpy` :
+  * `encoding` : specifies encoding.
 
 ### v0.1.9
 * Removing unnecessary dependencies.
@@ -148,7 +148,7 @@ This project falls under the BSD 2-Clause License.
 
 ### v0.1.5
 * Compatible with pandas versions lower than 1.4.0.
-* Updated `textpy.textpy`:
+* Updated `textpy.textpy` :
   * `Path` objects are now acceptable as parameters.
   * New optional parameter `home` to specify the home path.
 * More flexible presentation of output when using `textpy.TextPy.findall`.
