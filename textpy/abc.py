@@ -6,7 +6,7 @@ from typing import *
 
 import pandas as pd
 from pandas.io.formats.style import Styler
-from typing_extensions import *
+from typing_extensions import Self
 
 from .utils.re_extended import pattern_inreg, real_findall
 
