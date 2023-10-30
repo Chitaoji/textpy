@@ -1,5 +1,7 @@
 import warnings
 
+from .__version__ import __version__
+
 __all__ = []
 
 # import `abc` if exists
