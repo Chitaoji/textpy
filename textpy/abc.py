@@ -391,7 +391,7 @@ class Docstring(ABC):
 
     @property
     @abstractclassmethod
-    def sections(self) -> Dict[str, str]:
+    def sections(cls) -> Dict[str, str]:
         """
         Returns the details of the docstring, each title corresponds to a
         paragraph of description.
