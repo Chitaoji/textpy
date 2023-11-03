@@ -3,6 +3,7 @@ from typing import *
 
 SpanNGroup = Tuple[Tuple[int, int], str]
 LineSpanNGroup = Tuple[int, Tuple[int, int], str]
+StrPattern = TypeVar("StrPattern", str, re.Pattern)
 
 __all__ = [
     "rsplit",
@@ -46,16 +47,16 @@ def rsplit(
     """
     splits: List[str] = []
     searched = re.search(pattern, string, flags=flags)
-    _left: str = ""
+    left: str = ""
     while searched:
         span = searched.span()
-        splits.append(_left + string[: span[0]])
-        _left = searched.group()
+        splits.append(left + string[: span[0]])
+        left = searched.group()
         string = string[span[1] :]
         if maxsplit > 0 and len(splits) >= maxsplit:
             break
         searched = re.search(pattern, string, flags=flags)
-    splits.append(_left + string)
+    splits.append(left + string)
     return splits
 
 
@@ -162,18 +163,18 @@ def real_findall(
     while searched:
         span, group = searched.span(), searched.group()
         if linemode:
-            _left = string[: span[0]]
-            _lcleft = line_count(_left) - 1
-            nline += _lcleft
-            if _lcleft > 0:
+            left = string[: span[0]]
+            lc_left = line_count(left) - 1
+            nline += lc_left
+            if lc_left > 0:
                 inline_pos = 0
-            _lastline_pos = len(_left) - 1 - _left.rfind("\n")
+            lastline_pos = len(left) - 1 - left.rfind("\n")
             finds.append(
                 (
                     nline,
                     (
-                        inline_pos + _lastline_pos,
-                        inline_pos + _lastline_pos + span[1] - span[0],
+                        inline_pos + lastline_pos,
+                        inline_pos + lastline_pos + span[1] - span[0],
                     ),
                     group,
                 )
@@ -182,7 +183,7 @@ def real_findall(
             if "\n" in group:
                 inline_pos = len(group) - 1 - group.rfind("\n")
             else:
-                inline_pos += max(_lastline_pos + span[1] - span[0], 1)
+                inline_pos += max(lastline_pos + span[1] - span[0], 1)
         else:
             finds.append(((span[0] + total_pos, span[1] + total_pos), group))
             total_pos += max(span[1], 1)
@@ -197,22 +198,31 @@ def real_findall(
     return finds
 
 
-def pattern_inreg(pattern: str) -> str:
+def pattern_inreg(pattern: StrPattern) -> StrPattern:
     """
     Invalidates the regular expressions in `pattern`.
 
     Parameters
     ----------
-    pattern : str
+    pattern : StrPattern
         Pattern to be invalidated.
 
     Returns
     -------
-    str
+    StrPattern
         A new pattern.
 
     """
-    return re.sub("[$^.\[\]*+-?!{},|:#><=\\\\]", lambda x: "\\" + x.group(), pattern)
+    flags: int = -1
+    if isinstance(pattern, re.Pattern):
+        pattern, flags = str(pattern.pattern), pattern.flags
+    pattern = re.sub(
+        "[$^.\\[\\]*+-?!{},|:#><=\\\\]", lambda x: "\\" + x.group(), pattern
+    )
+    if flags == -1:
+        return pattern
+    else:
+        return re.compile(pattern, flags=flags)
 
 
 def line_count(string: str) -> int:
@@ -233,7 +243,7 @@ def line_count(string: str) -> int:
     return 1 + len(re.findall("\n", string))
 
 
-def line_count_iter(iter: Iterable[str]) -> Iterable[Tuple[int, str]]:
+def line_count_iter(iterstr: Iterable[str]) -> Iterable[Tuple[int, str]]:
     """
     Counts the number of lines in each string, and returns the cumsumed
     values.
@@ -250,7 +260,7 @@ def line_count_iter(iter: Iterable[str]) -> Iterable[Tuple[int, str]]:
         with a string found in `iter`, until `iter` is traversed.
 
     """
-    _cnt: int = 1
-    for _str in iter:
-        yield _cnt, _str
-        _cnt += len(re.findall("\n", _str))
+    cnt: int = 1
+    for s in iterstr:
+        yield cnt, s
+        cnt += len(re.findall("\n", s))

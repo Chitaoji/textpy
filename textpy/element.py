@@ -11,7 +11,7 @@ __all__ = ["PyModule", "PyFile", "PyClass", "PyFunc", "PyMethod"]
 
 
 class PyModule(PyText):
-    def init_attrs(self, path_or_text: Union[Path, str]) -> None:
+    def text_init(self, path_or_text: Union[Path, str]) -> None:
         """
         Initialize the instance.
 
@@ -53,7 +53,7 @@ class PyModule(PyText):
 
 
 class PyFile(PyText):
-    def init_attrs(self, path_or_text: Union[Path, str]) -> None:
+    def text_init(self, path_or_text: Union[Path, str]) -> None:
         if isinstance(path_or_text, Path):
             if not path_or_text.is_absolute():
                 self.path = self.home / path_or_text
@@ -98,7 +98,7 @@ class PyFile(PyText):
 
 
 class PyClass(PyText):
-    def init_attrs(self, path_or_text: Union[Path, str]) -> None:
+    def text_init(self, path_or_text: Union[Path, str]) -> None:
         self.text = path_or_text.strip()
         self.name = re.search("class .*?[(:]", self.text).group()[6:-1]
         self.__header: Optional[str] = None
@@ -137,7 +137,7 @@ class PyClass(PyText):
 
 
 class PyFunc(PyText):
-    def init_attrs(self, path_or_text: Union[Path, str]) -> None:
+    def text_init(self, path_or_text: Union[Path, str]) -> None:
         self.text = path_or_text.strip()
         self.name = re.search("def .*?\(", self.text).group()[4:-1]
 
@@ -156,6 +156,6 @@ class PyFunc(PyText):
 
 
 class PyMethod(PyFunc):
-    def init_attrs(self, path_or_text: Union[Path, str]) -> None:
-        super().init_attrs(path_or_text=path_or_text)
+    def text_init(self, path_or_text: Union[Path, str]) -> None:
+        super().text_init(path_or_text=path_or_text)
         self.spaces = 4
