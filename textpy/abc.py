@@ -51,13 +51,13 @@ class PyText(ABC):
         self.encoding: Optional[str] = encoding
         self.spaces: int = 0
 
-        self.init_attrs(path_or_text)
+        self.text_init(path_or_text)
 
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}('{self.absname}')"
 
     @abstractclassmethod
-    def init_attrs(self, path_or_text: Union[Path, str]) -> None:
+    def text_init(self, path_or_text: Union[Path, str]) -> None:
         """
         Initialize the instance.
 
@@ -391,7 +391,7 @@ class Docstring(ABC):
 
     @property
     @abstractclassmethod
-    def sections(self) -> Dict[str, str]:
+    def sections(cls) -> Dict[str, str]:
         """
         Returns the details of the docstring, each title corresponds to a
         paragraph of description.
