@@ -594,9 +594,9 @@ def as_path(
 ) -> Union[Path, str]:
     """
     If the input is a string, check if it represents an existing
-    path, if true, convert it to a `Path` object, otherwise return
-    itself. If the input is already a `Path` object, return itself,
-    too.
+    path. If it does, convert it to a `Path` object, otherwise return
+    itself. If the input is already a `Path` object, return itself
+    directly.
 
     Parameters
     ----------
@@ -612,11 +612,7 @@ def as_path(
         A path or a string.
 
     """
-    if home is None:
-        home = Path("").cwd()
-    else:
-        home = Path(home).absolute()
-
+    home = Path("").cwd() if home is None else Path(home).absolute()
     if isinstance(path_or_text, str):
         if len(path_or_text) < 256 and (home / path_or_text).exists():
             path_or_text = Path(path_or_text)
