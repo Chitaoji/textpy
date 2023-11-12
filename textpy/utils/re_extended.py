@@ -142,8 +142,8 @@ def real_findall(
     flags : Union[int, re.RegexFlag], optional
         Regex flag, by default 0.
     linemode : bool, optional
-        If true, match the pattern on each line of the string, by
-        default False.
+        Determines whether to match the pattern on each line of the
+        string, by default False.
 
     Returns
     -------
