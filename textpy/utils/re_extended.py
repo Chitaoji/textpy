@@ -148,9 +148,9 @@ def real_findall(
     Returns
     -------
     List[Union[SpanNGroup, LineSpanNGroup]]
-        List of finding result. If `linemode` is false, each list
+        List of finding result. If `linemode` is False, each list
         element consists of the span and the group of the pattern. If
-        `linemode` is true, each list element consists of the line
+        `linemode` is True, each list element consists of the line
         number, the span (within the line), and the group of the
         pattern instead.
 
