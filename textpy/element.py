@@ -3,7 +3,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import *
 
-from .abc import NULL, Docstring, PyText, as_path
+from .abc import Docstring, PyText, as_path
 from .format import NumpyFormatDocstring
 from .utils.re_extended import line_count_iter, rsplit
 
