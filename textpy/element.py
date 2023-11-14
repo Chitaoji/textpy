@@ -3,8 +3,8 @@ from functools import cached_property
 from pathlib import Path
 from typing import *
 
-from .abc import NULL, Docstring, PyText, as_path
-from .format import NumpyFormatDocstring
+from .abc import Docstring, PyText, as_path
+from .docfmt import NumpyFormatDocstring
 from .utils.re_extended import line_count_iter, rsplit
 
 __all__ = ["PyModule", "PyFile", "PyClass", "PyFunc", "PyMethod"]
@@ -30,6 +30,10 @@ class PyModule(PyText):
         if not self.path.is_dir():
             raise NotADirectoryError(f"not a dicretory: '{self.path}'")
         self.name = self.path.stem
+
+    @cached_property
+    def doc(self) -> Docstring:
+        return NumpyFormatDocstring("", parent=self)
 
     @cached_property
     def header(self) -> PyText:
@@ -65,6 +69,10 @@ class PyFile(PyText):
 
         self.name = self.path.stem
         self.__header: Optional[str] = None
+
+    @cached_property
+    def doc(self) -> Docstring:
+        return NumpyFormatDocstring("", parent=self)
 
     @cached_property
     def header(self) -> PyText:

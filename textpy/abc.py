@@ -1,14 +1,16 @@
 import re
-from abc import ABC, abstractclassmethod
+from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
 from typing import *
 
 import pandas as pd
-from pandas.io.formats.style import Styler
 from typing_extensions import Self
 
 from .utils.re_extended import pattern_inreg, real_findall
+
+if TYPE_CHECKING:
+    from pandas.io.formats.style import Styler
 
 __all__ = ["PyText", "Docstring"]
 
@@ -56,7 +58,7 @@ class PyText(ABC):
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}('{self.absname}')"
 
-    @abstractclassmethod
+    @abstractmethod
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         """
         Initialize the instance.
@@ -67,9 +69,9 @@ class PyText(ABC):
             File path, module path or file text.
 
         """
-        ...
 
     @cached_property
+    @abstractmethod
     def doc(self) -> "Docstring":
         """
         Docstring of a function / class / method.
@@ -80,9 +82,9 @@ class PyText(ABC):
             An instance of `Docstring`.
 
         """
-        return Docstring("")
 
     @cached_property
+    @abstractmethod
     def header(self) -> "PyText":
         """
         Header of a file / function / class / method.
@@ -93,7 +95,6 @@ class PyText(ABC):
             An instance of `TextPy`.
 
         """
-        return self.__class__()
 
     @cached_property
     def children(self) -> List["PyText"]:
@@ -223,7 +224,7 @@ class PyText(ABC):
         regex: bool = True,
         styler: Literal[True] = True,
         line_numbers: bool = True,
-    ) -> Styler:
+    ) -> "Styler":
         ...
 
     @overload
@@ -246,7 +247,7 @@ class PyText(ABC):
         regex: bool = True,
         styler: bool = True,
         line_numbers: bool = True,
-    ) -> Union[Styler, "FindTextResult"]:
+    ) -> Union["Styler", "FindTextResult"]:
         """
         Finds all non-overlapping matches of `pattern`.
 
@@ -390,8 +391,8 @@ class Docstring(ABC):
         self.parent = parent
 
     @property
-    @abstractclassmethod
-    def sections(cls) -> Dict[str, str]:
+    @abstractmethod
+    def sections(self) -> Dict[str, str]:
         """
         Returns the details of the docstring, each title corresponds to a
         paragraph of description.
@@ -489,7 +490,7 @@ class FindTextResult:
         obj.extend(self.res + other.res)
         return obj
 
-    def to_styler(self) -> Styler:
+    def to_styler(self) -> "Styler":
         """
         Convert `self` to a `Styler` of dataframe in convenience of displaying
         in a Jupyter notebook.
@@ -594,9 +595,9 @@ def as_path(
 ) -> Union[Path, str]:
     """
     If the input is a string, check if it represents an existing
-    path, if true, convert it to a `Path` object, otherwise return
-    itself. If the input is already a `Path` object, return itself,
-    too.
+    path. If it does, convert it to a `Path` object, otherwise return
+    itself. If the input is already a `Path` object, return itself
+    directly.
 
     Parameters
     ----------
@@ -612,11 +613,7 @@ def as_path(
         A path or a string.
 
     """
-    if home is None:
-        home = Path("").cwd()
-    else:
-        home = Path(home).absolute()
-
+    home = Path("").cwd() if home is None else Path(home).absolute()
     if isinstance(path_or_text, str):
         if len(path_or_text) < 256 and (home / path_or_text).exists():
             path_or_text = Path(path_or_text)

@@ -142,15 +142,15 @@ def real_findall(
     flags : Union[int, re.RegexFlag], optional
         Regex flag, by default 0.
     linemode : bool, optional
-        If true, match the pattern on each line of the string, by
-        default False.
+        Determines whether to match the pattern on each line of the
+        string, by default False.
 
     Returns
     -------
     List[Union[SpanNGroup, LineSpanNGroup]]
-        List of finding result. If `linemode` is false, each list
+        List of finding result. If `linemode` is False, each list
         element consists of the span and the group of the pattern. If
-        `linemode` is true, each list element consists of the line
+        `linemode` is True, each list element consists of the line
         number, the span (within the line), and the group of the
         pattern instead.
 
