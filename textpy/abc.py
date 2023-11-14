@@ -5,12 +5,13 @@ from pathlib import Path
 from typing import *
 
 import pandas as pd
+from typing_extensions import Self
 
 from .utils.re_extended import pattern_inreg, real_findall
 
 if TYPE_CHECKING:
     from pandas.io.formats.style import Styler
-    from typing_extensions import Self
+
 
 __all__ = ["PyText", "Docstring"]
 
