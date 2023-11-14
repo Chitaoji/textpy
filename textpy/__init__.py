@@ -43,12 +43,12 @@ except ImportError as e:
     else:
         warnings.warn(e.msg, Warning)
 
-# import `format` if exists
+# import `docfmt` if exists
 try:
-    from . import format
+    from . import docfmt
 
-    __all__.extend(format.__all__)
-    from .format import *
+    __all__.extend(docfmt.__all__)
+    from .docfmt import *
 
 except ImportError as e:
     if isinstance(e, ModuleNotFoundError):

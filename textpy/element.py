@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import *
 
 from .abc import Docstring, PyText, as_path
-from .format import NumpyFormatDocstring
+from .docfmt import NumpyFormatDocstring
 from .utils.re_extended import line_count_iter, rsplit
 
 __all__ = ["PyModule", "PyFile", "PyClass", "PyFunc", "PyMethod"]

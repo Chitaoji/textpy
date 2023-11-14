@@ -5,10 +5,12 @@ from pathlib import Path
 from typing import *
 
 import pandas as pd
-from pandas.io.formats.style import Styler
 from typing_extensions import Self
 
 from .utils.re_extended import pattern_inreg, real_findall
+
+if TYPE_CHECKING:
+    from pandas.io.formats.style import Styler
 
 __all__ = ["PyText", "Docstring"]
 
@@ -222,7 +224,7 @@ class PyText(ABC):
         regex: bool = True,
         styler: Literal[True] = True,
         line_numbers: bool = True,
-    ) -> Styler:
+    ) -> "Styler":
         ...
 
     @overload
@@ -245,7 +247,7 @@ class PyText(ABC):
         regex: bool = True,
         styler: bool = True,
         line_numbers: bool = True,
-    ) -> Union[Styler, "FindTextResult"]:
+    ) -> Union["Styler", "FindTextResult"]:
         """
         Finds all non-overlapping matches of `pattern`.
 
@@ -488,7 +490,7 @@ class FindTextResult:
         obj.extend(self.res + other.res)
         return obj
 
-    def to_styler(self) -> Styler:
+    def to_styler(self) -> "Styler":
         """
         Convert `self` to a `Styler` of dataframe in convenience of displaying
         in a Jupyter notebook.
