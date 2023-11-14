@@ -32,6 +32,10 @@ class PyModule(PyText):
         self.name = self.path.stem
 
     @cached_property
+    def doc(self) -> Docstring:
+        return NumpyFormatDocstring("", parent=self)
+
+    @cached_property
     def header(self) -> PyText:
         return PyFile("", parent=self)
 
@@ -65,6 +69,10 @@ class PyFile(PyText):
 
         self.name = self.path.stem
         self.__header: Optional[str] = None
+
+    @cached_property
+    def doc(self) -> Docstring:
+        return NumpyFormatDocstring("", parent=self)
 
     @cached_property
     def header(self) -> PyText:

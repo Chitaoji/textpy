@@ -1,5 +1,5 @@
 import re
-from abc import ABC, abstractclassmethod
+from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
 from typing import *
@@ -56,7 +56,7 @@ class PyText(ABC):
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}('{self.absname}')"
 
-    @abstractclassmethod
+    @abstractmethod
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         """
         Initialize the instance.
@@ -67,9 +67,9 @@ class PyText(ABC):
             File path, module path or file text.
 
         """
-        ...
 
     @cached_property
+    @abstractmethod
     def doc(self) -> "Docstring":
         """
         Docstring of a function / class / method.
@@ -80,9 +80,9 @@ class PyText(ABC):
             An instance of `Docstring`.
 
         """
-        return Docstring("")
 
     @cached_property
+    @abstractmethod
     def header(self) -> "PyText":
         """
         Header of a file / function / class / method.
@@ -93,7 +93,6 @@ class PyText(ABC):
             An instance of `TextPy`.
 
         """
-        return self.__class__()
 
     @cached_property
     def children(self) -> List["PyText"]:
@@ -390,8 +389,8 @@ class Docstring(ABC):
         self.parent = parent
 
     @property
-    @abstractclassmethod
-    def sections(cls) -> Dict[str, str]:
+    @abstractmethod
+    def sections(self) -> Dict[str, str]:
         """
         Returns the details of the docstring, each title corresponds to a
         paragraph of description.
