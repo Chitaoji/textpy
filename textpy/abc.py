@@ -5,12 +5,12 @@ from pathlib import Path
 from typing import *
 
 import pandas as pd
-from typing_extensions import Self
 
 from .utils.re_extended import pattern_inreg, real_findall
 
 if TYPE_CHECKING:
     from pandas.io.formats.style import Styler
+    from typing_extensions import Self
 
 __all__ = ["PyText", "Docstring"]
 
@@ -300,10 +300,7 @@ class PyText(ABC):
             res = res.join(self.header.findall(pattern, styler=False))
             for c in self.children:
                 res = res.join(c.findall(pattern, styler=False))
-        if styler and pd.__version__ >= "1.4.0":
-            return res.to_styler()
-        else:
-            return res
+        return res.to_styler() if styler and pd.__version__ >= "1.4.0" else res
 
     def jumpto(self, target: str) -> "PyText":
         """

@@ -1,8 +1,12 @@
 import warnings
 
+import lazyr
+
 from .__version__ import __version__
 
 __all__ = []
+
+lazyr.register("pandas")
 
 # import `abc` if exists
 try:
