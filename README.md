@@ -131,8 +131,8 @@ This project falls under the BSD 2-Clause License.
 
 ## History
 
-### v0.1.15
-* Reducing the time taken to import the module.
+### v0.1.16
+* Reduced the time cost for importing. Some required packages are lazily imported.
 
 ### v0.1.12
 * New optional parameters for `textpy.TextPy.findall` :
