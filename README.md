@@ -121,7 +121,7 @@ print(res)
 
 ## See Also
 ### Github repository
-* https://github.com/Chitaoji/textpy
+* https://github.com/Chitaoji/textpy/
 
 ### PyPI project
 * https://pypi.org/project/textpy/
