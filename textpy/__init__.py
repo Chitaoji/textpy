@@ -1,4 +1,10 @@
-from . import _lazy, abc, core, docfmt, element
+import lazyr
+
+VERBOSE = 0
+
+lazyr.register("pandas", verbose=VERBOSE)
+
+from . import abc, core, docfmt, element
 from .__version__ import __version__
 from .abc import *
 from .core import *
