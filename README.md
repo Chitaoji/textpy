@@ -132,7 +132,10 @@ This project falls under the BSD 2-Clause License.
 ## History
 
 ### v0.1.16
-* Reduced the time cost for importing. Some required packages are lazily imported.
+* Lazily imported *pandas*
+
+### v0.1.15
+* Reduced the time cost for importing.
 
 ### v0.1.12
 * New optional parameters for `textpy.TextPy.findall` :
@@ -150,7 +153,7 @@ This project falls under the BSD 2-Clause License.
 * Bugfix for Windows.
 
 ### v0.1.5
-* Compatible with pandas versions lower than 1.4.0.
+* Compatible with *pandas* versions lower than 1.4.0.
 * Updated `textpy.textpy` :
   * `Path` objects are now acceptable as parameters.
   * New optional parameter `home` to specify the home path.
