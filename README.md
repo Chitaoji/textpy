@@ -132,10 +132,7 @@ This project falls under the BSD 2-Clause License.
 ## History
 
 ### v0.1.16
-* Lazily imported *pandas*
-
-### v0.1.15
-* Reduced the time cost for importing.
+* Lazily imported *pandas* to reduce the time cost for importing.
 
 ### v0.1.12
 * New optional parameters for `textpy.TextPy.findall` :
