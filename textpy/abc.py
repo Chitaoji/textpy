@@ -144,7 +144,7 @@ class PyText(ABC):
     @cached_property
     def absname(self) -> str:
         """
-        The full-name including all the parent's name, connected with `"."`'s.
+        The full-name including all the parent's name, connected with dots.
 
         Returns
         -------
