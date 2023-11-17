@@ -19,6 +19,24 @@ NULL = "NULL"  # Path stems or filenames should avoid this.
 
 
 class PyText(ABC):
+    """
+    Could be a python module, file, class, function, or method.
+
+    Parameters
+    ----------
+    path_or_text : Union[Path, str]
+        File path, module path or file text.
+    parent : Optional[&quot;PyText&quot;], optional
+        Parent node (if exists), by default None.
+    start_line : int, optional
+        Starting line number, by default 1.
+    home : Union[Path, str, None], optional
+        Specifies the home path if `path_or_text` is relative, by default None.
+    encoding : Optional[str], optional
+        Specifies encoding, by default None.
+
+    """
+
     def __init__(
         self,
         path_or_text: Union[Path, str],
@@ -27,23 +45,6 @@ class PyText(ABC):
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
     ) -> None:
-        """
-        Could be a python module, file, class, function, or method.
-
-        Parameters
-        ----------
-        path_or_text : Union[Path, str]
-            File path, module path or file text.
-        parent : Optional[&quot;PyText&quot;], optional
-            Parent node (if exists), by default None.
-        start_line : int, optional
-            Starting line number, by default 1.
-        home : Union[Path, str, None], optional
-            Specifies the home path if `path_or_text` is relative, by default None.
-        encoding : Optional[str], optional
-            Specifies encoding, by default None.
-
-        """
         self.text: str = ""
         self.name: str = ""
         self.path: Path = Path(NULL + ".py")
@@ -54,6 +55,7 @@ class PyText(ABC):
         self.encoding: Optional[str] = encoding
         self.spaces: int = 0
 
+        self._header: Optional[str] = None
         self.text_init(path_or_text)
 
     def __repr__(self) -> None:
