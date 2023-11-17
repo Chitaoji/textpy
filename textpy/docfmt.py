@@ -1,6 +1,6 @@
 import re
 from functools import cached_property
-from typing import *
+from typing import Dict
 
 from .abc import Docstring
 from .utils.re_extended import rsplit
@@ -9,6 +9,11 @@ __all__ = ["NumpyFormatDocstring"]
 
 
 class NumpyFormatDocstring(Docstring):
+    """
+    Stores a numpy-formatted docstring.
+
+    """
+
     @cached_property
     def sections(self) -> Dict[str, str]:
         details: Dict[str, str] = {}

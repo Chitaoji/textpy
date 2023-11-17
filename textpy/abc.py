@@ -2,7 +2,7 @@ import re
 from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
-from typing import *
+from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Union, overload
 
 import pandas as pd
 from typing_extensions import Self
@@ -197,7 +197,7 @@ class PyText(ABC):
         """
         try:
             return self.abspath.relative_to(self.home.absolute())
-        except ValueError as e:
+        except ValueError:
             return self.abspath
 
     @cached_property
@@ -213,7 +213,7 @@ class PyText(ABC):
         """
         try:
             return self.abspath.relative_to(self.abspath.cwd())
-        except ValueError as e:
+        except ValueError:
             return self.abspath
 
     @overload
@@ -287,7 +287,7 @@ class PyText(ABC):
         pattern = re.compile(pattern, flags=flags)
 
         res = FindTextResult(pattern, line_numbers=line_numbers)
-        if self.children == []:
+        if not self.children:
             to_match = self.text
             for nline, _, group in real_findall(
                 ".*" + pattern.pattern + ".*",
@@ -325,7 +325,7 @@ class PyText(ABC):
         """
         if target == "":
             return self
-        splits = re.split("\.", target, maxsplit=1)
+        splits = re.split("\\.", target, maxsplit=1)
         if len(splits) == 1:
             splits.append("")
         if splits[0] == "":
@@ -372,19 +372,20 @@ class PyText(ABC):
 
 
 class Docstring(ABC):
+    """
+    Stores the docstring of a function / class / method, then divides
+    it into different sections accaording to its titles.
+
+    Parameters
+    ----------
+    text : str
+        Docstring text.
+    parent : Optional[PyText], optional
+        Parent node (if exists), by default None.
+
+    """
+
     def __init__(self, text: str, parent: Optional[PyText] = None) -> None:
-        """
-        Stores the docstring of a function / class / method, then divides
-        it into different sections accaording to its titles.
-
-        Parameters
-        ----------
-        text : str
-            Docstring text.
-        parent : Optional[PyText], optional
-            Parent node (if exists), by default None.
-
-        """
         self.text = text.strip()
         self.parent = parent
 
@@ -405,20 +406,21 @@ class Docstring(ABC):
 
 
 class FindTextResult:
+    """
+    Result of text finding, only as a return of `TextPy.find_text`.
+
+    Parameters
+    ----------
+    pattern : Union[str, re.Pattern]
+        Regex pattern.
+    line_numbers : bool, optional
+        Whether to display the line numbers, by default True.
+
+    """
+
     def __init__(
         self, pattern: Union[str, re.Pattern], line_numbers: bool = True
     ) -> None:
-        """
-        Result of text finding, only as a return of `TextPy.find_text`.
-
-        Parameters
-        ----------
-        pattern : Union[str, re.Pattern]
-            Regex pattern.
-        line_numbers : bool, optional
-            Whether to display the line numbers, by default True.
-
-        """
         self.pattern = pattern
         self.line_numbers = line_numbers
         self.res: List[Tuple[PyText, int, str]] = []
@@ -432,7 +434,7 @@ class FindTextResult:
                 lambda x: "\033[100m" + x.group() + "\033[0m",
                 " " * tp.spaces + group,
             )
-            string += re.sub("\\\\x1b\[", "\033[", _sub.__repr__())
+            string += re.sub("\\\\x1b\\[", "\033[", _sub.__repr__())
         return string.lstrip()
 
     def append(self, finding: Tuple[PyText, int, str]) -> None:
@@ -500,8 +502,8 @@ class FindTextResult:
 
         """
         df = pd.DataFrame("", index=range(len(self.res)), columns=["source", "match"])
-        for i in range(len(self.res)):
-            _tp, _n, _match = self.res[i]
+        for i, r in enumerate(self.res):
+            _tp, _n, _match = r
             df.iloc[i, 0] = ".".join(
                 [
                     NULL
@@ -524,8 +526,8 @@ class FindTextResult:
                 lambda x: ""
                 if x.group() == ""
                 else make_ahref(
-                    f"{_tp.execpath}"
-                    + f":{_n}:{1+_tp.spaces+x.span()[0]}" * self.line_numbers,
+                    f"{_tp.execpath}:{_n}:{1+_tp.spaces+x.span()[0]}"
+                    * self.line_numbers,
                     x.group(),
                     color="#cccccc",
                     background_color="#595959",
