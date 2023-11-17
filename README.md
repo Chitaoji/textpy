@@ -127,6 +127,9 @@ This project falls under the BSD 2-Clause License.
 
 ## History
 
+### v0.1.17
+* Refactored README.
+
 ### v0.1.16
 * Lazily imported *pandas* to reduce the time cost for importing.
 
