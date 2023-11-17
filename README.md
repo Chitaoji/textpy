@@ -4,7 +4,7 @@ Reads a python file/module and statically analyzes it. This works well with Jupy
 ## Installation
 
 ```sh
-pip install textpy
+$ pip install textpy
 ```
 
 ## Requirements
@@ -46,22 +46,19 @@ def print_my_class(a: MyClass):
 Run the following codes to find all the occurrences of the pattern `"va"` in `myfile.py`:
 
 ```py
-from textpy import textpy
-
-res = textpy("./examples/myfile.py").findall("va", styler=False)
-print(res)
-# Output:
-# examples/myfile.py:10: '        self.var_1 = "hahaha"'
-# examples/myfile.py:11: '        self.var_2 = "blabla"'
-# examples/myfile.py:24: '    print(a.var_1, a.var_2)'
+>>> from textpy import textpy
+>>> res = textpy("./examples/myfile.py").findall("va", styler=False)
+>>> res
+examples/myfile.py:10: '        self.var_1 = "hahaha"'
+examples/myfile.py:11: '        self.var_2 = "blabla"'
+examples/myfile.py:24: '    print(a.var_1, a.var_2)'
 ```
 
 Also, when using a Jupyter notebook in VScode, you can run a cell like this:
 
 ```py
-from textpy import textpy
-
-textpy("./examples/myfile.py").findall("va")
+>>> from textpy import textpy
+>>> textpy("./examples/myfile.py").findall("va")
 ```
 
 and the output will be like:
@@ -109,14 +106,13 @@ Note that in the Jupyter notebook case, the matched substrings are **clickable**
 Now suppose you've got a python module consists of a few files, for example, our `textpy` module itself, you can do almost the same thing:
 
 ```py
-module_path = "textpy/" # you can type any path here
-pattern = "note.*k" # type any regular expression here
+>>> module_path = "textpy/" # you can type any path here
+>>> pattern = "note.*k" # type any regular expression here
 
-res = textpy(module_path).findall("note.*k", styler=False, line_numbers=False)
-print(res)
-# Output:
-# textpy/abc.py: '            in a Jupyter notebook, this only takes effect when'
-# textpy/abc.py: '        in a Jupyter notebook.'
+>>> res = textpy(module_path).findall("note.*k", styler=False, line_numbers=False)
+>>> res
+textpy/abc.py: '            in a Jupyter notebook, this only takes effect when'
+textpy/abc.py: '        in a Jupyter notebook.'
 ```
 
 ## See Also
@@ -130,6 +126,9 @@ print(res)
 This project falls under the BSD 2-Clause License.
 
 ## History
+
+### v0.1.17
+* Refactored README.
 
 ### v0.1.16
 * Lazily imported *pandas* to reduce the time cost for importing.
