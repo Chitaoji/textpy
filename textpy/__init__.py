@@ -1,7 +1,7 @@
 '''
 # textpy
 Reads a python file/module and statically analyzes it. This works well with Jupyter extensions 
-in VScode, and have better performance when the file/module is formatted with `PEP-8`.
+in VScode, and have better performance when the file/module is formatted with *PEP-8*.
 
 ## Examples
 Create a new file named `myfile.py` under `./examples/` (or any dir, just for an example):
@@ -51,11 +51,11 @@ Also, when using a Jupyter notebook in VScode, you can run a cell like this:
 >>> textpy("./examples/myfile.py").findall("va")
 ```
 
-Note that in the Jupyter notebook case, the matched substrings are `clickable`, linking to
-where the patterns were found.
+Note that in the Jupyter notebook case, the matched substrings are **clickable**, linking 
+to where the patterns were found.
 
-Now suppose you've got a python module consists of a few files, for example, our `textpy` module 
-itself, you can do almost the same thing:
+Now suppose you've got a python module consists of a few files, for example, our `textpy`
+module itself, you can do almost the same thing:
 
 ```py
 >>> module_path = "textpy/" # you can type any path here
