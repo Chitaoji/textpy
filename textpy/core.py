@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import *
+from typing import Optional, Union
 
 from .abc import PyText, as_path
 from .element import PyFile, PyModule
@@ -14,8 +14,8 @@ def textpy(
 ) -> PyText:
     """
     Statically analyzes a python file or a python module. Each python
-    file is recommended to be formatted with `black` and `Auto Docstring
-    (numpy format)`, otherwise unexpected errors may occur.
+    file is recommended to be formatted with `PEP-8`, otherwise the
+    analyzing output could be surprising.
 
     Parameters
     ----------
@@ -39,11 +39,11 @@ def textpy(
 
     See Also
     --------
-    PyModule : Corresponds to a python module.
-    PyFile : Contains the text of a python file.
-    PyClass : Contains the text of a class and its docstring.
-    PyMethod : Contains the text of a class method and its docstring.
-    PyFunc : Contains the text of a function and its docstring.
+    PyModule : Contains a python module.
+    PyFile : Contains the code of a python file.
+    PyClass : Contains the code and docstring of a class.
+    PyMethod : Contains the code and docstring of a class method.
+    PyFunc : Contains the code and docstring of a function.
     NumpyFormatDocstring : Stores a numpy-formatted docstring.
 
     """

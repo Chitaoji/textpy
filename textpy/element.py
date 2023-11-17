@@ -1,7 +1,7 @@
 import re
 from functools import cached_property
 from pathlib import Path
-from typing import *
+from typing import List, Union
 
 from .abc import Docstring, PyText, as_path
 from .docfmt import NumpyFormatDocstring
@@ -11,6 +11,8 @@ __all__ = ["PyModule", "PyFile", "PyClass", "PyFunc", "PyMethod"]
 
 
 class PyModule(PyText):
+    """Contains a python module."""
+
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         """
         Initialize the instance.
@@ -57,6 +59,8 @@ class PyModule(PyText):
 
 
 class PyFile(PyText):
+    """Contains the code of a python file."""
+
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         if isinstance(path_or_text, Path):
             if not path_or_text.is_absolute():
@@ -68,7 +72,6 @@ class PyFile(PyText):
             self.text = path_or_text.strip()
 
         self.name = self.path.stem
-        self.__header: Optional[str] = None
 
     @cached_property
     def doc(self) -> Docstring:
@@ -76,16 +79,16 @@ class PyFile(PyText):
 
     @cached_property
     def header(self) -> PyText:
-        if self.__header is None:
+        if self._header is None:
             _ = self.children
-        return self.__class__(self.__header, parent=self).as_header()
+        return self.__class__(self._header, parent=self).as_header()
 
     @cached_property
     def children(self) -> List[PyText]:
         children: List[PyText] = []
         _cnt: int = 0
-        self.__header = ""
-        for i, _str in line_count_iter(rsplit("\n\n\n+[^\s]", self.text)):
+        self._header = ""
+        for i, _str in line_count_iter(rsplit("\n\n\n+[^\\s]", self.text)):
             _str = "\n" + _str.strip()
             if re.match("(?:\n@.*)*\ndef ", _str):
                 children.append(
@@ -96,7 +99,7 @@ class PyFile(PyText):
                     PyClass(_str, parent=self, start_line=int(i + 3 * (_cnt > 0)))
                 )
             elif _cnt == 0:
-                self.__header = _str
+                self._header = _str
             else:
                 children.append(
                     PyFile(_str, parent=self, start_line=int(i + 3 * (_cnt > 0)))
@@ -106,10 +109,11 @@ class PyFile(PyText):
 
 
 class PyClass(PyText):
+    """Contains the code and docstring of a class."""
+
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         self.text = path_or_text.strip()
         self.name = re.search("class .*?[(:]", self.text).group()[6:-1]
-        self.__header: Optional[str] = None
 
     @cached_property
     def doc(self) -> Docstring:
@@ -122,10 +126,10 @@ class PyClass(PyText):
 
     @cached_property
     def header(self) -> PyText:
-        if self.__header is None:
+        if self._header is None:
             _ = self.children
         return self.__class__(
-            self.__header, parent=self, start_line=self.start_line
+            self._header, parent=self, start_line=self.start_line
         ).as_header()
 
     @cached_property
@@ -135,7 +139,7 @@ class PyClass(PyText):
         _cnt: int = 0
         for i, _str in line_count_iter(rsplit("(?:\n@.*)*\ndef ", sub_text)):
             if _cnt == 0:
-                self.__header = _str.replace("\n", "\n    ")
+                self._header = _str.replace("\n", "\n    ")
             else:
                 children.append(
                     PyMethod(_str, parent=self, start_line=self.start_line + i)
@@ -145,9 +149,11 @@ class PyClass(PyText):
 
 
 class PyFunc(PyText):
+    """Contains the code and docstring of a function."""
+
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         self.text = path_or_text.strip()
-        self.name = re.search("def .*?\(", self.text).group()[4:-1]
+        self.name = re.search("def .*?\\(", self.text).group()[4:-1]
 
     @cached_property
     def doc(self) -> Docstring:
@@ -160,10 +166,12 @@ class PyFunc(PyText):
 
     @cached_property
     def header(self) -> PyText:
-        return re.search(".*\n[^\s][^\n]*", self.text, re.DOTALL).group()
+        return re.search(".*\n[^\\s][^\n]*", self.text, re.DOTALL).group()
 
 
 class PyMethod(PyFunc):
+    """Contains the code and docstring of a class method."""
+
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         super().text_init(path_or_text=path_or_text)
         self.spaces = 4

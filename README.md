@@ -1,5 +1,5 @@
 # textpy
-Reads a python file/module and statically analyzes it, this works well with Jupyter extensions in VScode.
+Reads a python file/module and statically analyzes it. This works well with Jupyter extensions in VScode, and have better performance when the file/module is formatted with *PEP-8*.
 
 ## Installation
 
@@ -9,8 +9,8 @@ pip install textpy
 
 ## Requirements
 ```txt
-pandas>=1.4.0 
-# A lower version is also acceptable, but some features will be invalid.
+lazyr>=0.0.3 
+pandas>=1.4.0 # A lower version is also acceptable, but some features will be invalid
 ```
 
 ## Examples
@@ -121,7 +121,7 @@ print(res)
 
 ## See Also
 ### Github repository
-* https://github.com/Chitaoji/textpy
+* https://github.com/Chitaoji/textpy/
 
 ### PyPI project
 * https://pypi.org/project/textpy/
@@ -131,8 +131,8 @@ This project falls under the BSD 2-Clause License.
 
 ## History
 
-### v0.1.15
-* Reducing the time taken to import the module.
+### v0.1.16
+* Lazily imported *pandas* to reduce the time cost for importing.
 
 ### v0.1.12
 * New optional parameters for `textpy.TextPy.findall` :
@@ -150,7 +150,7 @@ This project falls under the BSD 2-Clause License.
 * Bugfix for Windows.
 
 ### v0.1.5
-* Compatible with pandas versions lower than 1.4.0.
+* Compatible with *pandas* versions lower than 1.4.0.
 * Updated `textpy.textpy` :
   * `Path` objects are now acceptable as parameters.
   * New optional parameter `home` to specify the home path.

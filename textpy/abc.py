@@ -1,8 +1,8 @@
 import re
 from abc import ABC, abstractmethod
-from functools import cached_property
+from functools import cached_property, partial
 from pathlib import Path
-from typing import *
+from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Union, overload
 
 import pandas as pd
 from typing_extensions import Self
@@ -12,12 +12,31 @@ from .utils.re_extended import pattern_inreg, real_findall
 if TYPE_CHECKING:
     from pandas.io.formats.style import Styler
 
+
 __all__ = ["PyText", "Docstring"]
 
 NULL = "NULL"  # Path stems or filenames should avoid this.
 
 
 class PyText(ABC):
+    """
+    Could be a python module, file, class, function, or method.
+
+    Parameters
+    ----------
+    path_or_text : Union[Path, str]
+        File path, module path or file text.
+    parent : Optional[&quot;PyText&quot;], optional
+        Parent node (if exists), by default None.
+    start_line : int, optional
+        Starting line number, by default 1.
+    home : Union[Path, str, None], optional
+        Specifies the home path if `path_or_text` is relative, by default None.
+    encoding : Optional[str], optional
+        Specifies encoding, by default None.
+
+    """
+
     def __init__(
         self,
         path_or_text: Union[Path, str],
@@ -26,23 +45,6 @@ class PyText(ABC):
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
     ) -> None:
-        """
-        Could be a python module, file, class, function, or method.
-
-        Parameters
-        ----------
-        path_or_text : Union[Path, str]
-            File path, module path or file text.
-        parent : Optional[&quot;PyText&quot;], optional
-            Parent node (if exists), by default None.
-        start_line : int, optional
-            Starting line number, by default 1.
-        home : Union[Path, str, None], optional
-            Specifies the home path if `path_or_text` is relative, by default None.
-        encoding : Optional[str], optional
-            Specifies encoding, by default None.
-
-        """
         self.text: str = ""
         self.name: str = ""
         self.path: Path = Path(NULL + ".py")
@@ -53,6 +55,7 @@ class PyText(ABC):
         self.encoding: Optional[str] = encoding
         self.spaces: int = 0
 
+        self._header: Optional[str] = None
         self.text_init(path_or_text)
 
     def __repr__(self) -> None:
@@ -196,7 +199,7 @@ class PyText(ABC):
         """
         try:
             return self.abspath.relative_to(self.home.absolute())
-        except ValueError as e:
+        except ValueError:
             return self.abspath
 
     @cached_property
@@ -212,7 +215,7 @@ class PyText(ABC):
         """
         try:
             return self.abspath.relative_to(self.abspath.cwd())
-        except ValueError as e:
+        except ValueError:
             return self.abspath
 
     @overload
@@ -286,7 +289,7 @@ class PyText(ABC):
         pattern = re.compile(pattern, flags=flags)
 
         res = FindTextResult(pattern, line_numbers=line_numbers)
-        if self.children == []:
+        if not self.children:
             to_match = self.text
             for nline, _, group in real_findall(
                 ".*" + pattern.pattern + ".*",
@@ -300,10 +303,7 @@ class PyText(ABC):
             res = res.join(self.header.findall(pattern, styler=False))
             for c in self.children:
                 res = res.join(c.findall(pattern, styler=False))
-        if styler and pd.__version__ >= "1.4.0":
-            return res.to_styler()
-        else:
-            return res
+        return res.to_styler() if styler and pd.__version__ >= "1.4.0" else res
 
     def jumpto(self, target: str) -> "PyText":
         """
@@ -327,7 +327,7 @@ class PyText(ABC):
         """
         if target == "":
             return self
-        splits = re.split("\.", target, maxsplit=1)
+        splits = re.split("\\.", target, maxsplit=1)
         if len(splits) == 1:
             splits.append("")
         if splits[0] == "":
@@ -374,19 +374,20 @@ class PyText(ABC):
 
 
 class Docstring(ABC):
+    """
+    Stores the docstring of a function / class / method, then divides
+    it into different sections accaording to its titles.
+
+    Parameters
+    ----------
+    text : str
+        Docstring text.
+    parent : Optional[PyText], optional
+        Parent node (if exists), by default None.
+
+    """
+
     def __init__(self, text: str, parent: Optional[PyText] = None) -> None:
-        """
-        Stores the docstring of a function / class / method, then divides
-        it into different sections accaording to its titles.
-
-        Parameters
-        ----------
-        text : str
-            Docstring text.
-        parent : Optional[PyText], optional
-            Parent node (if exists), by default None.
-
-        """
         self.text = text.strip()
         self.parent = parent
 
@@ -407,20 +408,21 @@ class Docstring(ABC):
 
 
 class FindTextResult:
+    """
+    Result of text finding, only as a return of `TextPy.find_text`.
+
+    Parameters
+    ----------
+    pattern : Union[str, re.Pattern]
+        Regex pattern.
+    line_numbers : bool, optional
+        Whether to display the line numbers, by default True.
+
+    """
+
     def __init__(
         self, pattern: Union[str, re.Pattern], line_numbers: bool = True
     ) -> None:
-        """
-        Result of text finding, only as a return of `TextPy.find_text`.
-
-        Parameters
-        ----------
-        pattern : Union[str, re.Pattern]
-            Regex pattern.
-        line_numbers : bool, optional
-            Whether to display the line numbers, by default True.
-
-        """
         self.pattern = pattern
         self.line_numbers = line_numbers
         self.res: List[Tuple[PyText, int, str]] = []
@@ -434,7 +436,7 @@ class FindTextResult:
                 lambda x: "\033[100m" + x.group() + "\033[0m",
                 " " * tp.spaces + group,
             )
-            string += re.sub("\\\\x1b\[", "\033[", _sub.__repr__())
+            string += re.sub("\\\\x1b\\[", "\033[", _sub.__repr__())
         return string.lstrip()
 
     def append(self, finding: Tuple[PyText, int, str]) -> None:
@@ -502,42 +504,46 @@ class FindTextResult:
 
         """
         df = pd.DataFrame("", index=range(len(self.res)), columns=["source", "match"])
-        for i in range(len(self.res)):
-            _tp, _n, _match = self.res[i]
+        for i, r in enumerate(self.res):
+            _tp, _n, _match = r
             df.iloc[i, 0] = ".".join(
-                [
-                    NULL
-                    if x.name == NULL
-                    else make_ahref(
-                        f"{x.execpath}"
-                        + f":{x.start_line}:{1+x.spaces}" * self.line_numbers,
-                        x.name,
-                        color="inherit",
-                    )
-                    for x in _tp.track()
-                ]
+                [self.__display_source(x) for x in _tp.track()]
             ).replace(".NULL", "")
             if self.line_numbers:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{_tp.execpath}:{_n}", str(_n), color="inherit"
                 )
             df.iloc[i, 1] = re.sub(
-                self.pattern,
-                lambda x: ""
-                if x.group() == ""
-                else make_ahref(
-                    f"{_tp.execpath}"
-                    + f":{_n}:{1+_tp.spaces+x.span()[0]}" * self.line_numbers,
-                    x.group(),
-                    color="#cccccc",
-                    background_color="#595959",
-                ),
-                _match,
+                self.pattern, partial(self.__display_match, r), _match
             )
         return (
             df.style.hide(axis=0)
             .set_properties(**{"text-align": "left"})
             .set_table_styles([dict(selector="th", props=[("text-align", "center")])])
+        )
+
+    def __display_source(self, x: PyText) -> str:
+        return (
+            NULL
+            if x.name == NULL
+            else make_ahref(
+                f"{x.execpath}" + f":{x.start_line}:{1+x.spaces}" * self.line_numbers,
+                x.name,
+                color="inherit",
+            )
+        )
+
+    def __display_match(self, r: Tuple[PyText, int, str], m: re.Match) -> str:
+        return (
+            ""
+            if m.group() == ""
+            else make_ahref(
+                f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.span()[0]}"
+                * self.line_numbers,
+                m.group(),
+                color="#cccccc",
+                background_color="#595959",
+            )
         )
 
 
