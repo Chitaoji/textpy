@@ -1,6 +1,6 @@
 import re
 from abc import ABC, abstractmethod
-from functools import cached_property
+from functools import cached_property, partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Union, overload
 
@@ -505,39 +505,43 @@ class FindTextResult:
         for i, r in enumerate(self.res):
             _tp, _n, _match = r
             df.iloc[i, 0] = ".".join(
-                [
-                    NULL
-                    if x.name == NULL
-                    else make_ahref(
-                        f"{x.execpath}"
-                        + f":{x.start_line}:{1+x.spaces}" * self.line_numbers,
-                        x.name,
-                        color="inherit",
-                    )
-                    for x in _tp.track()
-                ]
+                [self.__display_source(x) for x in _tp.track()]
             ).replace(".NULL", "")
             if self.line_numbers:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{_tp.execpath}:{_n}", str(_n), color="inherit"
                 )
             df.iloc[i, 1] = re.sub(
-                self.pattern,
-                lambda x: ""
-                if x.group() == ""
-                else make_ahref(
-                    f"{_tp.execpath}:{_n}:{1+_tp.spaces+x.span()[0]}"
-                    * self.line_numbers,
-                    x.group(),
-                    color="#cccccc",
-                    background_color="#595959",
-                ),
-                _match,
+                self.pattern, partial(self.__display_match, r), _match
             )
         return (
             df.style.hide(axis=0)
             .set_properties(**{"text-align": "left"})
             .set_table_styles([dict(selector="th", props=[("text-align", "center")])])
+        )
+
+    def __display_source(self, x: PyText) -> str:
+        return (
+            NULL
+            if x.name == NULL
+            else make_ahref(
+                f"{x.execpath}" + f":{x.start_line}:{1+x.spaces}" * self.line_numbers,
+                x.name,
+                color="inherit",
+            )
+        )
+
+    def __display_match(self, r: Tuple[PyText, int, str], m: re.Match) -> str:
+        return (
+            ""
+            if m.group() == ""
+            else make_ahref(
+                f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.span()[0]}"
+                * self.line_numbers,
+                m.group(),
+                color="#cccccc",
+                background_color="#595959",
+            )
         )
 
 
