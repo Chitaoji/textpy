@@ -33,7 +33,7 @@ def print_my_class(a: MyClass):
     print(a.var_1, a.var_2)
 ```
 
-Run the following codes to find all the occurrences of the pattern `"va"` in `myfile.py`:
+Run the following codes to find all the occurrences of the pattern "va" in `myfile.py`:
 
 ```py
 >>> from textpy import textpy
@@ -75,7 +75,7 @@ textpy/abc.py: '        in a Jupyter notebook.'
 * https://pypi.org/project/textpy/
 
 ## License
-This project falls under the BSD 2-Clause License.
+This project falls under the BSD 3-Clause License.
 
 '''
 import lazyr
