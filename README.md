@@ -153,7 +153,7 @@ This project falls under the BSD 2-Clause License.
 * Updated function `textpy` :
   * `Path` objects are now acceptable as parameters.
   * New optional parameter `home` to specify the home path.
-* More flexible presentation of output when calling `TextPy.findall`.
+* More flexible presentation of output from `TextPy.findall`.
 
 ### v0.1.4
 * Fixed a display problem of README on PyPI.
