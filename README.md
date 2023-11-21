@@ -43,7 +43,7 @@ def print_my_class(a: MyClass):
     print(a.var_1, a.var_2)
 ```
 
-Run the following codes to find all the occurrences of the pattern `"va"` in `myfile.py`:
+Run the following codes to find all the occurrences of the pattern "va" in `myfile.py`:
 
 ```py
 >>> from textpy import textpy
@@ -123,9 +123,12 @@ textpy/abc.py: '        in a Jupyter notebook.'
 * https://pypi.org/project/textpy/
 
 ## License
-This project falls under the BSD 2-Clause License.
+This project falls under the BSD 3-Clause License.
 
 ## History
+
+### v0.1.18
+* Updated LICENSE.
 
 ### v0.1.17
 * Refactored README.
@@ -134,12 +137,12 @@ This project falls under the BSD 2-Clause License.
 * Lazily imported *pandas* to reduce the time cost for importing.
 
 ### v0.1.12
-* New optional parameters for `textpy.TextPy.findall` :
-  * `whole_word` : whether to match whole words only.
+* New optional parameters for `TextPy.findall()` :
+  * `whole_word` : whether to match whole words only;
   * `case_sensitive` : specifies case sensitivity.
 
 ### v0.1.10
-* New optional parameter for `textpy.textpy` :
+* New optional parameter for `textpy()` :
   * `encoding` : specifies encoding.
 
 ### v0.1.9
@@ -150,13 +153,13 @@ This project falls under the BSD 2-Clause License.
 
 ### v0.1.5
 * Compatible with *pandas* versions lower than 1.4.0.
-* Updated `textpy.textpy` :
+* Updated `textpy()` :
   * `Path` objects are now acceptable as parameters.
   * New optional parameter `home` to specify the home path.
-* More flexible presentation of output when using `textpy.TextPy.findall`.
+* More flexible presentation of output from `TextPy.findall()`.
 
 ### v0.1.4
-* Fixed a display problem of `README.md` on PyPI.
+* Fixed a display problem of README on PyPI.
 
 ### v0.1.3
 * Initial release.

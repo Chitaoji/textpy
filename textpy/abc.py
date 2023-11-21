@@ -1,3 +1,10 @@
+"""
+Contains abstract classes: PyText and Docstring.
+
+NOTE: this module is private. All functions and objects are available in the main
+`textpy` namespace - use that instead.
+
+"""
 import re
 from abc import ABC, abstractmethod
 from functools import cached_property, partial
@@ -144,7 +151,7 @@ class PyText(ABC):
     @cached_property
     def absname(self) -> str:
         """
-        The full-name including all the parent's name, connected with `"."`'s.
+        The full-name including all the parent's name, connected with dots.
 
         Returns
         -------

@@ -1,8 +1,15 @@
+"""
+Contains the core of textpy: textpy().
+
+NOTE: this module is private. All functions and objects are available in the main
+`textpy` namespace - use that instead.
+
+"""
 from pathlib import Path
 from typing import Optional, Union
 
 from .abc import PyText, as_path
-from .element import PyFile, PyModule
+from .text import PyFile, PyModule
 
 __all__ = ["textpy"]
 
