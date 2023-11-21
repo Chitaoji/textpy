@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Optional, Union
 
 from .abc import PyText, as_path
-from .element import PyFile, PyModule
+from .text import PyFile, PyModule
 
 __all__ = ["textpy"]
 
