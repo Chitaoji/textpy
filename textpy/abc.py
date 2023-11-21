@@ -1,3 +1,10 @@
+"""
+Contains abstract classes: PyText and Docstring.
+
+NOTE: this module is private. All functions and objects are available in the main
+`textpy` namespace - use that instead.
+
+"""
 import re
 from abc import ABC, abstractmethod
 from functools import cached_property, partial

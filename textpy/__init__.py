@@ -84,15 +84,15 @@ VERBOSE = 0
 
 lazyr.register("pandas", verbose=VERBOSE)
 
-from . import abc, core, docfmt, element
+from . import abc, core, doc, text
 from .__version__ import __version__
 from .abc import *
 from .core import *
-from .docfmt import *
-from .element import *
+from .doc import *
+from .text import *
 
 __all__ = []
-__all__.extend(core.__all__)
 __all__.extend(abc.__all__)
-__all__.extend(element.__all__)
-__all__.extend(docfmt.__all__)
+__all__.extend(core.__all__)
+__all__.extend(doc.__all__)
+__all__.extend(text.__all__)

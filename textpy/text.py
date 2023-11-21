@@ -1,10 +1,17 @@
+"""
+Contains subclasses of PyText: PyModule, PyFile, PyClass, etc.
+
+NOTE: this module is private. All functions and objects are available in the main
+`textpy` namespace - use that instead.
+
+"""
 import re
 from functools import cached_property
 from pathlib import Path
 from typing import List, Union
 
 from .abc import Docstring, PyText, as_path
-from .docfmt import NumpyFormatDocstring
+from .doc import NumpyFormatDocstring
 from .utils.re_extended import line_count_iter, rsplit
 
 __all__ = ["PyModule", "PyFile", "PyClass", "PyFunc", "PyMethod"]

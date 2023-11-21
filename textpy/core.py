@@ -1,3 +1,10 @@
+"""
+Contains the core of textpy: textpy().
+
+NOTE: this module is private. All functions and objects are available in the main
+`textpy` namespace - use that instead.
+
+"""
 from pathlib import Path
 from typing import Optional, Union
 
