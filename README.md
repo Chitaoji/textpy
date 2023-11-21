@@ -134,12 +134,12 @@ This project falls under the BSD 2-Clause License.
 * Lazily imported *pandas* to reduce the time cost for importing.
 
 ### v0.1.12
-* New optional parameters for `textpy.TextPy.findall` :
+* New optional parameters for `TextPy.findall` :
   * `whole_word` : whether to match whole words only;
   * `case_sensitive` : specifies case sensitivity.
 
 ### v0.1.10
-* New optional parameter for `textpy.textpy` :
+* New optional parameter for function `textpy` :
   * `encoding` : specifies encoding.
 
 ### v0.1.9
@@ -150,13 +150,13 @@ This project falls under the BSD 2-Clause License.
 
 ### v0.1.5
 * Compatible with *pandas* versions lower than 1.4.0.
-* Updated `textpy.textpy` :
+* Updated function `textpy` :
   * `Path` objects are now acceptable as parameters.
   * New optional parameter `home` to specify the home path.
-* More flexible presentation of output when using `textpy.TextPy.findall`.
+* More flexible presentation of output on calling `TextPy.findall`.
 
 ### v0.1.4
-* Fixed a display problem of `README.md` on PyPI.
+* Fixed a display problem of README on PyPI.
 
 ### v0.1.3
 * Initial release.
