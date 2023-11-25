@@ -167,12 +167,14 @@ def readme2doc(readme: str) -> str:
 
 # Import the __init__.py and change the module docstring.
 try:
-    with io.open(os.path.join(here, NAME, "__init__.py"), "r", encoding="utf-8") as f:
+    with io.open(
+        path := os.path.join(here, NAME, "__init__.py"), "r", encoding="utf-8"
+    ) as f:
         module_file = f.read()
-    doc_new = readme2doc(LONG_DESCRIPTION)
-    module_file = re.sub('^""".*"""', f'"""{doc_new}"""', module_file, flags=re.DOTALL)
-    module_file = re.sub("^'''.*'''", f"'''{doc_new}'''", module_file, flags=re.DOTALL)
-    with io.open(os.path.join(here, NAME, "__init__.py"), "w", encoding="utf-8") as f:
+    NEW_DOC = readme2doc(LONG_DESCRIPTION)
+    module_file = re.sub('^""".*"""', f'"""{NEW_DOC}"""', module_file, flags=re.DOTALL)
+    module_file = re.sub("^'''.*'''", f"'''{NEW_DOC}'''", module_file, flags=re.DOTALL)
+    with io.open(path, "w", encoding="utf-8") as f:
         f.write(module_file)
 except FileNotFoundError:
     pass
