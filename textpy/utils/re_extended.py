@@ -1,5 +1,5 @@
 import re
-from typing import *
+from typing import Iterable, List, Literal, Tuple, TypeVar, Union, overload
 
 SpanNGroup = Tuple[Tuple[int, int], str]
 LineSpanNGroup = Tuple[int, Tuple[int, int], str]
@@ -53,7 +53,7 @@ def rsplit(
         splits.append(left + string[: span[0]])
         left = searched.group()
         string = string[span[1] :]
-        if maxsplit > 0 and len(splits) >= maxsplit:
+        if len(splits) >= maxsplit > 0:
             break
         searched = re.search(pattern, string, flags=flags)
     splits.append(left + string)
@@ -96,7 +96,7 @@ def lsplit(
         span = searched.span()
         splits.append(string[: span[1]])
         string = string[span[1] :]
-        if maxsplit > 0 and len(splits) >= maxsplit:
+        if len(splits) >= maxsplit > 0:
             break
         searched = re.search(pattern, string, flags=flags)
     splits.append(string)
@@ -221,8 +221,7 @@ def pattern_inreg(pattern: StrPattern) -> StrPattern:
     )
     if flags == -1:
         return pattern
-    else:
-        return re.compile(pattern, flags=flags)
+    return re.compile(pattern, flags=flags)
 
 
 def line_count(string: str) -> int:

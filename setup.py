@@ -7,8 +7,10 @@
 
 import io
 import os
+import re
 import sys
 from shutil import rmtree
+from typing import List, Union
 
 from setuptools import Command, find_packages, setup
 
@@ -32,6 +34,7 @@ try:
         LONG_DESCRIPTION = "\n" + f.read()
 except FileNotFoundError:
     LONG_DESCRIPTION = DESCRIPTION
+
 
 # Load the package's __version__.py module as a dictionary.
 about = {}
@@ -82,6 +85,97 @@ class UploadCommand(Command):
         os.system("git push --tags")
 
         sys.exit()
+
+
+def rsplit(
+    pattern: Union[str, re.Pattern],
+    string: str,
+    maxsplit: int = 0,
+    flags: Union[int, re.RegexFlag] = 0,
+) -> List[str]:
+    """
+    Split the string by the occurrences of the pattern. Differences to
+    `re.split` that the text of all groups in the pattern are also
+    returned, each followed by a substring on its right, connected with
+    `""`'s.
+
+    Parameters
+    ----------
+    pattern : Union[str, re.Pattern]
+        Pattern string.
+    string : str
+        String to be splitted.
+    maxsplit : int, optional
+        Max number of splits, if specified to be 0, there will be no
+        more limits, by default 0.
+    flags : Union[int, re.RegexFlag], optional
+        Regex flag, by default 0.
+
+    Returns
+    -------
+    List[str]
+        List of substrings.
+
+    """
+    splits: List[str] = []
+    searched = re.search(pattern, string, flags=flags)
+    left: str = ""
+    while searched:
+        span = searched.span()
+        splits.append(left + string[: span[0]])
+        left = searched.group()
+        string = string[span[1] :]
+        if len(splits) >= maxsplit > 0:
+            break
+        searched = re.search(pattern, string, flags=flags)
+    splits.append(left + string)
+    return splits
+
+
+def readme2doc(readme: str) -> str:
+    """
+    Takes a readme string as input and returns a modified version of the
+    readme string without certain sections.
+
+    Parameters
+    ----------
+    readme : str
+        A string containing the content of a README file.
+
+    Returns
+    -------
+    str
+        A modified version of the readme string.
+
+    """
+    doc = ""
+    for i in rsplit("\n## ", readme):
+        head = re.search(" .*\n", i).group()[1:-1]
+        if head not in {"Installation", "Requirements", "History"}:
+            doc += i
+    doc = re.sub("<!--html-->.*<!--/html-->", "", doc, flags=re.DOTALL)
+    return (
+        "\n".join(
+            x
+            if len(x) <= 100
+            else x[: (i := x.rfind(" ", None, 100))] + "\n" + x[i + 1 :]
+            for x in doc.splitlines()
+        )
+        + "\n\n"
+    )
+
+
+# Import the __init__.py and change the module docstring.
+try:
+    with io.open(os.path.join(here, NAME, "__init__.py"), "r", encoding="utf-8") as f:
+        module_file = f.read()
+    doc_new = readme2doc(LONG_DESCRIPTION)
+    module_file = re.sub('^""".*"""', f'"""{doc_new}"""', module_file, flags=re.DOTALL)
+    module_file = re.sub("^'''.*'''", f"'''{doc_new}'''", module_file, flags=re.DOTALL)
+    with io.open(os.path.join(here, NAME, "__init__.py"), "w", encoding="utf-8") as f:
+        f.write(module_file)
+except FileNotFoundError:
+    pass
 
 
 setup(
