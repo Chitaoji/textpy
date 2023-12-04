@@ -95,9 +95,8 @@ def rsplit(
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
-    `re.split` that the text of all groups in the pattern are also
-    returned, each followed by a substring on its right, connected with
-    `""`'s.
+    `re.split()` that the texts of all groups in the pattern are also
+    returned, each followed by the substring on its right.
 
     Parameters
     ----------
@@ -132,6 +131,32 @@ def rsplit(
     return splits
 
 
+def word_wrap(string: str) -> str:
+    """
+    Takes a string as input and wraps the text into multiple lines,
+    ensuring that each line has a maximum length of 100 characters.
+
+    Parameters
+    ----------
+    string : str
+        The input text that needs to be word-wrapped.
+
+    Returns
+    -------
+        A string with the input string wrapped to a maximum line length
+        of 100 characters.
+
+    """
+    lines: List[str] = []
+    for x in string.splitlines():
+        x = x.strip()
+        if len(x) <= 100 or (i := x.rfind(" ", None, 101)) == -1:
+            lines.append(x)
+        else:
+            lines.append(x[:i] + "\n" + x[i + 1 :])
+    return "\n".join(lines)
+
+
 def readme2doc(readme: str) -> str:
     """
     Takes a readme string as input and returns a modified version of the
@@ -154,15 +179,7 @@ def readme2doc(readme: str) -> str:
         if head not in {"Installation", "Requirements", "History"}:
             doc += i
     doc = re.sub("<!--html-->.*<!--/html-->", "", doc, flags=re.DOTALL)
-    return (
-        "\n".join(
-            x
-            if len(x) <= 100
-            else x[: (i := x.rfind(" ", None, 100))] + "\n" + x[i + 1 :]
-            for x in doc.splitlines()
-        )
-        + "\n\n"
-    )
+    return word_wrap(doc) + "\n\n"
 
 
 # Import the __init__.py and change the module docstring.

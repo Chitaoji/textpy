@@ -84,6 +84,7 @@ VERBOSE = 0
 
 lazyr.register("pandas", verbose=VERBOSE)
 
+# pylint: disable=wrong-import-position
 from . import abc, core, doc, text
 from .__version__ import __version__
 from .abc import *

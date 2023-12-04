@@ -23,9 +23,8 @@ def rsplit(
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
-    `re.split` that the text of all groups in the pattern are also
-    returned, each followed by a substring on its right, connected with
-    `""`'s.
+    `re.split()` that all groups in the pattern are also returned, each
+    connected with the substring on its right.
 
     Parameters
     ----------
@@ -68,9 +67,8 @@ def lsplit(
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
-    `re.split` that the text of all groups in the pattern are also
-    returned, each following a substring on its left, connected with
-    `""`'s.
+    `re.split()` that all groups in the pattern are also returned, each
+    connected with the substring on its left.
 
     Parameters
     ----------
@@ -226,7 +224,7 @@ def pattern_inreg(pattern: StrPattern) -> StrPattern:
 
 def line_count(string: str) -> int:
     """
-    Counts the number of lines in a string.
+    Counts the number of lines in the string.
 
     Parameters
     ----------
