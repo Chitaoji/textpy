@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Union, o
 import pandas as pd
 from typing_extensions import Self
 
-from .utils.re_extended import pattern_inreg, real_findall
+from .utils.re_extensions import pattern_inreg, real_findall
 
 if TYPE_CHECKING:
     from pandas.io.formats.style import Styler

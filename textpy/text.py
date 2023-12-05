@@ -12,7 +12,7 @@ from typing import List, Union
 
 from .abc import Docstring, PyText, as_path
 from .doc import NumpyFormatDocstring
-from .utils.re_extended import line_count_iter, rsplit
+from .utils.re_extensions import line_count_iter, rsplit
 
 __all__ = ["PyModule", "PyFile", "PyClass", "PyFunc", "PyMethod"]
 

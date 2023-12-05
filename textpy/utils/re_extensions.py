@@ -1,3 +1,4 @@
+"""Extensions to the `re` package."""
 import re
 from typing import Iterable, List, Literal, Tuple, TypeVar, Union, overload
 

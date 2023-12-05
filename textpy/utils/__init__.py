@@ -1,3 +1,4 @@
-from . import re_extended
+"""Utils."""
+from . import re_extensions
 
 __all__ = []
