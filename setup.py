@@ -4,11 +4,10 @@
 
 # Note: To use the 'upload' functionality of this file, you must:
 #   $ pipenv install twine --dev
-
-import io
 import os
 import re
 import sys
+from pathlib import Path
 from shutil import rmtree
 from typing import List, Union
 
@@ -26,12 +25,11 @@ REQUIRED = ["lazyr", "pandas"]
 EXTRAS = {}
 
 
-here = os.path.abspath(os.path.dirname(__file__))
+here = Path(__file__).parent
 
 # Import the README and use it as the long-description.
 try:
-    with io.open(os.path.join(here, "README.md"), encoding="utf-8") as f:
-        LONG_DESCRIPTION = "\n" + f.read()
+    LONG_DESCRIPTION = "\n" + (here / "README.md").read_text()
 except FileNotFoundError:
     LONG_DESCRIPTION = DESCRIPTION
 
@@ -41,10 +39,7 @@ about = {}
 python_exec = exec
 if not VERSION:
     PROJECT_SLUG = NAME.lower().replace("-", "_").replace(" ", "_")
-    with open(
-        os.path.join(here, PROJECT_SLUG, "__version__.py"), encoding="utf-8"
-    ) as f:
-        python_exec(f.read(), about)
+    python_exec((here / PROJECT_SLUG / "__version__.py").read_text(), about)
 else:
     about["__version__"] = VERSION
 
@@ -182,17 +177,25 @@ def readme2doc(readme: str) -> str:
     return word_wrap(doc) + "\n\n"
 
 
+class ReadmeFormatError(Exception):
+    """Raised when the README has a wrong format."""
+
+
 # Import the __init__.py and change the module docstring.
 try:
-    with io.open(
-        path := os.path.join(here, NAME, "__init__.py"), "r", encoding="utf-8"
-    ) as f:
-        module_file = f.read()
+    init_path = here / PROJECT_SLUG / "__init__.py"
+    module_file = init_path.read_text()
     NEW_DOC = readme2doc(LONG_DESCRIPTION)
-    module_file = re.sub('^""".*"""', f'"""{NEW_DOC}"""', module_file, flags=re.DOTALL)
-    module_file = re.sub("^'''.*'''", f"'''{NEW_DOC}'''", module_file, flags=re.DOTALL)
-    with io.open(path, "w", encoding="utf-8") as f:
-        f.write(module_file)
+    if "'''" in NEW_DOC:
+        NEW_DOC = f'"""{NEW_DOC}"""'
+    elif '"""' in NEW_DOC:
+        NEW_DOC = f"'''{NEW_DOC}'''"
+    else:
+        raise ReadmeFormatError("Both \"\"\" and ''' are found in the README")
+    module_file = re.sub(
+        "^\"\"\".*\"\"\"|^'''.*'''", NEW_DOC, module_file, flags=re.DOTALL
+    )
+    init_path.write_text(module_file)
 except FileNotFoundError:
     pass
 
