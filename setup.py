@@ -90,8 +90,8 @@ def rsplit(
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
-    `re.split()` that the texts of all groups in the pattern are also
-    returned, each followed by the substring on its right.
+    `re.split()` that all groups in the pattern are also returned, each
+    connected with the substring on its right.
 
     Parameters
     ----------
