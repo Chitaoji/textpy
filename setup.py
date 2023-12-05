@@ -126,15 +126,30 @@ def rsplit(
     return splits
 
 
-def word_wrap(string: str) -> str:
+def __maxsplit(string: str, maximum: int = 1):
+    head, tail = string, ""
+    if len(string) > maximum:
+        if (i := string.rfind(" ", None, 1 + maximum)) > 0 and (
+            l := string[:i]
+        ).strip():
+            head, tail = l, string[1 + i :]
+        elif (j := string.find(" ", 1 + maximum)) > 0:
+            head, tail = string[:j], string[1 + j :]
+    return head.rstrip(), tail.strip()
+
+
+def word_wrap(string: str, maximum: int = 100) -> str:
     """
     Takes a string as input and wraps the text into multiple lines,
-    ensuring that each line has a maximum length of 100 characters.
+    ensuring that each line has a maximum length of characters.
 
     Parameters
     ----------
     string : str
         The input text that needs to be word-wrapped.
+    maximum : int, optional
+        Specifies the maximum length of each line in the word-wrapped
+        string, by default 100.
 
     Returns
     -------
@@ -142,13 +157,15 @@ def word_wrap(string: str) -> str:
         of 100 characters.
 
     """
+    if maximum < 1:
+        raise ValueError(f"expected maximum > 0, got {maximum} instead")
     lines: List[str] = []
     for x in string.splitlines():
-        x = x.strip()
-        if len(x) <= 100 or (i := x.rfind(" ", None, 101)) == -1:
-            lines.append(x)
-        else:
-            lines.append(x[:i] + "\n" + x[i + 1 :])
+        while True:
+            l, x = __maxsplit(x, maximum=maximum)
+            lines.append(l)
+            if not x:
+                break
     return "\n".join(lines)
 
 
