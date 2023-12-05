@@ -1,9 +1,15 @@
-"""Setup the package."""
+"""
+Setup the package.
+
+To use this file, you must:
+
+```sh
+$ pip install twine
+$ pip install wheel
+```
+"""
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-# Note: To use the 'upload' functionality of this file, you must:
-#   $ pipenv install twine --dev
 import os
 import re
 import sys
@@ -203,14 +209,14 @@ try:
     init_path = here / PROJECT_SLUG / "__init__.py"
     module_file = init_path.read_text()
     NEW_DOC = readme2doc(LONG_DESCRIPTION)
-    if "'''" in NEW_DOC:
-        NEW_DOC = f'"""{NEW_DOC}"""'
-    elif '"""' in NEW_DOC:
+    if "'''" in NEW_DOC and '"""' in NEW_DOC:
+        raise ReadmeFormatError("Both \"\"\" and ''' are found in the README")
+    if '"""' in NEW_DOC:
         NEW_DOC = f"'''{NEW_DOC}'''"
     else:
-        raise ReadmeFormatError("Both \"\"\" and ''' are found in the README")
+        NEW_DOC = f'"""{NEW_DOC}"""'
     module_file = re.sub(
-        "^\"\"\".*\"\"\"|^'''.*'''", NEW_DOC, module_file, flags=re.DOTALL
+        "^\"\"\".*\"\"\"|^'''.*'''|^", NEW_DOC, module_file, flags=re.DOTALL
     )
     init_path.write_text(module_file)
 except FileNotFoundError:
