@@ -125,6 +125,9 @@ textpy/abc.py: '        in a Jupyter notebook.'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.19
+* Various improvements.
+
 ### v0.1.18
 * Updated LICENSE.
 
