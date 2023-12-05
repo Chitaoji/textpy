@@ -60,4 +60,4 @@ def textpy(
     elif path_or_text.is_dir():
         return PyModule(path_or_text, home=home, encoding=encoding)
     else:
-        raise ValueError(f"path not exists: {path_or_text}")
+        raise FileExistsError(f"file not exists: '{path_or_text}'")

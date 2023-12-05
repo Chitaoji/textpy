@@ -340,13 +340,13 @@ class PyText(ABC):
         if splits[0] == "":
             if self.parent is not None:
                 return self.parent.jumpto(splits[1])
-            raise ValueError(f"`{self.absname}` hasn't got a parent")
+            raise ValueError(f"'{self.absname}' hasn't got a parent")
         elif splits[0] in self.children_dict:
             return self.children_dict[splits[0]].jumpto(splits[1])
         elif self.name == splits[0]:
             return self.jumpto(splits[1])
         else:
-            raise ValueError(f"`{splits[0]}` is not a child of `{self.absname}`")
+            raise ValueError(f"'{splits[0]}' is not a child of '{self.absname}'")
 
     def as_header(self) -> Self:
         """

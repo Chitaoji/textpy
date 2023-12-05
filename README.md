@@ -2,7 +2,6 @@
 Reads a python file/module and statically analyzes it. This works well with Jupyter extensions in VScode, and have better performance when the file/module is formatted with *PEP-8*.
 
 ## Installation
-
 ```sh
 $ pip install textpy
 ```
@@ -60,7 +59,7 @@ Also, when using a Jupyter notebook in VScode, you can run a cell like this:
 >>> from textpy import textpy
 >>> textpy("./examples/myfile.py").findall("va")
 ```
-
+<!--html-->
 and the output will be like:
 
 <table id="T_eb71c">
@@ -100,7 +99,7 @@ and the output will be like:
     </tr>
   </tbody>
 </table>
-
+<!--/html-->
 Note that in the Jupyter notebook case, the matched substrings are **clickable**, linking to where the patterns were found.
 
 Now suppose you've got a python module consists of a few files, for example, our `textpy` module itself, you can do almost the same thing:
@@ -126,6 +125,8 @@ textpy/abc.py: '        in a Jupyter notebook.'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.19
+* Various improvements.
 
 ### v0.1.18
 * Updated LICENSE.

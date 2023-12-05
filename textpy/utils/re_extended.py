@@ -1,5 +1,5 @@
 import re
-from typing import *
+from typing import Iterable, List, Literal, Tuple, TypeVar, Union, overload
 
 SpanNGroup = Tuple[Tuple[int, int], str]
 LineSpanNGroup = Tuple[int, Tuple[int, int], str]
@@ -23,9 +23,8 @@ def rsplit(
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
-    `re.split` that the text of all groups in the pattern are also
-    returned, each followed by a substring on its right, connected with
-    `""`'s.
+    `re.split()` that all groups in the pattern are also returned, each
+    connected with the substring on its right.
 
     Parameters
     ----------
@@ -53,7 +52,7 @@ def rsplit(
         splits.append(left + string[: span[0]])
         left = searched.group()
         string = string[span[1] :]
-        if maxsplit > 0 and len(splits) >= maxsplit:
+        if len(splits) >= maxsplit > 0:
             break
         searched = re.search(pattern, string, flags=flags)
     splits.append(left + string)
@@ -68,9 +67,8 @@ def lsplit(
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
-    `re.split` that the text of all groups in the pattern are also
-    returned, each following a substring on its left, connected with
-    `""`'s.
+    `re.split()` that all groups in the pattern are also returned, each
+    connected with the substring on its left.
 
     Parameters
     ----------
@@ -96,7 +94,7 @@ def lsplit(
         span = searched.span()
         splits.append(string[: span[1]])
         string = string[span[1] :]
-        if maxsplit > 0 and len(splits) >= maxsplit:
+        if len(splits) >= maxsplit > 0:
             break
         searched = re.search(pattern, string, flags=flags)
     splits.append(string)
@@ -221,13 +219,12 @@ def pattern_inreg(pattern: StrPattern) -> StrPattern:
     )
     if flags == -1:
         return pattern
-    else:
-        return re.compile(pattern, flags=flags)
+    return re.compile(pattern, flags=flags)
 
 
 def line_count(string: str) -> int:
     """
-    Counts the number of lines in a string.
+    Counts the number of lines in the string.
 
     Parameters
     ----------
