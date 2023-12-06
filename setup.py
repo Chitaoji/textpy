@@ -4,7 +4,7 @@ Setup the package.
 To use the full functionality of this file, you must:
 
 ```sh
-$ pip install yaml
+$ pip install pyyaml
 $ pip install twine
 $ pip install wheel
 ```
