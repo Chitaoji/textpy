@@ -1,12 +1,12 @@
 # Package meta-data.
 NAME: textpy
-DESCRIPTION: Reads a python file/module and statically analyzes it.
-URL: https://github.com/Chitaoji/textpy/
-EMAIL: 2360742040@qq.com
-AUTHOR: Chitaoji
-REQUIRES_PYTHON: ">=3.8.13"
 VERSION:
-REQUIRED:
+SUMMARY: Reads a python file/module and statically analyzes it.
+HOMEPAGE: https://github.com/Chitaoji/textpy/
+AUTHOR: Chitaoji
+AUTHOR_EMAIL: 2360742040@qq.com
+REQUIRES_PYTHON: ">=3.8.13"
+REQUIRES: 
   - lazyr>=0.0.11
   - pandas
 EXTRAS: {}
