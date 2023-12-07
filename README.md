@@ -8,7 +8,7 @@ $ pip install textpy
 
 ## Requirements
 ```txt
-lazyr>=0.0.10
+lazyr>=0.0.11
 pandas>=1.4.0 # A lower version is also acceptable, but some features will be invalid
 ```
 
