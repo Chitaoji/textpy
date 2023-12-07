@@ -19,7 +19,7 @@ from shutil import rmtree
 from typing import Any, Dict, Final, List, Optional, Union
 
 import yaml
-from setuptools import Command, setup
+from setuptools import Command, find_packages, setup
 
 here = Path(__file__).parent
 
@@ -239,7 +239,9 @@ if __name__ == "__main__":
         author_email=AUTHOR_EMAIL,
         python_requires=REQUIRES_PYTHON,
         url=HOMEPAGE,
-        packages=[NAME],
+        packages=[
+            x.replace(PACKAGE_DIR, NAME) for x in find_packages(exclude=["examples"])
+        ],
         package_dir={NAME: PACKAGE_DIR},
         install_requires=REQUIRES,
         extras_require=EXTRAS,
