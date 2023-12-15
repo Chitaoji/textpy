@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Union, o
 import pandas as pd
 from typing_extensions import Self
 
-from .utils.re_extended import pattern_inreg, real_findall
+from .utils.re_extensions import pattern_inreg, real_findall
 
 if TYPE_CHECKING:
     from pandas.io.formats.style import Styler
@@ -416,7 +416,7 @@ class Docstring(ABC):
 
 class FindTextResult:
     """
-    Result of text finding, only as a return of `TextPy.find_text`.
+    Result of text finding, only as a return of `TextPy.findall`.
 
     Parameters
     ----------
@@ -545,8 +545,8 @@ class FindTextResult:
             ""
             if m.group() == ""
             else make_ahref(
-                f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.span()[0]}"
-                * self.line_numbers,
+                f"{r[0].execpath}"
+                + f":{r[1]}:{1+r[0].spaces+m.span()[0]}" * self.line_numbers,
                 m.group(),
                 color="#cccccc",
                 background_color="#595959",

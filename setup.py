@@ -1,45 +1,56 @@
-"""Setup the package."""
+"""
+Setup the package.
+
+To use the full functionality of this file, you must:
+
+```sh
+$ pip install pyyaml
+$ pip install twine
+$ pip install wheel
+```
+"""
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-# Note: To use the 'upload' functionality of this file, you must:
-#   $ pipenv install twine --dev
 import os
 import re
 import sys
 from pathlib import Path
 from shutil import rmtree
-from typing import List, Union
+from typing import Any, Dict, Final, List, Optional, Union
 
+import yaml
 from setuptools import Command, find_packages, setup
-
-# Package meta-data.
-NAME = "textpy"
-DESCRIPTION = "Reads a python file/module and statically analyzes it."
-URL = "https://github.com/Chitaoji/textpy"
-EMAIL = "2360742040@qq.com"
-AUTHOR = "Chitaoji"
-REQUIRES_PYTHON = ">=3.8.13"
-VERSION = None
-REQUIRED = ["lazyr", "pandas"]
-EXTRAS = {}
-
 
 here = Path(__file__).parent
 
+# Load the package's meta-data from metadata.yml.
+yml: Dict[str, Any] = yaml.safe_load((here / "metadata.yml").read_text())
+NAME: Final[str] = yml["NAME"]
+VERSION: Final[Optional[str]] = yml["VERSION"]
+SUMMARY: Final[str] = yml["SUMMARY"]
+HOMEPAGE: Final[str] = yml["HOMEPAGE"]
+AUTHOR: Final[str] = yml["AUTHOR"]
+AUTHOR_EMAIL: Final[str] = yml["AUTHOR_EMAIL"]
+REQUIRES_PYTHON: Final[str] = yml["REQUIRES_PYTHON"]
+REQUIRES: Final[List[str]] = yml["REQUIRES"]
+EXTRAS: Final[Dict] = yml["EXTRAS"]
+PACKAGE_DIR = "src"
+
 # Import the README and use it as the long-description.
 try:
-    LONG_DESCRIPTION = "\n" + (here / "README.md").read_text()
+    long_description = "\n" + (here / "README.md").read_text()
 except FileNotFoundError:
-    LONG_DESCRIPTION = DESCRIPTION
+    long_description = SUMMARY
 
 
 # Load the package's __version__.py module as a dictionary.
 about = {}
 python_exec = exec
 if not VERSION:
-    PROJECT_SLUG = NAME.lower().replace("-", "_").replace(" ", "_")
-    python_exec((here / PROJECT_SLUG / "__version__.py").read_text(), about)
+    try:
+        python_exec((here / PACKAGE_DIR / "__version__.py").read_text(), about)
+    except FileNotFoundError:
+        about["__version__"] = "0.0.0"
 else:
     about["__version__"] = VERSION
 
@@ -52,17 +63,17 @@ class UploadCommand(Command):
 
     @staticmethod
     def status(s):
-        """Prints things in bold."""
+        """Print things in bold."""
         print(f"\033[1m{s}\033[0m")
 
     def initialize_options(self):
-        """Initializes options."""
+        """Initialize options."""
 
     def finalize_options(self):
-        """Finalizes options."""
+        """Finalize options."""
 
     def run(self):
-        """Runs commands."""
+        """Run commands."""
         try:
             self.status("Removing previous builds…")
             rmtree(os.path.join(here, "dist"))
@@ -198,54 +209,58 @@ class ReadmeFormatError(Exception):
     """Raised when the README has a wrong format."""
 
 
-# Import the __init__.py and change the module docstring.
-try:
-    init_path = here / PROJECT_SLUG / "__init__.py"
-    module_file = init_path.read_text()
-    NEW_DOC = readme2doc(LONG_DESCRIPTION)
-    if "'''" in NEW_DOC:
-        NEW_DOC = f'"""{NEW_DOC}"""'
-    elif '"""' in NEW_DOC:
-        NEW_DOC = f"'''{NEW_DOC}'''"
-    else:
-        raise ReadmeFormatError("Both \"\"\" and ''' are found in the README")
-    module_file = re.sub(
-        "^\"\"\".*\"\"\"|^'''.*'''", NEW_DOC, module_file, flags=re.DOTALL
+if __name__ == "__main__":
+    # Import the __init__.py and change the module docstring.
+    try:
+        init_path = here / PACKAGE_DIR / "__init__.py"
+        module_file = init_path.read_text()
+        new_doc = readme2doc(long_description)  # pylint: disable=invalid-name
+        if "'''" in new_doc and '"""' in new_doc:
+            raise ReadmeFormatError("Both \"\"\" and ''' are found in the README")
+        if '"""' in new_doc:
+            new_doc = f"'''{new_doc}'''"
+        else:
+            new_doc = f'"""{new_doc}"""'
+        module_file = re.sub(
+            "^\"\"\".*\"\"\"|^'''.*'''|^", new_doc, module_file, flags=re.DOTALL
+        )
+        init_path.write_text(module_file)
+    except FileNotFoundError:
+        pass
+
+    # Where the magic happens.
+    setup(
+        name=NAME,
+        version=about["__version__"],
+        description=SUMMARY,
+        long_description=long_description,
+        long_description_content_type="text/markdown",
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        python_requires=REQUIRES_PYTHON,
+        url=HOMEPAGE,
+        packages=[
+            x.replace(PACKAGE_DIR, NAME) for x in find_packages(exclude=["examples"])
+        ],
+        package_dir={NAME: PACKAGE_DIR},
+        install_requires=REQUIRES,
+        extras_require=EXTRAS,
+        include_package_data=True,
+        license="BSD",
+        classifiers=[
+            # Trove classifiers
+            # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
+            "License :: OSI Approved :: BSD License",
+            "Programming Language :: Python",
+            "Programming Language :: Python :: 3",
+            "Programming Language :: Python :: 3.8",
+            "Programming Language :: Python :: 3.9",
+            "Programming Language :: Python :: 3.10",
+            "Programming Language :: Python :: 3.11",
+            "Programming Language :: Python :: 3.12",
+        ],
+        # $ setup.py publish support.
+        cmdclass={
+            "upload": UploadCommand,
+        },
     )
-    init_path.write_text(module_file)
-except FileNotFoundError:
-    pass
-
-
-setup(
-    name=NAME,
-    version=about["__version__"],
-    description=DESCRIPTION,
-    long_description=LONG_DESCRIPTION,
-    long_description_content_type="text/markdown",
-    author=AUTHOR,
-    author_email=EMAIL,
-    python_requires=REQUIRES_PYTHON,
-    url=URL,
-    packages=find_packages(exclude=["examples"]),
-    install_requires=REQUIRED,
-    extras_require=EXTRAS,
-    include_package_data=True,
-    license="BSD",
-    classifiers=[
-        # Trove classifiers
-        # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
-        "License :: OSI Approved :: BSD License",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12",
-    ],
-    # $ setup.py publish support.
-    cmdclass={
-        "upload": UploadCommand,
-    },
-)

@@ -8,7 +8,7 @@ $ pip install textpy
 
 ## Requirements
 ```txt
-lazyr>=0.0.3 
+lazyr>=0.0.11
 pandas>=1.4.0 # A lower version is also acceptable, but some features will be invalid
 ```
 
@@ -112,6 +112,10 @@ Now suppose you've got a python module consists of a few files, for example, our
 >>> res
 textpy/abc.py: '            in a Jupyter notebook, this only takes effect when'
 textpy/abc.py: '        in a Jupyter notebook.'
+textpy/__init__.py: 'Also, when using a Jupyter notebook in VScode, you can run a cell like this:'
+textpy/__init__.py: 'Note that in the Jupyter notebook case, the matched substrings are **clickable**, linking to where'
+textpy/__init__.py: '>>> pattern = "note.*k" # type any regular expression here'
+textpy/__init__.py: '>>> res = textpy(module_path).findall("note.*k", styler=False, line_numbers=False)'
 ```
 
 ## See Also
@@ -125,6 +129,11 @@ textpy/abc.py: '        in a Jupyter notebook.'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.20
+* Fixed issues:
+  * Incorrectly displayed file paths in the output of `TextPy.findall(styler=False)`;
+  * Expired file links in the output of `TextPy.findall(styler=True, line_numbers=False)`.
+
 ### v0.1.19
 * Various improvements.
 

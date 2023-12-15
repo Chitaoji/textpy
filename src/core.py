@@ -57,7 +57,6 @@ def textpy(
     path_or_text = as_path(path_or_text, home=home)
     if isinstance(path_or_text, str) or path_or_text.is_file():
         return PyFile(path_or_text, home=home, encoding=encoding)
-    elif path_or_text.is_dir():
+    if path_or_text.is_dir():
         return PyModule(path_or_text, home=home, encoding=encoding)
-    else:
-        raise FileExistsError(f"file not exists: '{path_or_text}'")
+    raise FileExistsError(f"file not exists: '{path_or_text}'")

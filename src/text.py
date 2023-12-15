@@ -12,7 +12,7 @@ from typing import List, Union
 
 from .abc import Docstring, PyText, as_path
 from .doc import NumpyFormatDocstring
-from .utils.re_extended import line_count_iter, rsplit
+from .utils.re_extensions import line_count_iter, rsplit
 
 __all__ = ["PyModule", "PyFile", "PyClass", "PyFunc", "PyMethod"]
 
@@ -97,19 +97,20 @@ class PyFile(PyText):
         self._header = ""
         for i, _str in line_count_iter(rsplit("\n\n\n+[^\\s]", self.text)):
             _str = "\n" + _str.strip()
+            start_line = int(i + 3 * (_cnt > 0))
             if re.match("(?:\n@.*)*\ndef ", _str):
                 children.append(
-                    PyFunc(_str, parent=self, start_line=int(i + 3 * (_cnt > 0)))
+                    PyFunc(_str, parent=self, start_line=start_line, home=self.home)
                 )
             elif re.match("(?:\n@.*)*\nclass ", _str):
                 children.append(
-                    PyClass(_str, parent=self, start_line=int(i + 3 * (_cnt > 0)))
+                    PyClass(_str, parent=self, start_line=start_line, home=self.home)
                 )
             elif _cnt == 0:
                 self._header = _str
             else:
                 children.append(
-                    PyFile(_str, parent=self, start_line=int(i + 3 * (_cnt > 0)))
+                    PyFile(_str, parent=self, start_line=start_line, home=self.home)
                 )
             _cnt += 1
         return children
@@ -149,7 +150,12 @@ class PyClass(PyText):
                 self._header = _str.replace("\n", "\n    ")
             else:
                 children.append(
-                    PyMethod(_str, parent=self, start_line=self.start_line + i)
+                    PyMethod(
+                        _str,
+                        parent=self,
+                        start_line=self.start_line + i,
+                        home=self.home,
+                    )
                 )
             _cnt += 1
         return children
