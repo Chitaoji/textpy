@@ -534,9 +534,7 @@ class FindTextResult:
             NULL
             if x.name == NULL
             else make_ahref(
-                f"{x.execpath}" + f":{x.start_line}:{1+x.spaces}" * self.line_numbers,
-                x.name,
-                color="inherit",
+                f"{x.execpath}:{x.start_line}:{1+x.spaces}", x.name, color="inherit"
             )
         )
 
@@ -545,8 +543,7 @@ class FindTextResult:
             ""
             if m.group() == ""
             else make_ahref(
-                f"{r[0].execpath}"
-                + f":{r[1]}:{1+r[0].spaces+m.span()[0]}" * self.line_numbers,
+                f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.span()[0]}",
                 m.group(),
                 color="#cccccc",
                 background_color="#595959",
