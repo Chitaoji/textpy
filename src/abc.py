@@ -416,7 +416,7 @@ class Docstring(ABC):
 
 class FindTextResult:
     """
-    Result of text finding, only as a return of `TextPy.find_text`.
+    Result of text finding, only as a return of `TextPy.findall`.
 
     Parameters
     ----------
@@ -545,8 +545,8 @@ class FindTextResult:
             ""
             if m.group() == ""
             else make_ahref(
-                f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.span()[0]}"
-                * self.line_numbers,
+                f"{r[0].execpath}"
+                + f":{r[1]}:{1+r[0].spaces+m.span()[0]}" * self.line_numbers,
                 m.group(),
                 color="#cccccc",
                 background_color="#595959",
