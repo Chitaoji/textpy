@@ -129,6 +129,9 @@ textpy/__init__.py: '>>> res = textpy(module_path).findall("note.*k", styler=Fal
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.21
+* Various improvements.
+
 ### v0.1.20
 * Fixed issues:
   * Incorrectly displayed file paths in the output of `TextPy.findall(styler=False)`;
