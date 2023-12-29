@@ -100,9 +100,10 @@ and the output will be like:
   </tbody>
 </table>
 <!--/html-->
+
 Note that in the Jupyter notebook case, the matched substrings are **clickable**, linking to where the patterns were found.
 
-Now suppose you've got a python module consists of a few files, for example, our `textpy` module itself, you can do almost the same thing:
+Now suppose you've got a python module consists of a few files, for example, our `textpy` module itself, you can do almost the same thing by giving the module path:
 
 ```py
 >>> module_path = "textpy/" # you can type any path here
