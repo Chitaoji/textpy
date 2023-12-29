@@ -1,5 +1,5 @@
 # textpy
-Reads a python file/module and statically analyzes it. This works well with Jupyter extensions in VScode, and have better performance when the file/module is formatted with *PEP-8*.
+Reads a python file/module and statically analyzes it. This works well with Jupyter extensions in VScode, and has better performance when the file/module is formatted with *PEP-8*.
 
 ## Installation
 ```sh
