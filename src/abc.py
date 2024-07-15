@@ -5,6 +5,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 `textpy` namespace - use that instead.
 
 """
+
 import re
 from abc import ABC, abstractmethod
 from functools import cached_property, partial
@@ -33,7 +34,7 @@ class PyText(ABC):
     ----------
     path_or_text : Union[Path, str]
         File path, module path or file text.
-    parent : Optional[&quot;PyText&quot;], optional
+    parent : Optional[PyText], optional
         Parent node (if exists), by default None.
     start_line : int, optional
         Starting line number, by default 1.
@@ -68,6 +69,9 @@ class PyText(ABC):
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}('{self.absname}')"
 
+    def __truediv__(self, __value: "str") -> "PyText":
+        return self.jumpto(__value)
+
     @abstractmethod
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         """
@@ -101,8 +105,8 @@ class PyText(ABC):
 
         Returns
         -------
-        TextPy
-            An instance of `TextPy`.
+        PyText
+            An instance of `PyText`.
 
         """
 
@@ -113,7 +117,7 @@ class PyText(ABC):
 
         Returns
         -------
-        Dict[str, TextPy]
+        Dict[str, PyText]
             List of the children nodes.
 
         """
@@ -139,7 +143,7 @@ class PyText(ABC):
 
         Returns
         -------
-        Dict[str, TextPy]
+        Dict[str, PyText]
             Dictionary of children nodes.
 
         """
@@ -234,8 +238,7 @@ class PyText(ABC):
         regex: bool = True,
         styler: Literal[True] = True,
         line_numbers: bool = True,
-    ) -> "Styler":
-        ...
+    ) -> "Styler": ...
 
     @overload
     def findall(
@@ -246,8 +249,7 @@ class PyText(ABC):
         regex: bool = True,
         styler: Literal[False] = False,
         line_numbers: bool = True,
-    ) -> "FindTextResult":
-        ...
+    ) -> "FindTextResult": ...
 
     def findall(
         self,
@@ -314,7 +316,7 @@ class PyText(ABC):
 
     def jumpto(self, target: str) -> "PyText":
         """
-        Jump to another `TextPy` instance.
+        Jump to another `PyText` instance.
 
         Parameters
         ----------
@@ -323,8 +325,8 @@ class PyText(ABC):
 
         Returns
         -------
-        TextPy
-            An instance of `TextPy`.
+        PyText
+            An instance of `PyText`.
 
         Raises
         ------
@@ -367,8 +369,8 @@ class PyText(ABC):
 
         Returns
         -------
-        List[TextPy]
-            List of `TextPy` instances.
+        List[PyText]
+            List of `PyText` instances.
 
         """
         track: List["PyText"] = []
@@ -416,7 +418,7 @@ class Docstring(ABC):
 
 class FindTextResult:
     """
-    Result of text finding, only as a return of `TextPy.findall`.
+    Result of text finding, only as a return of `PyText.findall`.
 
     Parameters
     ----------
@@ -452,8 +454,8 @@ class FindTextResult:
 
         Parameters
         ----------
-        finding : Tuple[TextPy, int, str]
-            Contains a `TextPy` instance, the line number where pattern
+        finding : Tuple[PyText, int, str]
+            Contains a `PyText` instance, the line number where pattern
             is found, and a matched string.
 
         """
@@ -465,8 +467,8 @@ class FindTextResult:
 
         Parameters
         ----------
-        findings : List[Tuple[TextPy, int, str]]
-            A finding contains a `TextPy` instance, the line number where
+        findings : List[Tuple[PyText, int, str]]
+            A finding contains a `PyText` instance, the line number where
             pattern is found, and a matched string.
 
         """
@@ -591,13 +593,13 @@ def make_ahref(
 
 
 @overload
-def as_path(path_or_text: Path, home: Union[Path, str, None] = None) -> Path:
-    ...
+def as_path(path_or_text: Path, home: Union[Path, str, None] = None) -> Path: ...
 
 
 @overload
-def as_path(path_or_text: str, home: Union[Path, str, None] = None) -> Union[Path, str]:
-    ...
+def as_path(
+    path_or_text: str, home: Union[Path, str, None] = None
+) -> Union[Path, str]: ...
 
 
 def as_path(

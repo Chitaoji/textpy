@@ -5,6 +5,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 `textpy` namespace - use that instead.
 
 """
+
 import re
 from functools import cached_property
 from pathlib import Path
@@ -188,3 +189,6 @@ class PyMethod(PyFunc):
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         super().text_init(path_or_text=path_or_text)
         self.spaces = 4
+
+
+# class Py
