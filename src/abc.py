@@ -56,11 +56,11 @@ class PyText(ABC):
         self.name: str = ""
         self.path: Path = Path(NULL + ".py")
 
-        self.parent: Optional["PyText"] = parent
-        self.start_line: int = start_line
-        self.home: Path = as_path(Path(""), home=home)
-        self.encoding: Optional[str] = encoding
-        self.spaces: int = 0
+        self.parent = parent
+        self.start_line = start_line
+        self.home = as_path(Path(""), home=home)
+        self.encoding = encoding
+        self.spaces = 0
 
         self._header: Optional[str] = None
         self.text_init(path_or_text)
