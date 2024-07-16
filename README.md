@@ -19,45 +19,55 @@ Create a new file named `myfile.py` under `./examples/` (or any dir, just for an
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from typing import *
+from typing import Optional
 
 
-class MyClass:
-    def __init__(self):
-        """Write something."""
-        self.var_1 = "hahaha"
-        self.var_2 = "blabla"
-
-
-def print_my_class(a: MyClass):
+class MyBook:
     """
-    Print something.
+    A book that records a story.
 
     Parameters
     ----------
-    a : ThisIsAClass
-        An object.
+    story : str, optional
+        Story to record, by default None.
 
     """
-    print(a.var_1, a.var_2)
+
+    def __init__(self, story: Optional[str] = None) -> None:
+        if story is None:
+            self.content = "This book is empty."
+        self.content = story
+
+
+def print_my_book(book: MyBook) -> None:
+    """
+    Print a book.
+
+    Parameters
+    ----------
+    book : MyBook
+        A book.
+
+    """
+    print(book.content)
 ```
 
-Run the following codes to find all the occurrences of the pattern "va" in `myfile.py`:
+Run the following codes to find all the occurrences of the pattern "content" in `myfile.py`:
 
 ```py
 >>> from textpy import textpy
->>> res = textpy("./examples/myfile.py").findall("va", styler=False)
+>>> res = textpy("./examples/myfile.py").findall("content", styler=False)
 >>> res
-examples/myfile.py:10: '        self.var_1 = "hahaha"'
-examples/myfile.py:11: '        self.var_2 = "blabla"'
-examples/myfile.py:24: '    print(a.var_1, a.var_2)'
+repo/textpy/examples/myfile.py:20: '            self.content = "This book is empty."'
+repo/textpy/examples/myfile.py:21: '        self.content = story'
+repo/textpy/examples/myfile.py:34: '    print(book.content)'
 ```
 
 Also, when using a Jupyter notebook in VScode, you can run a cell like this:
 
 ```py
 >>> from textpy import textpy
->>> textpy("./examples/myfile.py").findall("va")
+>>> textpy("./examples/myfile.py").findall("content")
 ```
 <!--html-->
 and the output will be like:
@@ -75,27 +85,26 @@ and the output will be like:
           style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py'
           style='text-decoration:none;color:inherit'>MyClass</a>.<a href='examples/myfile.py'
           style='text-decoration:none;color:inherit'>__init__</a>:<a href='examples/myfile.py'
-          style='text-decoration:none;color:inherit'>10</a></td>
+          style='text-decoration:none;color:inherit'>20</a></td>
       <td id="T_eb71c_row0_col1" class="data row0 col1"> self.<a href='examples/myfile.py'
-          style='text-decoration:none;color:#cccccc;background-color:#595959'>va</a>r_1 = "hahaha"</td>
+          style='text-decoration:none;color:#cccccc;background-color:#595959'>content</a> = "This book is empty."</td>
     </tr>
     <tr>
       <td id="T_eb71c_row1_col0" class="data row1 col0"><a href='examples/myfile.py'
           style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py'
           style='text-decoration:none;color:inherit'>MyClass</a>.<a href='examples/myfile.py'
           style='text-decoration:none;color:inherit'>__init__</a>:<a href='examples/myfile.py'
-          style='text-decoration:none;color:inherit'>11</a></td>
+          style='text-decoration:none;color:inherit'>21</a></td>
       <td id="T_eb71c_row1_col1" class="data row1 col1"> self.<a href='examples/myfile.py'
-          style='text-decoration:none;color:#cccccc;background-color:#595959'>va</a>r_2 = "blabla"</td>
+          style='text-decoration:none;color:#cccccc;background-color:#595959'>content</a> = story</td>
     </tr>
     <tr>
       <td id="T_eb71c_row2_col0" class="data row2 col0"><a href='examples/myfile.py'
           style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py'
           style='text-decoration:none;color:inherit'>print_my_class</a>:<a href='examples/myfile.py'
-          style='text-decoration:none;color:inherit'>24</a></td>
-      <td id="T_eb71c_row2_col1" class="data row2 col1"> print(a.<a href='examples/myfile.py'
-          style='text-decoration:none;color:#cccccc;background-color:#595959'>va</a>r_1, a.<a href='examples/myfile.py'
-          style='text-decoration:none;color:#cccccc;background-color:#595959'>va</a>r_2)</td>
+          style='text-decoration:none;color:inherit'>34</a></td>
+      <td id="T_eb71c_row2_col1" class="data row2 col1"> print(book.<a href='examples/myfile.py'
+          style='text-decoration:none;color:#cccccc;background-color:#595959'>content</a>)</td>
     </tr>
   </tbody>
 </table>

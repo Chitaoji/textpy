@@ -1,24 +1,34 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from typing import *
+from typing import Optional
 
 
-class MyClass:
-    def __init__(self):
-        """Write something."""
-        self.var_1 = "hahaha"
-        self.var_2 = "blabla"
-
-
-def print_my_class(a: MyClass):
+class MyBook:
     """
-    Print something.
+    A book that records a story.
 
     Parameters
     ----------
-    a : ThisIsAClass
-        An object.
+    story : str, optional
+        Story to record, by default None.
 
     """
-    print(a.var_1, a.var_2)
+
+    def __init__(self, story: Optional[str] = None) -> None:
+        if story is None:
+            self.content = "This book is empty."
+        self.content = story
+
+
+def print_my_book(book: MyBook) -> None:
+    """
+    Print a book.
+
+    Parameters
+    ----------
+    book : MyBook
+        A book.
+
+    """
+    print(book.content)
