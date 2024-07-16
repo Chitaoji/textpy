@@ -1,61 +1,73 @@
 '''
 # textpy
 Reads a python file/module and statically analyzes it. This works well with Jupyter extensions in
-VScode, and have better performance when the file/module is formatted with *PEP-8*.
+VScode, and has better performance when the file/module is formatted with *PEP-8*.
 
 ## Examples
-Create a new file named `myfile.py` under `./examples/` (or any dir, just for an example):
+To demonstrate the usage of this module, we put a file named `myfile.py` under `./examples/` (you
+can find it in the repository, or create a new file of your own):
 
 ```py
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from typing import *
+from typing import Optional
 
 
-class MyClass:
-    def __init__(self):
-        """Write something."""
-        self.var_1 = "hahaha"
-        self.var_2 = "blabla"
-
-
-def print_my_class(a: MyClass):
+class MyBook:
     """
-    Print something.
+    A book that records a story.
 
     Parameters
     ----------
-    a : ThisIsAClass
-        An object.
+    story : str, optional
+        Story to record, by default None.
 
     """
-    print(a.var_1, a.var_2)
+
+    def __init__(self, story: Optional[str] = None) -> None:
+        if story is None:
+            self.content = "This book is empty."
+        self.content = story
+
+
+def print_my_book(book: MyBook) -> None:
+    """
+    Print a book.
+
+    Parameters
+    ----------
+    book : MyBook
+        A book.
+
+    """
+    print(book.content)
 ```
 
-Run the following codes to find all the occurrences of the pattern "va" in `myfile.py`:
+Run the following codes to find all the occurrences of the pattern "content" in `myfile.py`:
 
 ```py
 >>> from textpy import textpy
->>> res = textpy("./examples/myfile.py").findall("va", styler=False)
+>>> res = textpy("./examples/myfile.py").findall("content", styler=False)
 >>> res
-examples/myfile.py:10: '        self.var_1 = "hahaha"'
-examples/myfile.py:11: '        self.var_2 = "blabla"'
-examples/myfile.py:24: '    print(a.var_1, a.var_2)'
+examples/myfile.py:20: '            self.content = "This book is empty."'
+examples/myfile.py:21: '        self.content = story'
+examples/myfile.py:34: '    print(book.content)'
 ```
 
 Also, when using a Jupyter notebook in VScode, you can run a cell like this:
 
 ```py
 >>> from textpy import textpy
->>> textpy("./examples/myfile.py").findall("va")
+>>> textpy("./examples/myfile.py").findall("content")
 ```
+
 
 Note that in the Jupyter notebook case, the matched substrings are **clickable**, linking to where
 the patterns were found.
 
 Now suppose you've got a python module consists of a few files, for example, our `textpy` module
-itself, you can do almost the same thing:
+itself, you can do almost the same thing by giving the module path:
 
 ```py
 >>> module_path = "textpy/" # you can type any path here
@@ -63,7 +75,14 @@ itself, you can do almost the same thing:
 
 >>> res = textpy(module_path).findall("note.*k", styler=False, line_numbers=False)
 >>> res
-
+textpy/abc.py: '            in a Jupyter notebook, this only takes effect when'
+textpy/abc.py: '        in a Jupyter notebook.'
+textpy/__init__.py: 'Also, when using a Jupyter notebook in VScode, you can run a cell like this:'
+textpy/__init__.py: 'Note that in the Jupyter notebook case, the matched substrings are
+**clickable**, linking to where'
+textpy/__init__.py: '>>> pattern = "note.*k" # type any regular expression here'
+textpy/__init__.py: '>>> res = textpy(module_path).findall("note.*k", styler=False,
+line_numbers=False)'
 ```
 
 ## See Also

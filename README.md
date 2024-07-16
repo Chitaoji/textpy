@@ -8,12 +8,13 @@ $ pip install textpy
 
 ## Requirements
 ```txt
-lazyr>=0.0.11
+lazyr>=0.0.16
 pandas>=1.4.0 # A lower version is also acceptable, but some features will be invalid
+Jinja2
 ```
 
 ## Examples
-Create a new file named `myfile.py` under `./examples/` (or any dir, just for an example):
+To demonstrate the usage of this module, we put a file named `myfile.py` under `./examples/` (you can find it in the repository, or create a new file of your own):
 
 ```py
 #!/usr/bin/env python
@@ -58,9 +59,9 @@ Run the following codes to find all the occurrences of the pattern "content" in 
 >>> from textpy import textpy
 >>> res = textpy("./examples/myfile.py").findall("content", styler=False)
 >>> res
-repo/textpy/examples/myfile.py:20: '            self.content = "This book is empty."'
-repo/textpy/examples/myfile.py:21: '        self.content = story'
-repo/textpy/examples/myfile.py:34: '    print(book.content)'
+examples/myfile.py:20: '            self.content = "This book is empty."'
+examples/myfile.py:21: '        self.content = story'
+examples/myfile.py:34: '    print(book.content)'
 ```
 
 Also, when using a Jupyter notebook in VScode, you can run a cell like this:
@@ -139,12 +140,16 @@ textpy/__init__.py: '>>> res = textpy(module_path).findall("note.*k", styler=Fal
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.22
+* Added a new dunder method `PyText.__truediv__()` as an alternative to `.jumpto()`.
+* New class `PyComponent` for storing components of a file, class, or function.
+
 ### v0.1.21
-* Various improvements.
+* Improved behavior of clickables.
 
 ### v0.1.20
 * Fixed issues:
-  * Incorrectly displayed file paths in the output of `TextPy.findall(styler=False)`;
+  * Incorrectly displaying file paths in the output of `TextPy.findall(styler=False)`;
   * Expired file links in the output of `TextPy.findall(styler=True, line_numbers=False)`.
 
 ### v0.1.19
@@ -165,24 +170,23 @@ This project falls under the BSD 3-Clause License.
   * `case_sensitive` : specifies case sensitivity.
 
 ### v0.1.10
-* New optional parameter for `textpy()` :
-  * `encoding` : specifies encoding.
+* New optional parameter `encoding=` for `textpy()`.
 
 ### v0.1.9
-* Removing unnecessary dependencies.
+* Removed unnecessary dependencies.
 
 ### v0.1.8
-* Bugfix for Windows.
+* Bugfix under Windows system.
 
 ### v0.1.5
-* Compatible with *pandas* versions lower than 1.4.0.
+* Provided compatibility with *pandas* versions lower than 1.4.0.
 * Updated `textpy()` :
   * `Path` objects are now acceptable as parameters.
   * New optional parameter `home` to specify the home path.
 * More flexible presentation of output from `TextPy.findall()`.
 
 ### v0.1.4
-* Fixed a display problem of README on PyPI.
+* Fixed a display issue of README on PyPI.
 
 ### v0.1.3
 * Initial release.
