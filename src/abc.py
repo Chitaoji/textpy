@@ -367,9 +367,8 @@ class PyText(ABC):
                 regex=regex,
             )
             editor = PyEditor(self, overwrite=overwrite)
-            new_text = re.sub(pattern, repl, self.text)
-            editor.write(new_text, encoding=self.encoding)
-            paths.append(editor.path)
+            if editor.replace(pattern, repl) > 0:
+                paths.append(editor.path)
         else:
             for c in self.children:
                 p = c.replace(
@@ -710,14 +709,14 @@ def as_path(
 
 class PyEditor:
     """
-    Edit python files.
+    Python file editor.
 
     Parameters
     ----------
     pyfile : PyFile
         PyFile object.
     overwrite : bool, optional
-        Specifies whether to overwrite the original file, by default True.
+        Determines whether to overwrite the original file, by default True.
 
     Raises
     ------
@@ -736,8 +735,10 @@ class PyEditor:
 
         self.path = path
         self.pyfile = pyfile
+        self.__count: int = 0
+        self.__repl: str = ""
 
-    def write(self, text: str, encoding: Optional[str] = None) -> None:
+    def write(self, text: str) -> None:
         """
         Write text.
 
@@ -745,8 +746,37 @@ class PyEditor:
         ----------
         text : str
             Text to write.
-        encoding : str, optional
-            Specifies encoding, by default None.
 
         """
-        self.path.write_text(text + "\n", encoding=encoding)
+        self.path.write_text(text + "\n", encoding=self.pyfile.encoding)
+
+    def replace(
+        self,
+        pattern: Union[str, re.Pattern],
+        repl: Union[str, Callable[["Match[str]"], str]],
+    ) -> int:
+        """
+        Replace patterns with replacement.
+
+        Parameters
+        ----------
+        pattern : Union[str, re.Pattern]
+            String pattern.
+        repl : Union[str, Callable[[Match[str]], str]]
+            Replacement.
+
+        Returns
+        -------
+        int
+            How many patterns are replaced.
+
+        """
+        self.__count = 0
+        self.__repl = repl
+        self.write(re.sub(pattern, self.repl, self.pyfile.text))
+        return self.__count
+
+    def repl(self, _) -> Union[str, Callable[["Match[str]"], str]]:
+        """Counts and returns replacement."""
+        self.__count += 1
+        return self.__repl
