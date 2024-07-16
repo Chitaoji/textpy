@@ -11,11 +11,11 @@ from functools import cached_property
 from pathlib import Path
 from typing import List, Union
 
-from .abc import Docstring, PyText, as_path
+from .abc import NULL, Docstring, PyText, as_path
 from .doc import NumpyFormatDocstring
 from .utils.re_extensions import line_count_iter, rsplit
 
-__all__ = ["PyModule", "PyFile", "PyClass", "PyFunc", "PyMethod"]
+__all__ = ["PyModule", "PyFile", "PyClass", "PyFunc", "PyMethod", "PyComponent"]
 
 
 class PyModule(PyText):
@@ -89,7 +89,7 @@ class PyFile(PyText):
     def header(self) -> PyText:
         if self._header is None:
             _ = self.children
-        return self.__class__(self._header, parent=self).as_header()
+        return PyComponent(self._header, parent=self)
 
     @cached_property
     def children(self) -> List[PyText]:
@@ -126,9 +126,10 @@ class PyClass(PyText):
 
     @cached_property
     def doc(self) -> Docstring:
-        _init = self.jumpto("__init__")
-        if "__init__" in self.children_names and _init.doc.text != "":
-            _doc = _init.doc.text
+        if "__init__" in self.children_names and (
+            t := self.jumpto("__init__").doc.text
+        ):
+            _doc = t
         else:
             _doc = self.header.text
         return NumpyFormatDocstring(_doc, parent=self)
@@ -137,9 +138,7 @@ class PyClass(PyText):
     def header(self) -> PyText:
         if self._header is None:
             _ = self.children
-        return self.__class__(
-            self._header, parent=self, start_line=self.start_line
-        ).as_header()
+        return PyComponent(self._header, parent=self, start_line=self.start_line)
 
     @cached_property
     def children(self) -> List[PyText]:
@@ -180,7 +179,8 @@ class PyFunc(PyText):
 
     @cached_property
     def header(self) -> PyText:
-        return re.search(".*\n[^\\s][^\n]*", self.text, re.DOTALL).group()
+        _header = re.search(".*\n[^\\s][^\n]*", self.text, re.DOTALL).group()
+        return PyComponent(_header)
 
 
 class PyMethod(PyFunc):
@@ -191,4 +191,17 @@ class PyMethod(PyFunc):
         self.spaces = 4
 
 
-# class Py
+class PyComponent(PyText):
+    """The smallest component of PyText."""
+
+    def text_init(self, path_or_text: Union[Path, str]) -> None:
+        self.text = path_or_text.strip()
+        self.name = NULL
+
+    @cached_property
+    def doc(self) -> Docstring:
+        return NumpyFormatDocstring(self.text, parent=self)
+
+    @cached_property
+    def header(self) -> PyText:
+        return self

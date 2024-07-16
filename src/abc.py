@@ -67,7 +67,7 @@ class PyText(ABC):
         self.text_init(path_or_text)
 
     def __repr__(self) -> None:
-        return f"{self.__class__.__name__}('{self.absname}')"
+        return f"{self.__class__.__name__}({self.absname!r})"
 
     def __truediv__(self, __value: "str") -> "PyText":
         return self.jumpto(__value)
@@ -349,19 +349,6 @@ class PyText(ABC):
             return self.jumpto(splits[1])
         else:
             raise ValueError(f"'{splits[0]}' is not a child of '{self.absname}'")
-
-    def as_header(self) -> Self:
-        """
-        Declare `self` as a class header (rather than the class itself).
-
-        Returns
-        -------
-        self
-            An instance of self.
-
-        """
-        self.name = NULL
-        return self
 
     def track(self) -> List["PyText"]:
         """
