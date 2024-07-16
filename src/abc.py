@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Union, overload
 
 import pandas as pd
-from typing_extensions import Self
 
 from .utils.re_extensions import pattern_inreg, real_findall
 
@@ -34,13 +33,13 @@ class PyText(ABC):
     ----------
     path_or_text : Union[Path, str]
         File path, module path or file text.
-    parent : Optional[PyText], optional
+    parent : PyText, optional
         Parent node (if exists), by default None.
     start_line : int, optional
         Starting line number, by default 1.
     home : Union[Path, str, None], optional
         Specifies the home path if `path_or_text` is relative, by default None.
-    encoding : Optional[str], optional
+    encoding : str, optional
         Specifies encoding, by default None.
 
     """
@@ -378,7 +377,7 @@ class Docstring(ABC):
     ----------
     text : str
         Docstring text.
-    parent : Optional[PyText], optional
+    parent : PyText, optional
         Parent node (if exists), by default None.
 
     """
@@ -555,9 +554,9 @@ def make_ahref(
         URL to link.
     display : str
         Word to display.
-    color : Optional[str], optional
+    color : str, optional
         Text color, by default None.
-    background_color : Optional[str], optional
+    background_color : str, optional
         Background color, by default None.
 
     Returns
@@ -581,14 +580,10 @@ def make_ahref(
 
 @overload
 def as_path(path_or_text: Path, home: Union[Path, str, None] = None) -> Path: ...
-
-
 @overload
 def as_path(
     path_or_text: str, home: Union[Path, str, None] = None
 ) -> Union[Path, str]: ...
-
-
 def as_path(
     path_or_text: Union[Path, str], home: Union[Path, str, None] = None
 ) -> Union[Path, str]:

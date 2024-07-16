@@ -5,20 +5,24 @@ NOTE: this module is private. All functions and objects are available in the mai
 `textpy` namespace - use that instead.
 
 """
-from pathlib import Path
-from typing import Optional, Union
 
-from .abc import PyText, as_path
+from pathlib import Path
+from typing import TYPE_CHECKING, Optional, Union
+
+from .abc import as_path
 from .text import PyFile, PyModule
+
+if TYPE_CHECKING:
+    from .abc import PyText
 
 __all__ = ["textpy"]
 
 
 def textpy(
     path_or_text: Union[Path, str],
-    home: Union[Path, str, None] = None,
+    home: Optional[Union[Path, str]] = None,
     encoding: Optional[str] = None,
-) -> PyText:
+) -> "PyText":
     """
     Statically analyzes a python file or a python module. Each python
     file is recommended to be formatted with `PEP-8`, otherwise the
@@ -28,10 +32,10 @@ def textpy(
     ----------
     path_or_text : Union[Path, str]
         File path, module path or file text.
-    home : Union[Path, str, None], optional
+    home : Union[Path, str], optional
         Specifies the home path when `path_or_text` is relative, by
         default None.
-    encoding : Optional[str]
+    encoding : str, optional
         Specifies encoding, by default None.
 
     Returns

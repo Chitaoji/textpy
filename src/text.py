@@ -9,11 +9,14 @@ NOTE: this module is private. All functions and objects are available in the mai
 import re
 from functools import cached_property
 from pathlib import Path
-from typing import List, Union
+from typing import TYPE_CHECKING, List, Union
 
-from .abc import NULL, Docstring, PyText, as_path
+from .abc import NULL, PyText, as_path
 from .doc import NumpyFormatDocstring
 from .utils.re_extensions import line_count_iter, rsplit
+
+if TYPE_CHECKING:
+    from .abc import Docstring
 
 __all__ = ["PyModule", "PyFile", "PyClass", "PyFunc", "PyMethod", "PyComponent"]
 
@@ -42,7 +45,7 @@ class PyModule(PyText):
         self.name = self.path.stem
 
     @cached_property
-    def doc(self) -> Docstring:
+    def doc(self) -> "Docstring":
         return NumpyFormatDocstring("", parent=self)
 
     @cached_property
@@ -71,18 +74,17 @@ class PyFile(PyText):
 
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         if isinstance(path_or_text, Path):
-            if not path_or_text.is_absolute():
-                self.path = self.home / path_or_text
-            else:
-                self.path = path_or_text
+            self.path = as_path(path_or_text, home=self.home)
             self.text = self.path.read_text(encoding=self.encoding).strip()
         else:
-            self.text = path_or_text.strip()
+            self.text = path_or_text.strip()  # in this situation, once argument
+            # 'path_or_text' is str, it will be regarded as text content even if can
+            # represent an existing path
 
         self.name = self.path.stem
 
     @cached_property
-    def doc(self) -> Docstring:
+    def doc(self) -> "Docstring":
         return NumpyFormatDocstring("", parent=self)
 
     @cached_property
@@ -125,7 +127,7 @@ class PyClass(PyText):
         self.name = re.search("class .*?[(:]", self.text).group()[6:-1]
 
     @cached_property
-    def doc(self) -> Docstring:
+    def doc(self) -> "Docstring":
         if "__init__" in self.children_names and (
             t := self.jumpto("__init__").doc.text
         ):
@@ -169,7 +171,7 @@ class PyFunc(PyText):
         self.name = re.search("def .*?\\(", self.text).group()[4:-1]
 
     @cached_property
-    def doc(self) -> Docstring:
+    def doc(self) -> "Docstring":
         searched = re.search('""".*?"""', self.text, re.DOTALL)
         if searched:
             _doc = re.sub("\n    ", "\n", searched.group()[3:-3])
@@ -199,7 +201,7 @@ class PyComponent(PyText):
         self.name = NULL
 
     @cached_property
-    def doc(self) -> Docstring:
+    def doc(self) -> "Docstring":
         return NumpyFormatDocstring(self.text, parent=self)
 
     @cached_property
