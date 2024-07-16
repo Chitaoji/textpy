@@ -10,14 +10,28 @@ import re
 from abc import ABC, abstractmethod
 from functools import cached_property, partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Union, overload
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+    overload,
+)
 
 import pandas as pd
 
 from .utils.re_extensions import pattern_inreg, real_findall
 
 if TYPE_CHECKING:
+    from re import Match
+
     from pandas.io.formats.style import Styler
+
+    from .text import PyFile
 
 
 __all__ = ["PyText", "Docstring"]
@@ -238,7 +252,6 @@ class PyText(ABC):
         styler: Literal[True] = True,
         line_numbers: bool = True,
     ) -> "Styler": ...
-
     @overload
     def findall(
         self,
@@ -249,7 +262,6 @@ class PyText(ABC):
         styler: Literal[False] = False,
         line_numbers: bool = True,
     ) -> "FindTextResult": ...
-
     def findall(
         self,
         pattern: Union[str, re.Pattern],
@@ -265,7 +277,7 @@ class PyText(ABC):
         Parameters
         ----------
         pattern : Union[str, re.Pattern]
-            Regex pattern.
+            String pattern.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
         case_sensitive : bool, optional
@@ -285,23 +297,14 @@ class PyText(ABC):
             Searching result.
 
         """
-        flags: int = 0
-        if isinstance(pattern, re.Pattern):
-            pattern, flags = str(pattern.pattern), pattern.flags
-        if not regex:
-            pattern = pattern_inreg(pattern)
-        if not case_sensitive:
-            flags = flags | re.I
-        if whole_word:
-            pattern = "\\b" + pattern + "\\b"
-        pattern = re.compile(pattern, flags=flags)
-
+        pattern = self.__get_flag(
+            pattern, whole_word=whole_word, case_sensitive=case_sensitive, regex=regex
+        )
         res = FindTextResult(pattern, line_numbers=line_numbers)
         if not self.children:
-            to_match = self.text
             for nline, _, group in real_findall(
                 ".*" + pattern.pattern + ".*",
-                to_match,
+                self.text,
                 linemode=True,
                 flags=pattern.flags,
             ):
@@ -312,6 +315,92 @@ class PyText(ABC):
             for c in self.children:
                 res = res.join(c.findall(pattern, styler=False))
         return res.to_styler() if styler and pd.__version__ >= "1.4.0" else res
+
+    def replace(
+        self,
+        pattern: Union[str, re.Pattern],
+        repl: Union[str, Callable[["Match[str]"], str]],
+        overwrite: bool = True,
+        whole_word: bool = False,
+        case_sensitive: bool = True,
+        regex: bool = True,
+    ) -> List[str]:
+        """
+        Finds all non-overlapping matches of `pattern`, and replace them with
+        `repl`.
+
+        Parameters
+        ----------
+        pattern : Union[str, re.Pattern]
+            String pattern.
+        repl : Union[str, Callable[[str], str]]
+            Speficies the string to replace the patterns. If Callable, should
+            be a function that receives the Match object, and gives back
+            the replacement string to be used.
+        overwrite : bool, optional
+            Specifies whether to overwrite the original file, by default True.
+        whole_word : bool, optional
+            Whether to match whole words only, by default False.
+        case_sensitive : bool, optional
+            Specifies case sensitivity, by default True.
+        regex : bool, optional
+            Whether to enable regular expressions, by default True.
+        styler : bool, optional
+            Whether to return a `Styler` object in convenience of displaying
+            in a Jupyter notebook, this only takes effect when
+            `pandas.__version__ >= 1.4.0`, by default True.
+        line_numbers : bool, optional
+            Whether to display the line numbers, by default True.
+
+        Returns
+        -------
+        List[str]
+            Paths where files have been changed.
+
+        """
+        paths: List[str] = []
+        if self.path.suffix == ".py":
+            pattern = self.__get_flag(
+                pattern,
+                whole_word=whole_word,
+                case_sensitive=case_sensitive,
+                regex=regex,
+            )
+            editor = PyEditor(self, overwrite=overwrite)
+            new_text = re.sub(pattern, repl, self.text)
+            editor.write(new_text, encoding=self.encoding)
+            paths.append(editor.path)
+        else:
+            for c in self.children:
+                p = c.replace(
+                    pattern,
+                    repl,
+                    overwrite=overwrite,
+                    whole_word=whole_word,
+                    case_sensitive=case_sensitive,
+                    regex=regex,
+                )
+                paths.extend(p)
+        return paths
+
+    @staticmethod
+    def __get_flag(
+        pattern: Union[str, re.Pattern],
+        whole_word: bool = False,
+        case_sensitive: bool = True,
+        regex: bool = True,
+    ) -> re.Pattern:
+        flags: int = 0
+        if isinstance(pattern, re.Pattern):
+            pattern, flags = str(pattern.pattern), pattern.flags
+        if not regex:
+            pattern = pattern_inreg(pattern)
+        if not case_sensitive:
+            flags = flags | re.I
+        if whole_word:
+            pattern = "\\b" + pattern + "\\b"
+        pattern = re.compile(pattern, flags=flags)
+        return pattern
 
     def jumpto(self, target: str) -> "PyText":
         """
@@ -526,7 +615,7 @@ class FindTextResult:
             )
         )
 
-    def __display_match(self, r: Tuple[PyText, int, str], m: re.Match) -> str:
+    def __display_match(self, r: Tuple[PyText, int, str], m: "Match[str]") -> str:
         return (
             ""
             if m.group() == ""
@@ -617,3 +706,47 @@ def as_path(
     if not path_or_text.is_absolute():
         path_or_text = home / path_or_text
     return path_or_text
+
+
+class PyEditor:
+    """
+    Edit python files.
+
+    Parameters
+    ----------
+    pyfile : PyFile
+        PyFile object.
+    overwrite : bool, optional
+        Specifies whether to overwrite the original file, by default True.
+
+    Raises
+    ------
+    ValueError
+        Raised when input is not a python file.
+
+    """
+
+    def __init__(self, pyfile: "PyFile", overwrite: bool = True) -> None:
+        if pyfile.path.stem == NULL:
+            raise ValueError(f"not a python file: {pyfile}")
+        path = pyfile.path
+        if not overwrite:
+            while path.exists():
+                path = path.parent / (path.stem + "_copy.py")
+
+        self.path = path
+        self.pyfile = pyfile
+
+    def write(self, text: str, encoding: Optional[str] = None) -> None:
+        """
+        Write text.
+
+        Parameters
+        ----------
+        text : str
+            Text to write.
+        encoding : str, optional
+            Specifies encoding, by default None.
+
+        """
+        self.path.write_text(text + "\n", encoding=encoding)
