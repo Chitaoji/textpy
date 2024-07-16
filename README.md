@@ -166,8 +166,8 @@ This project falls under the BSD 3-Clause License.
 
 ### v0.1.12
 * New optional parameters for `TextPy.findall()` :
-  * `whole_word` : whether to match whole words only;
-  * `case_sensitive` : specifies case sensitivity.
+  * `whole_word=` : whether to match whole words only;
+  * `case_sensitive=` : specifies case sensitivity.
 
 ### v0.1.10
 * New optional parameter `encoding=` for `textpy()`.
