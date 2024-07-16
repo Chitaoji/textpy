@@ -23,6 +23,7 @@ from typing import (
 )
 
 import pandas as pd
+from typing_extensions import Self
 
 from .utils.re_extensions import pattern_inreg, real_findall
 
@@ -324,7 +325,7 @@ class PyText(ABC):
         whole_word: bool = False,
         case_sensitive: bool = True,
         regex: bool = True,
-    ) -> List[str]:
+    ) -> "Replacer":
         """
         Finds all non-overlapping matches of `pattern`, and replace them with
         `repl`.
@@ -354,11 +355,11 @@ class PyText(ABC):
 
         Returns
         -------
-        List[str]
-            Paths where files have been changed.
+        Replacer
+            Text replacer.
 
         """
-        paths: List[str] = []
+        replacer = Replacer()
         if self.path.suffix == ".py":
             pattern = self.__get_flag(
                 pattern,
@@ -368,19 +369,20 @@ class PyText(ABC):
             )
             editor = PyEditor(self, overwrite=overwrite)
             if editor.replace(pattern, repl) > 0:
-                paths.append(editor.path)
+                replacer.append(editor)
         else:
             for c in self.children:
-                p = c.replace(
-                    pattern,
-                    repl,
-                    overwrite=overwrite,
-                    whole_word=whole_word,
-                    case_sensitive=case_sensitive,
-                    regex=regex,
+                replacer.join(
+                    c.replace(
+                        pattern,
+                        repl,
+                        overwrite=overwrite,
+                        whole_word=whole_word,
+                        case_sensitive=case_sensitive,
+                        regex=regex,
+                    )
                 )
-                paths.extend(p)
-        return paths
+        return replacer
 
     @staticmethod
     def __get_flag(
@@ -492,7 +494,7 @@ class Docstring(ABC):
 
 class FindTextResult:
     """
-    Result of text finding, only as a return of `PyText.findall`.
+    Result of text finding, only as a return of `PyText.findall()`.
 
     Parameters
     ----------
@@ -548,19 +550,19 @@ class FindTextResult:
         """
         self.res.extend(findings)
 
-    def join(self, other: "FindTextResult") -> "FindTextResult":
+    def join(self, other: Self) -> Self:
         """
-        Joins two `FindTextResult` instance, only works when they share the
-        same `pattern`.
+        Joins two instance of self, only works when they share the same
+        `pattern`.
 
         Parameters
         ----------
-        other : FindTextResult
+        other : Self
             The other instance.
 
         Returns
         -------
-        FindTextResult
+        Self
             A new instance.
 
         Raises
@@ -735,6 +737,7 @@ class PyEditor:
 
         self.path = path
         self.pyfile = pyfile
+        self.new_text = ""
         self.__count: int = 0
         self.__repl: str = ""
 
@@ -773,10 +776,52 @@ class PyEditor:
         """
         self.__count = 0
         self.__repl = repl
-        self.write(re.sub(pattern, self.repl, self.pyfile.text))
+        self.new_text = re.sub(pattern, self.repl, self.pyfile.text)
         return self.__count
 
     def repl(self, _) -> Union[str, Callable[["Match[str]"], str]]:
         """Counts and returns replacement."""
         self.__count += 1
         return self.__repl
+
+
+class Replacer:
+    """Text replacer, only as a return of `PyText.replace()`."""
+
+    def __init__(self):
+        self.editors: List[PyEditor] = []
+
+    def append(self, editor: PyEditor) -> None:
+        """
+        Append an editor.
+
+        Parameters
+        ----------
+        editor : PyEditor
+            Python file editor.
+
+        """
+        self.editors.append(editor)
+
+    def join(self, other: Self) -> Self:
+        """
+        Joins an instance of self.
+
+        Parameters
+        ----------
+        other : Self
+            The other instance.
+
+        Returns
+        -------
+        Self
+            An instance of self.
+
+        """
+        self.editors.extend(other.editors)
+        return self
+
+    def confirm(self) -> None:
+        """Confirm the replacement."""
+        for e in self.editors:
+            e.write(e.new_text)
