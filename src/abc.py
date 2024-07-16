@@ -514,7 +514,7 @@ class FindTextResult:
         return (
             df.style.hide(axis=0)
             .set_properties(**{"text-align": "left"})
-            .set_table_styles([dict(selector="th", props=[("text-align", "center")])])
+            .set_table_styles([{"selector": "th", "props": [("text-align", "center")]}])
         )
 
     def __display_source(self, x: PyText) -> str:
