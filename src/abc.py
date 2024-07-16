@@ -27,7 +27,7 @@ import pandas as pd
 from .utils.re_extensions import pattern_inreg, real_findall
 
 if TYPE_CHECKING:
-    from re import Match
+    from re import Match, Pattern
 
     from pandas.io.formats.style import Styler
 
@@ -245,7 +245,7 @@ class PyText(ABC):
     @overload
     def findall(
         self,
-        pattern: Union[str, re.Pattern],
+        pattern: Union[str, "Pattern[str]"],
         whole_word: bool = False,
         case_sensitive: bool = True,
         regex: bool = True,
@@ -255,7 +255,7 @@ class PyText(ABC):
     @overload
     def findall(
         self,
-        pattern: Union[str, re.Pattern],
+        pattern: Union[str, "Pattern[str]"],
         whole_word: bool = False,
         case_sensitive: bool = True,
         regex: bool = True,
@@ -264,7 +264,7 @@ class PyText(ABC):
     ) -> "FindTextResult": ...
     def findall(
         self,
-        pattern: Union[str, re.Pattern],
+        pattern: Union[str, "Pattern[str]"],
         whole_word: bool = False,
         case_sensitive: bool = True,
         regex: bool = True,
@@ -276,7 +276,7 @@ class PyText(ABC):
 
         Parameters
         ----------
-        pattern : Union[str, re.Pattern]
+        pattern : Union[str, Pattern[str]]
             String pattern.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
@@ -318,7 +318,7 @@ class PyText(ABC):
 
     def replace(
         self,
-        pattern: Union[str, re.Pattern],
+        pattern: Union[str, "Pattern[str]"],
         repl: Union[str, Callable[["Match[str]"], str]],
         overwrite: bool = True,
         whole_word: bool = False,
@@ -331,7 +331,7 @@ class PyText(ABC):
 
         Parameters
         ----------
-        pattern : Union[str, re.Pattern]
+        pattern : Union[str, Pattern[str]]
             String pattern.
         repl : Union[str, Callable[[str], str]]
             Speficies the string to replace the patterns. If Callable, should
@@ -384,11 +384,11 @@ class PyText(ABC):
 
     @staticmethod
     def __get_flag(
-        pattern: Union[str, re.Pattern],
+        pattern: Union[str, "Pattern[str]"],
         whole_word: bool = False,
         case_sensitive: bool = True,
         regex: bool = True,
-    ) -> re.Pattern:
+    ) -> "Pattern[str]":
         flags: int = 0
         if isinstance(pattern, re.Pattern):
             pattern, flags = str(pattern.pattern), pattern.flags
@@ -496,7 +496,7 @@ class FindTextResult:
 
     Parameters
     ----------
-    pattern : Union[str, re.Pattern]
+    pattern : Union[str, Pattern[str]]
         Regex pattern.
     line_numbers : bool, optional
         Whether to display the line numbers, by default True.
@@ -504,7 +504,7 @@ class FindTextResult:
     """
 
     def __init__(
-        self, pattern: Union[str, re.Pattern], line_numbers: bool = True
+        self, pattern: Union[str, "Pattern[str]"], line_numbers: bool = True
     ) -> None:
         self.pattern = pattern
         self.line_numbers = line_numbers
@@ -752,7 +752,7 @@ class PyEditor:
 
     def replace(
         self,
-        pattern: Union[str, re.Pattern],
+        pattern: Union[str, "Pattern[str]"],
         repl: Union[str, Callable[["Match[str]"], str]],
     ) -> int:
         """
@@ -760,7 +760,7 @@ class PyEditor:
 
         Parameters
         ----------
-        pattern : Union[str, re.Pattern]
+        pattern : Union[str, Pattern[str]]
             String pattern.
         repl : Union[str, Callable[[Match[str]], str]]
             Replacement.
