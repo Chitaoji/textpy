@@ -790,7 +790,12 @@ class Replacer:
         self.editors.extend(other.editors)
 
     def confirm(self) -> None:
-        """Confirm the replacement."""
+        """
+        Confirm the replacement.
+
+        NOTE: This may overwrite existing files, so be VERY CAREFUL!
+
+        """
         for e in self.editors:
             e.write(e.new_text)
 
