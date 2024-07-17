@@ -19,6 +19,7 @@ from typing import (
     Optional,
     Tuple,
     Union,
+    cast,
     overload,
 )
 
@@ -313,7 +314,9 @@ class PyText(ABC, Generic[P]):
     ) -> "Replacer":
         """
         Finds all non-overlapping matches of `pattern`, and replace them with
-        `repl`.
+        `repl`. If you want the replacement to take effect in actual files, use
+        `.confirm()` immediately after this method (e.g.
+        `obj.replace("a", "b").confirm()`).
 
         Parameters
         ----------
@@ -352,9 +355,13 @@ class PyText(ABC, Generic[P]):
                 replacer.append(editor)
         else:
             for c in self.children:
-                replacer.join(c.replace(pattern, repl, overwrite=overwrite, **kwargs))
+                replacer.join(
+                    c.replace(
+                        pattern, repl, overwrite=overwrite, styler=False, **kwargs
+                    )
+                )
         if styler:
-            return replacer
+            return cast("Replacer", replacer.to_styler())
         return replacer
 
     @staticmethod
@@ -533,7 +540,7 @@ class FindTextResult:
 
     def to_styler(self) -> "Styler":
         """
-        Return a `Styler` of dataframe in convenience of displaying in a
+        Return a `Styler` of dataframe to beautify the representation in a
         Jupyter notebook.
 
         Returns
@@ -748,10 +755,7 @@ class Replacer:
         self.editors: List[PyEditor] = []
 
     def __repr__(self) -> str:
-        res = FindTextResult(self.pattern, self.line_numbers)
-        for e in self.editors:
-            res.join(e.pyfile.findall(self.pattern, styler=False))
-        return repr(res)
+        return repr(self.__find_text_result)
 
     def append(self, editor: PyEditor) -> None:
         """
@@ -789,6 +793,28 @@ class Replacer:
         """Confirm the replacement."""
         for e in self.editors:
             e.write(e.new_text)
+
+    def to_styler(self) -> "Styler":
+        """
+        Return a `Styler` of dataframe to beautify the representation in a
+        Jupyter notebook.
+
+        Returns
+        -------
+        Styler
+            A `Styler` of dataframe.
+
+        """
+        styler = self.__find_text_result.to_styler()
+        setattr(styler, "confirm", self.confirm)
+        return styler
+
+    @cached_property
+    def __find_text_result(self) -> FindTextResult:
+        res = FindTextResult(self.pattern, self.line_numbers)
+        for e in self.editors:
+            res.join(e.pyfile.findall(self.pattern, styler=False))
+        return res
 
 
 # pylint: disable=unused-argument
