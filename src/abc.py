@@ -538,20 +538,30 @@ class FindTextResult:
             raise ValueError("joined instances must have the same pattern")
         self.extend(other.res)
 
-    def to_styler(self) -> "Styler":
+    def to_styler(self, match: Optional[Callable] = None) -> "Styler":
         """
         Return a `Styler` of dataframe to beautify the representation in a
         Jupyter notebook.
+
+        Parameters
+        ----------
+        match : Callable, optional
+            Specifies how to display the matched pattern, by default None.
 
         Returns
         -------
         Styler
             A `Styler` of dataframe.
 
+        Raises
+        ------
+        ValueError
+            Raised when `mode` is unrecognized.
+
         """
         df = pd.DataFrame("", index=range(len(self.res)), columns=["source", "match"])
         for i, r in enumerate(self.res):
-            _tp, _n, _match = r
+            _tp, _n, _line = r
             df.iloc[i, 0] = ".".join(
                 [self.__display_source(x) for x in _tp.track()]
             ).replace(".NULL", "")
@@ -559,16 +569,16 @@ class FindTextResult:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{_tp.execpath}:{_n}", str(_n), color="inherit"
                 )
-            df.iloc[i, 1] = re.sub(
-                self.pattern, partial(self.__display_match, r), _match
-            )
+            f = partial(self.__display_match if match is None else match, r)
+            df.iloc[i, 1] = re.sub(self.pattern, f, _line)
         return (
             df.style.hide(axis=0)
             .set_properties(**{"text-align": "left"})
             .set_table_styles([{"selector": "th", "props": [("text-align", "center")]}])
         )
 
-    def __display_source(self, x: PyText) -> str:
+    @staticmethod
+    def __display_source(x: PyText) -> str:
         return (
             NULL
             if x.name == NULL
@@ -577,7 +587,8 @@ class FindTextResult:
             )
         )
 
-    def __display_match(self, r: Tuple[PyText, int, str], m: "Match[str]") -> str:
+    @staticmethod
+    def __display_match(r: Tuple[PyText, int, str], m: "Match[str]") -> str:
         return (
             ""
             if m.group() == ""
@@ -585,14 +596,14 @@ class FindTextResult:
                 f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.span()[0]}",
                 m.group(),
                 color="#cccccc",
-                background_color="#595959",
+                background_color="#505050",
             )
         )
 
 
 def make_ahref(
     url: str,
-    display: str,
+    text: str,
     color: Optional[str] = None,
     background_color: Optional[str] = None,
 ) -> str:
@@ -603,8 +614,8 @@ def make_ahref(
     ----------
     url : str
         URL to link.
-    display : str
-        Word to display.
+    text : str
+        Text to display.
     color : str, optional
         Text color, by default None.
     background_color : str, optional
@@ -616,17 +627,48 @@ def make_ahref(
         An HTML <a> tag.
 
     """
-    style_list = ["text-decoration:none"]
+    style: str = "text-decoration:none"
     if color is not None:
-        style_list.append(f"color:{color}")
+        style += f";color:{color}"
     if background_color is not None:
-        style_list.append(f"background-color:{background_color}")
-    style = ";".join(style_list)
+        style += f";background-color:{background_color}"
     if Path(url).stem == NULL:
         href = ""
     else:
         href = f"href='{url}' "
-    return f"<a {href}style='{style}'>{display}</a>"
+    return f"<a {href}style='{style}'>{text}</a>"
+
+
+def make_span(
+    text: str,
+    color: Optional[str] = None,
+    background_color: Optional[str] = None,
+) -> str:
+    """
+    Makes an HTML <span> tag..
+
+    Parameters
+    ----------
+    text : str
+    color : str, optional
+        Text color, by default None.
+    background_color : str, optional
+        Background color, by default None.
+
+    Returns
+    -------
+    str
+        An HTML <span> tag.
+
+    """
+    style: str = ""
+    if color is not None:
+        style += f";color:{color}"
+    if background_color is not None:
+        style += f";background-color:{background_color}"
+    if style.startswith(";"):
+        style = style[1:]
+    return f"<span style='{style}'>{text}</span>"
 
 
 @overload
@@ -699,8 +741,8 @@ class PyEditor:
         self.path = path
         self.pyfile = pyfile
         self.new_text = ""
+        self.__repl: Union[str, Callable[["Match[str]"], str]] = ""
         self.__count: int = 0
-        self.__repl: str = ""
 
     def write(self, text: str) -> None:
         """
@@ -737,13 +779,13 @@ class PyEditor:
         """
         self.__count = 0
         self.__repl = repl
-        self.new_text = re.sub(pattern, self.repl, self.pyfile.text)
+        self.new_text = re.sub(pattern, self.counted_repl, self.pyfile.text)
         return self.__count
 
-    def repl(self, _) -> Union[str, Callable[["Match[str]"], str]]:
+    def counted_repl(self, x: "Match[str]") -> str:
         """Counts and returns replacement."""
         self.__count += 1
-        return self.__repl
+        return self.__repl if isinstance(self.__repl, str) else self.__repl(x)
 
 
 class Replacer:
@@ -810,9 +852,22 @@ class Replacer:
             A `Styler` of dataframe.
 
         """
-        styler = self.__find_text_result.to_styler()
+        styler = self.__find_text_result.to_styler(match=self.__display_repl)
         setattr(styler, "confirm", self.confirm)
         return styler
+
+    def __display_repl(self, r: Tuple[PyText, int, str], m: "Match[str]") -> str:
+        url = f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.span()[0]}"
+        disp = (
+            ""
+            if m.group() == ""
+            else make_ahref(url, m.group(), color="#cccccc", background_color="#4d2f2f")
+        )
+        if (to_replace := self.editors[0].counted_repl(m)) == "":
+            return disp
+        return disp + make_ahref(
+            url, to_replace, color="#cccccc", background_color="#2f4d2f"
+        )
 
     @cached_property
     def __find_text_result(self) -> FindTextResult:

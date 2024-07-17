@@ -88,7 +88,7 @@ and the output will be like:
           style='text-decoration:none;color:inherit'>__init__</a>:<a href='examples/myfile.py'
           style='text-decoration:none;color:inherit'>20</a></td>
       <td id="T_eb71c_row0_col1" class="data row0 col1"> self.<a href='examples/myfile.py'
-          style='text-decoration:none;color:#cccccc;background-color:#595959'>content</a> = "This book is empty."</td>
+          style='text-decoration:none;color:#cccccc;background-color:#505050'>content</a> = "This book is empty."</td>
     </tr>
     <tr>
       <td id="T_eb71c_row1_col0" class="data row1 col0"><a href='examples/myfile.py'
@@ -97,7 +97,7 @@ and the output will be like:
           style='text-decoration:none;color:inherit'>__init__</a>:<a href='examples/myfile.py'
           style='text-decoration:none;color:inherit'>21</a></td>
       <td id="T_eb71c_row1_col1" class="data row1 col1"> self.<a href='examples/myfile.py'
-          style='text-decoration:none;color:#cccccc;background-color:#595959'>content</a> = story</td>
+          style='text-decoration:none;color:#cccccc;background-color:#505050'>content</a> = story</td>
     </tr>
     <tr>
       <td id="T_eb71c_row2_col0" class="data row2 col0"><a href='examples/myfile.py'
@@ -105,7 +105,7 @@ and the output will be like:
           style='text-decoration:none;color:inherit'>print_my_class</a>:<a href='examples/myfile.py'
           style='text-decoration:none;color:inherit'>34</a></td>
       <td id="T_eb71c_row2_col1" class="data row2 col1"> print(book.<a href='examples/myfile.py'
-          style='text-decoration:none;color:#cccccc;background-color:#595959'>content</a>)</td>
+          style='text-decoration:none;color:#cccccc;background-color:#505050'>content</a>)</td>
     </tr>
   </tbody>
 </table>
