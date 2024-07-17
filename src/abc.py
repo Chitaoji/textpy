@@ -593,7 +593,7 @@ class FindTextResult:
             ""
             if m.group() == ""
             else make_ahref(
-                f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.span()[0]}",
+                f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.start()}",
                 m.group(),
                 color="#cccccc",
                 background_color="#505050",
@@ -857,7 +857,7 @@ class Replacer:
         return styler
 
     def __display_repl(self, r: Tuple[PyText, int, str], m: "Match[str]") -> str:
-        url = f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.span()[0]}"
+        url = f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.start()}"
         disp = (
             ""
             if m.group() == ""
