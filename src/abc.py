@@ -863,11 +863,9 @@ class Replacer:
             if m.group() == ""
             else make_ahref(url, m.group(), color="#cccccc", background_color="#4d2f2f")
         )
-        if (to_replace := self.editors[0].counted_repl(m)) == "":
+        if (new := self.editors[0].counted_repl(m)) == "":
             return disp
-        return disp + make_ahref(
-            url, to_replace, color="#cccccc", background_color="#2f4d2f"
-        )
+        return disp + make_ahref(url, new, color="#cccccc", background_color="#2f4d2f")
 
     @cached_property
     def __find_text_result(self) -> FindTextResult:
