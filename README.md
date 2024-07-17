@@ -141,6 +141,7 @@ This project falls under the BSD 3-Clause License.
 
 ## History
 ### v0.1.22
+* New method `TextPy.replace()` for text replacing.
 * Added a new dunder method `PyText.__truediv__()` as an alternative to `.jumpto()`.
 * New class `PyComponent` for storing components of a file, class, or function.
 
