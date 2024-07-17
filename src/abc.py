@@ -14,8 +14,8 @@ from typing import (
     TYPE_CHECKING,
     Callable,
     Dict,
+    Generic,
     List,
-    Literal,
     Optional,
     Tuple,
     Union,
@@ -23,7 +23,7 @@ from typing import (
 )
 
 import pandas as pd
-from typing_extensions import Self
+from typing_extensions import ParamSpec, Self
 
 from .utils.re_extensions import pattern_inreg, real_findall
 
@@ -38,9 +38,10 @@ if TYPE_CHECKING:
 __all__ = ["PyText", "Docstring"]
 
 NULL = "NULL"  # Path stems or filenames should avoid this.
+P = ParamSpec("P")
 
 
-class PyText(ABC):
+class PyText(ABC, Generic[P]):
     """
     Could be a python module, file, class, function, or method.
 
@@ -247,31 +248,13 @@ class PyText(ABC):
     def findall(
         self,
         pattern: Union[str, "Pattern[str]"],
-        whole_word: bool = False,
-        case_sensitive: bool = True,
-        regex: bool = True,
-        styler: Literal[True] = True,
-        line_numbers: bool = True,
-    ) -> "Styler": ...
-    @overload
-    def findall(
-        self,
-        pattern: Union[str, "Pattern[str]"],
-        whole_word: bool = False,
-        case_sensitive: bool = True,
-        regex: bool = True,
-        styler: Literal[False] = False,
-        line_numbers: bool = True,
+        /,
+        *_: P.args,
+        **kwargs: P.kwargs,
     ) -> "FindTextResult": ...
     def findall(
-        self,
-        pattern: Union[str, "Pattern[str]"],
-        whole_word: bool = False,
-        case_sensitive: bool = True,
-        regex: bool = True,
-        styler: bool = True,
-        line_numbers: bool = True,
-    ) -> Union["Styler", "FindTextResult"]:
+        self, pattern, /, styler=True, line_numbers=True, **kwargs
+    ) -> "FindTextResult":
         """
         Finds all non-overlapping matches of `pattern`.
 
@@ -286,22 +269,20 @@ class PyText(ABC):
         regex : bool, optional
             Whether to enable regular expressions, by default True.
         styler : bool, optional
-            Whether to return a `Styler` object in convenience of displaying
-            in a Jupyter notebook, this only takes effect when
+            Whether to use a `Styler` object to beautify the representation
+            of result in a Jupyter notebook, this only takes effect when
             `pandas.__version__ >= 1.4.0`, by default True.
         line_numbers : bool, optional
-            Whether to display the line numbers, by default True.
+            Whether to display line numbers in the result, by default True.
 
         Returns
         -------
-        Union[Styler, FindTextResult]
+        FindTextResult
             Searching result.
 
         """
-        pattern = self.__get_flag(
-            pattern, whole_word=whole_word, case_sensitive=case_sensitive, regex=regex
-        )
-        res = FindTextResult(pattern, line_numbers=line_numbers)
+        pattern = self.__pattern_trans(pattern, **kwargs)
+        res = FindTextResult(pattern, line_numbers)
         if not self.children:
             for nline, _, group in real_findall(
                 ".*" + pattern.pattern + ".*",
@@ -317,14 +298,18 @@ class PyText(ABC):
                 res.join(c.findall(pattern, styler=False))
         return res.to_styler() if styler and pd.__version__ >= "1.4.0" else res
 
+    @overload
     def replace(
         self,
         pattern: Union[str, "Pattern[str]"],
         repl: Union[str, Callable[["Match[str]"], str]],
         overwrite: bool = True,
-        whole_word: bool = False,
-        case_sensitive: bool = True,
-        regex: bool = True,
+        /,
+        *_: P.args,
+        **kwargs: P.kwargs,
+    ) -> "Replacer": ...
+    def replace(
+        self, pattern, repl, /, overwrite=True, styler=True, line_numbers=True, **kwargs
     ) -> "Replacer":
         """
         Finds all non-overlapping matches of `pattern`, and replace them with
@@ -347,11 +332,11 @@ class PyText(ABC):
         regex : bool, optional
             Whether to enable regular expressions, by default True.
         styler : bool, optional
-            Whether to return a `Styler` object in convenience of displaying
-            in a Jupyter notebook, this only takes effect when
+            Whether to use a `Styler` object to beautify the representation
+            of result in a Jupyter notebook, this only takes effect when
             `pandas.__version__ >= 1.4.0`, by default True.
         line_numbers : bool, optional
-            Whether to display the line numbers, by default True.
+            Whether to display line numbers in the result, by default True.
 
         Returns
         -------
@@ -359,33 +344,21 @@ class PyText(ABC):
             Text replacer.
 
         """
-        pattern = self.__get_flag(
-            pattern,
-            whole_word=whole_word,
-            case_sensitive=case_sensitive,
-            regex=regex,
-        )
-        replacer = Replacer(pattern=pattern)
+        pattern = self.__pattern_trans(pattern, **kwargs)
+        replacer = Replacer(pattern, line_numbers)
         if self.path.suffix == ".py":
             editor = PyEditor(self, overwrite=overwrite)
             if editor.replace(pattern, repl) > 0:
                 replacer.append(editor)
         else:
             for c in self.children:
-                replacer.join(
-                    c.replace(
-                        pattern,
-                        repl,
-                        overwrite=overwrite,
-                        whole_word=whole_word,
-                        case_sensitive=case_sensitive,
-                        regex=regex,
-                    )
-                )
+                replacer.join(c.replace(pattern, repl, overwrite=overwrite, **kwargs))
+        if styler:
+            return replacer
         return replacer
 
     @staticmethod
-    def __get_flag(
+    def __pattern_trans(
         pattern: Union[str, "Pattern[str]"],
         whole_word: bool = False,
         case_sensitive: bool = True,
@@ -495,9 +468,7 @@ class Docstring(ABC):
 class FindTextResult:
     """Result of text finding, only as a return of `PyText.findall()`."""
 
-    def __init__(
-        self, pattern: Union[str, "Pattern[str]"], line_numbers: bool = True
-    ) -> None:
+    def __init__(self, pattern: Union[str, "Pattern[str]"], line_numbers: bool) -> None:
         self.pattern = pattern
         self.line_numbers = line_numbers
         self.res: List[Tuple[PyText, int, str]] = []
@@ -771,12 +742,13 @@ class PyEditor:
 class Replacer:
     """Text replacer, only as a return of `PyText.replace()`."""
 
-    def __init__(self, pattern: Union[str, "Pattern[str]"]):
-        self.editors: List[PyEditor] = []
+    def __init__(self, pattern: Union[str, "Pattern[str]"], line_numbers: bool):
         self.pattern = pattern
+        self.line_numbers = line_numbers
+        self.editors: List[PyEditor] = []
 
     def __repr__(self) -> str:
-        res = FindTextResult(self.pattern)
+        res = FindTextResult(self.pattern, self.line_numbers)
         for e in self.editors:
             res.join(e.pyfile.findall(self.pattern, styler=False))
         return repr(res)
@@ -817,3 +789,13 @@ class Replacer:
         """Confirm the replacement."""
         for e in self.editors:
             e.write(e.new_text)
+
+
+# pylint: disable=unused-argument
+def _ignore(
+    whole_word: bool = False,
+    case_sensitive: bool = True,
+    regex: bool = True,
+    styler: bool = True,
+    line_numbers: bool = True,
+) -> None: ...

@@ -7,13 +7,14 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
-from .abc import as_path
+from .abc import P, _ignore, as_path
 from .text import PyFile, PyModule
 
 if TYPE_CHECKING:
     from .abc import PyText
+
 
 __all__ = ["textpy"]
 
@@ -22,7 +23,9 @@ def textpy(
     path_or_text: Union[Path, str],
     home: Optional[Union[Path, str]] = None,
     encoding: Optional[str] = None,
-) -> "PyText":
+    *,
+    _: Callable[P, None] = _ignore,
+) -> "PyText[P]":
     """
     Statically analyzes a python file or a python module. Each python
     file is recommended to be formatted with `PEP-8`, otherwise the
