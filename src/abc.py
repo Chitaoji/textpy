@@ -312,9 +312,9 @@ class PyText(ABC):
                 if group != "":
                     res.append((self, self.start_line + nline - 1, group))
         else:
-            res = res.join(self.header.findall(pattern, styler=False))
+            res.join(self.header.findall(pattern, styler=False))
             for c in self.children:
-                res = res.join(c.findall(pattern, styler=False))
+                res.join(c.findall(pattern, styler=False))
         return res.to_styler() if styler and pd.__version__ >= "1.4.0" else res
 
     def replace(
@@ -359,14 +359,14 @@ class PyText(ABC):
             Text replacer.
 
         """
-        replacer = Replacer()
+        pattern = self.__get_flag(
+            pattern,
+            whole_word=whole_word,
+            case_sensitive=case_sensitive,
+            regex=regex,
+        )
+        replacer = Replacer(pattern=pattern)
         if self.path.suffix == ".py":
-            pattern = self.__get_flag(
-                pattern,
-                whole_word=whole_word,
-                case_sensitive=case_sensitive,
-                regex=regex,
-            )
             editor = PyEditor(self, overwrite=overwrite)
             if editor.replace(pattern, repl) > 0:
                 replacer.append(editor)
@@ -493,17 +493,7 @@ class Docstring(ABC):
 
 
 class FindTextResult:
-    """
-    Result of text finding, only as a return of `PyText.findall()`.
-
-    Parameters
-    ----------
-    pattern : Union[str, Pattern[str]]
-        Regex pattern.
-    line_numbers : bool, optional
-        Whether to display the line numbers, by default True.
-
-    """
+    """Result of text finding, only as a return of `PyText.findall()`."""
 
     def __init__(
         self, pattern: Union[str, "Pattern[str]"], line_numbers: bool = True
@@ -550,20 +540,15 @@ class FindTextResult:
         """
         self.res.extend(findings)
 
-    def join(self, other: Self) -> Self:
+    def join(self, other: Self) -> None:
         """
-        Joins two instance of self, only works when they share the same
-        `pattern`.
+        Joins the other instance of self.__class__, only works when it
+        has the same `pattern` as self.
 
         Parameters
         ----------
         other : Self
             The other instance.
-
-        Returns
-        -------
-        Self
-            A new instance.
 
         Raises
         ------
@@ -573,14 +558,12 @@ class FindTextResult:
         """
         if other.pattern != self.pattern:
             raise ValueError("joined instances must have the same pattern")
-        obj = self.__class__(self.pattern, line_numbers=self.line_numbers)
-        obj.extend(self.res + other.res)
-        return obj
+        self.extend(other.res)
 
     def to_styler(self) -> "Styler":
         """
-        Convert `self` to a `Styler` of dataframe in convenience of displaying
-        in a Jupyter notebook.
+        Return a `Styler` of dataframe in convenience of displaying in a
+        Jupyter notebook.
 
         Returns
         -------
@@ -788,8 +771,15 @@ class PyEditor:
 class Replacer:
     """Text replacer, only as a return of `PyText.replace()`."""
 
-    def __init__(self):
+    def __init__(self, pattern: Union[str, "Pattern[str]"]):
         self.editors: List[PyEditor] = []
+        self.pattern = pattern
+
+    def __repr__(self) -> str:
+        res = FindTextResult(self.pattern)
+        for e in self.editors:
+            res.join(e.pyfile.findall(self.pattern, styler=False))
+        return repr(res)
 
     def append(self, editor: PyEditor) -> None:
         """
@@ -805,21 +795,23 @@ class Replacer:
 
     def join(self, other: Self) -> Self:
         """
-        Joins an instance of self.
+        Joins the other instance of self.__class__, only works when it
+        has the same `pattern` as self.
 
         Parameters
         ----------
         other : Self
             The other instance.
 
-        Returns
-        -------
-        Self
-            An instance of self.
+        Raises
+        ------
+        ValueError
+            Raised when the two instances have different patterns.
 
         """
+        if other.pattern != self.pattern:
+            raise ValueError("joined instances must have the same pattern")
         self.editors.extend(other.editors)
-        return self
 
     def confirm(self) -> None:
         """Confirm the replacement."""
