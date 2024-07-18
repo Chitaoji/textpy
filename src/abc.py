@@ -6,6 +6,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
+import logging
 import re
 from abc import ABC, abstractmethod
 from functools import cached_property, partial
@@ -181,8 +182,9 @@ class PyText(ABC, Generic[P]):
         """
         if self.parent is None:
             return self.name
-        else:
-            return self.parent.absname + ("." + self.name).replace(".NULL", "")
+        elif self.name == "NULL":
+            return self.parent.absname
+        return self.parent.absname + "." + self.name
 
     @cached_property
     def relname(self) -> str:
@@ -739,6 +741,18 @@ class PyEditor:
         self.__repl: Union[str, Callable[["Match[str]"], str]] = ""
         self.__count: int = 0
 
+    def read(self) -> str:
+        """
+        Read text.
+
+        Returns
+        -------
+        str
+            Text.
+
+        """
+        return self.path.read_text(encoding=self.pyfile.encoding).strip()
+
     def write(self, text: str) -> None:
         """
         Write text.
@@ -826,15 +840,58 @@ class Replacer:
             raise ValueError("joined instances must have the same pattern")
         self.editors.extend(other.editors)
 
-    def confirm(self) -> None:
+    def confirm(self) -> Dict[str, List[str]]:
         """
         Confirm the replacement.
 
         NOTE: This may overwrite existing files, so be VERY CAREFUL!
 
+        Returns
+        -------
+        Dict[str, List[str]]
+            Infomation dictionary.
+
         """
+        return self.__overwrite(log="\nTry running 'textpy(...).replace(...)' again.")
+
+    def rollback(self, force: bool = False) -> Dict[str, List[str]]:
+        """
+        Rollback the replacement.
+
+        Parameters
+        ----------
+        force : bool, optional
+            Whether to force rollback of files regardless of whether
+            they've been modified, by default False.
+
+        Returns
+        -------
+        Dict[str, List[str]]
+            Infomation dictionary.
+
+        """
+        return self.__overwrite(
+            rb=True, fc=force, log="\nTry running '.rollback(force=True)' again."
+        )
+
+    def __overwrite(
+        self, rb: bool = False, fc: bool = False, log: str = ""
+    ) -> Dict[str, List[str]]:
+        info: Dict[str, List[str]] = {"successful": [], "failed": []}
         for e in self.editors:
-            e.write(e.new_text)
+            if fc or e.read() == (e.new_text if rb else e.pyfile.text):
+                e.write(e.pyfile.text if rb else e.new_text)
+                info["successful"].append(str(e.pyfile.abspath))
+            else:
+                info["failed"].append(str(e.pyfile.abspath))
+        if info["failed"]:
+            logging.warning(
+                "failed to overwrite the following files because they've "
+                "been modified since last time they were read:\n    - %s%s",
+                "\n    - ".join(info["failed"]),
+                log,
+            )
+        return info
 
     def to_styler(self) -> "Styler":
         """
@@ -849,6 +906,7 @@ class Replacer:
         """
         styler = self.__find_text_result.to_styler()
         setattr(styler, "confirm", self.confirm)
+        setattr(styler, "rollback", self.rollback)
         return styler
 
     def __style_repl(self, r: Tuple[PyText, int, str], m: "Match[str]") -> str:
