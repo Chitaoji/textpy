@@ -494,13 +494,13 @@ class FindTextResult:
 
     def __repr__(self) -> str:
         string: str = ""
-        for tp, nline, group in self.res:
-            string += f"\n{tp.relpath}" + f":{nline}" * self.line_numbers + ": "
+        for t, n, _line in self.res:
+            string += f"\n{t.relpath}" + f":{n}" * self.line_numbers + ": "
             f: Callable[["Match[str]"], str] = (
                 self.repre if self.repre else lambda x: f"\033[100m{x.group()}\033[0m"
             )
-            _sub = re.sub(self.pattern, f, " " * tp.spaces + group)
-            string += re.sub("\\\\x1b\\[", "\033[", _sub.__repr__())
+            new = re.sub(self.pattern, f, " " * t.spaces + _line)
+            string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
 
     def append(self, finding: Tuple[PyText, int, str]) -> None:
@@ -561,16 +561,16 @@ class FindTextResult:
 
         """
         df = pd.DataFrame("", index=range(len(self.res)), columns=["source", "match"])
-        for i, r in enumerate(self.res):
-            _tp, _n, _line = r
+        for i, res in enumerate(self.res):
+            t, n, _line = res
             df.iloc[i, 0] = ".".join(
-                [self.__style_source(x) for x in _tp.track()]
+                [self.__style_source(x) for x in t.track()]
             ).replace(".NULL", "")
             if self.line_numbers:
                 df.iloc[i, 0] += ":" + make_ahref(
-                    f"{_tp.execpath}:{_n}", str(_n), color="inherit"
+                    f"{t.execpath}:{n}", str(n), color="inherit"
                 )
-            f = partial(self.styl if self.styl else self.__style_match, r)
+            f = partial(self.styl if self.styl else self.__style_match, res)
             df.iloc[i, 1] = re.sub(self.pattern, f, _line)
         return (
             df.style.hide(axis=0)
