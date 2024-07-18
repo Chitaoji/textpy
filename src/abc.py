@@ -316,9 +316,9 @@ class PyText(ABC, Generic[P]):
     ) -> "Replacer":
         """
         Finds all non-overlapping matches of `pattern`, and replace them with
-        `repl`. If you want the replacement to take effect in actual files, use
+        `repl`. If you want the replacement to take effect on files, use
         `.confirm()` immediately after this method (e.g.
-        `obj.replace("a", "b").confirm()`).
+        `.replace("a", "b").confirm()`).
 
         Parameters
         ----------
@@ -329,7 +329,8 @@ class PyText(ABC, Generic[P]):
             be a function that receives the Match object, and gives back
             the replacement string to be used.
         overwrite : bool, optional
-            Specifies whether to overwrite the original file, by default True.
+            Determines whether to overwrite the original files. If False, the
+            replacement will take effect on copyed files, by default True.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
         case_sensitive : bool, optional
@@ -642,7 +643,7 @@ def make_span(
     background_color: Optional[str] = None,
 ) -> str:
     """
-    Makes an HTML <span> tag..
+    Makes an HTML <span> tag.
 
     Parameters
     ----------
@@ -737,6 +738,7 @@ class PyEditor:
 
         self.path = path
         self.pyfile = pyfile
+        self.overwrite = overwrite
         self.new_text = ""
         self.__repl: Union[str, Callable[["Match[str]"], str]] = ""
         self.__count: int = 0
@@ -764,6 +766,25 @@ class PyEditor:
 
         """
         self.path.write_text(text + "\n", encoding=self.pyfile.encoding)
+
+    def compare(self, text: str) -> bool:
+        """
+        Compares whether the file is different from `text`.
+
+        Parameters
+        ----------
+        text : str
+            Text to compare with.
+
+        Returns
+        -------
+        bool
+            Whether the file is different.
+
+        """
+        if self.overwrite:
+            return self.read() == text
+        return True
 
     def replace(
         self,
@@ -804,6 +825,7 @@ class Replacer:
         self.pattern = pattern
         self.line_numbers = line_numbers
         self.editors: List[PyEditor] = []
+        self.__confirmed = False
 
     def __repr__(self) -> str:
         return repr(self.__find_text_result)
@@ -851,7 +873,15 @@ class Replacer:
         Dict[str, List[str]]
             Infomation dictionary.
 
+        Raises
+        ------
+        TypeError
+            Raised when replacement is confirmed repeatedly.
+
         """
+        if self.__confirmed:
+            raise TypeError("replacement has been confirmed already")
+        self.__confirmed = True
         return self.__overwrite(log="\nTry running 'textpy(...).replace(...)' again.")
 
     def rollback(self, force: bool = False) -> Dict[str, List[str]]:
@@ -869,7 +899,18 @@ class Replacer:
         Dict[str, List[str]]
             Infomation dictionary.
 
+        Raises
+        ------
+        TypeError
+            Raised when there's no need to rollback.
+
         """
+        if not self.__confirmed:
+            raise TypeError(
+                "no need to rollback - replacement is not confirmed yet, "
+                "or has been rolled back already"
+            )
+        self.__confirmed = False
         return self.__overwrite(
             rb=True, fc=force, log="\nTry running '.rollback(force=True)' again."
         )
@@ -879,15 +920,15 @@ class Replacer:
     ) -> Dict[str, List[str]]:
         info: Dict[str, List[str]] = {"successful": [], "failed": []}
         for e in self.editors:
-            if fc or e.read() == (e.new_text if rb else e.pyfile.text):
+            if fc or e.compare(e.new_text if rb else e.pyfile.text):
                 e.write(e.pyfile.text if rb else e.new_text)
-                info["successful"].append(str(e.pyfile.abspath))
+                info["successful"].append(str(e.path))
             else:
-                info["failed"].append(str(e.pyfile.abspath))
+                info["failed"].append(str(e.path))
         if info["failed"]:
             logging.warning(
                 "failed to overwrite the following files because they've "
-                "been modified since last time they were read:\n    - %s%s",
+                "been modified since last time:\n    - %s%s",
                 "\n    - ".join(info["failed"]),
                 log,
             )
