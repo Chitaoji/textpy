@@ -637,38 +637,6 @@ def make_ahref(
     return f"<a {href}style='{style}'>{text}</a>"
 
 
-def make_span(
-    text: str,
-    color: Optional[str] = None,
-    background_color: Optional[str] = None,
-) -> str:
-    """
-    Makes an HTML <span> tag.
-
-    Parameters
-    ----------
-    text : str
-    color : str, optional
-        Text color, by default None.
-    background_color : str, optional
-        Background color, by default None.
-
-    Returns
-    -------
-    str
-        An HTML <span> tag.
-
-    """
-    style: str = ""
-    if color is not None:
-        style += f";color:{color}"
-    if background_color is not None:
-        style += f";background-color:{background_color}"
-    if style.startswith(";"):
-        style = style[1:]
-    return f"<span style='{style}'>{text}</span>"
-
-
 @overload
 def as_path(path_or_text: Path, home: Union[Path, str, None] = None) -> Path: ...
 @overload
