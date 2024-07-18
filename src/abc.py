@@ -891,8 +891,8 @@ class Replacer:
         Parameters
         ----------
         force : bool, optional
-            Whether to force rollback of files regardless of whether
-            they've been modified, by default False.
+            Determines whether to forcedly rollback the files regardless
+            of whether they've been modified, by default False.
 
         Returns
         -------
