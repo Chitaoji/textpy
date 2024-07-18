@@ -11,8 +11,9 @@ from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Union
 
-from .abc import NULL, PyText, as_path
+from .abc import PyText, as_path
 from .doc import NumpyFormatDocstring
+from .interaction import NULL
 from .utils.re_extensions import line_count_iter, rsplit
 
 if TYPE_CHECKING:
