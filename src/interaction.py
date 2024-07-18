@@ -97,22 +97,14 @@ class FindTextResult:
 
     def join(self, other: Self) -> None:
         """
-        Joins the other instance of self.__class__, only works when it
-        has the same `pattern` as self.
+        Joins the other instance of self.__class__.
 
         Parameters
         ----------
         other : Self
             The other instance.
 
-        Raises
-        ------
-        ValueError
-            Raised when the two instances have different patterns.
-
         """
-        if other.pattern != self.pattern:
-            raise ValueError("joined instances must have the same pattern")
         self.extend(other.res)
 
     def to_styler(self) -> "Styler":
@@ -182,7 +174,7 @@ class PyEditor:
     Raises
     ------
     ValueError
-        Raised when input is not a python file.
+        Not a python file.
 
     """
 
@@ -301,22 +293,14 @@ class Replacer:
 
     def join(self, other: Self) -> Self:
         """
-        Joins the other instance of self.__class__, only works when it
-        has the same `pattern` as self.
+        Joins the other instance of self.__class__.
 
         Parameters
         ----------
         other : Self
             The other instance.
 
-        Raises
-        ------
-        ValueError
-            Raised when the two instances have different patterns.
-
         """
-        if other.pattern != self.pattern:
-            raise ValueError("joined instances must have the same pattern")
         self.editors.extend(other.editors)
 
     def confirm(self) -> Dict[str, List[str]]:
