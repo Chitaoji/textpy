@@ -475,20 +475,28 @@ class Docstring(ABC):
 class FindTextResult:
     """Result of text finding, only as a return of `PyText.findall()`."""
 
-    def __init__(self, pattern: Union[str, "Pattern[str]"], line_numbers: bool) -> None:
+    def __init__(
+        self,
+        pattern: Union[str, "Pattern[str]"],
+        line_numbers: bool,
+        *,
+        styl: Optional[Callable] = None,
+        repre: Optional[Callable] = None,
+    ) -> None:
         self.pattern = pattern
         self.line_numbers = line_numbers
         self.res: List[Tuple[PyText, int, str]] = []
+        self.styl = styl
+        self.repre = repre
 
     def __repr__(self) -> str:
         string: str = ""
         for tp, nline, group in self.res:
             string += f"\n{tp.relpath}" + f":{nline}" * self.line_numbers + ": "
-            _sub = re.sub(
-                self.pattern,
-                lambda x: "\033[100m" + x.group() + "\033[0m",
-                " " * tp.spaces + group,
+            f: Callable[["Match[str]"], str] = (
+                self.repre if self.repre else lambda x: f"\033[100m{x.group()}\033[0m"
             )
+            _sub = re.sub(self.pattern, f, " " * tp.spaces + group)
             string += re.sub("\\\\x1b\\[", "\033[", _sub.__repr__())
         return string.lstrip()
 
@@ -538,38 +546,28 @@ class FindTextResult:
             raise ValueError("joined instances must have the same pattern")
         self.extend(other.res)
 
-    def to_styler(self, match: Optional[Callable] = None) -> "Styler":
+    def to_styler(self) -> "Styler":
         """
         Return a `Styler` of dataframe to beautify the representation in a
         Jupyter notebook.
-
-        Parameters
-        ----------
-        match : Callable, optional
-            Specifies how to display the matched pattern, by default None.
 
         Returns
         -------
         Styler
             A `Styler` of dataframe.
 
-        Raises
-        ------
-        ValueError
-            Raised when `mode` is unrecognized.
-
         """
         df = pd.DataFrame("", index=range(len(self.res)), columns=["source", "match"])
         for i, r in enumerate(self.res):
             _tp, _n, _line = r
             df.iloc[i, 0] = ".".join(
-                [self.__display_source(x) for x in _tp.track()]
+                [self.__style_source(x) for x in _tp.track()]
             ).replace(".NULL", "")
             if self.line_numbers:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{_tp.execpath}:{_n}", str(_n), color="inherit"
                 )
-            f = partial(self.__display_match if match is None else match, r)
+            f = partial(self.styl if self.styl else self.__style_match, r)
             df.iloc[i, 1] = re.sub(self.pattern, f, _line)
         return (
             df.style.hide(axis=0)
@@ -578,7 +576,7 @@ class FindTextResult:
         )
 
     @staticmethod
-    def __display_source(x: PyText) -> str:
+    def __style_source(x: PyText) -> str:
         return (
             NULL
             if x.name == NULL
@@ -588,7 +586,7 @@ class FindTextResult:
         )
 
     @staticmethod
-    def __display_match(r: Tuple[PyText, int, str], m: "Match[str]") -> str:
+    def __style_match(r: Tuple[PyText, int, str], m: "Match[str]") -> str:
         return (
             ""
             if m.group() == ""
@@ -596,16 +594,13 @@ class FindTextResult:
                 f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.start()}",
                 m.group(),
                 color="#cccccc",
-                background_color="#505050",
+                bg_color="#505050",
             )
         )
 
 
 def make_ahref(
-    url: str,
-    text: str,
-    color: Optional[str] = None,
-    background_color: Optional[str] = None,
+    url: str, text: str, color: Optional[str] = None, bg_color: Optional[str] = None
 ) -> str:
     """
     Makes an HTML <a> tag.
@@ -618,7 +613,7 @@ def make_ahref(
         Text to display.
     color : str, optional
         Text color, by default None.
-    background_color : str, optional
+    bg_color : str, optional
         Background color, by default None.
 
     Returns
@@ -630,8 +625,8 @@ def make_ahref(
     style: str = "text-decoration:none"
     if color is not None:
         style += f";color:{color}"
-    if background_color is not None:
-        style += f";background-color:{background_color}"
+    if bg_color is not None:
+        style += f";background-color:{bg_color}"
     if Path(url).stem == NULL:
         href = ""
     else:
@@ -852,24 +847,35 @@ class Replacer:
             A `Styler` of dataframe.
 
         """
-        styler = self.__find_text_result.to_styler(match=self.__display_repl)
+        styler = self.__find_text_result.to_styler()
         setattr(styler, "confirm", self.confirm)
         return styler
 
-    def __display_repl(self, r: Tuple[PyText, int, str], m: "Match[str]") -> str:
+    def __style_repl(self, r: Tuple[PyText, int, str], m: "Match[str]") -> str:
         url = f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.start()}"
-        disp = (
+        before = (
             ""
             if m.group() == ""
-            else make_ahref(url, m.group(), color="#cccccc", background_color="#4d2f2f")
+            else make_ahref(url, m.group(), color="#cccccc", bg_color="#4d2f2f")
         )
         if (new := self.editors[0].counted_repl(m)) == "":
-            return disp
-        return disp + make_ahref(url, new, color="#cccccc", background_color="#2f4d2f")
+            return before
+        return before + make_ahref(url, new, color="#cccccc", bg_color="#2f4d2f")
+
+    def __repr_repl(self, m: "Match[str]") -> str:
+        before = f"\033[48;5;088m{m.group()}\033[0m"
+        if (new := self.editors[0].counted_repl(m)) == "":
+            return before
+        return before + f"\033[48;5;028m{new}\033[0m"
 
     @cached_property
     def __find_text_result(self) -> FindTextResult:
-        res = FindTextResult(self.pattern, self.line_numbers)
+        res = FindTextResult(
+            self.pattern,
+            self.line_numbers,
+            styl=self.__style_repl,
+            repre=self.__repr_repl,
+        )
         for e in self.editors:
             res.join(e.pyfile.findall(self.pattern, styler=False))
         return res
