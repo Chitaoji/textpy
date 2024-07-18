@@ -67,7 +67,6 @@ examples/myfile.py:34: '    print(book.content)'
 Also, when using a Jupyter notebook in VScode, you can run a cell like this:
 
 ```py
->>> from textpy import textpy
 >>> textpy("./examples/myfile.py").findall("content")
 ```
 <!--html-->
@@ -119,14 +118,14 @@ Now suppose you've got a python module consists of a few files, for example, our
 >>> module_path = "textpy/" # you can type any path here
 >>> pattern = "note.*k" # type any regular expression here
 
->>> res = textpy(module_path).findall("note.*k", styler=False, line_numbers=False)
+>>> res = textpy(module_path).findall(pattern, styler=False)
 >>> res
-textpy/abc.py: '            in a Jupyter notebook, this only takes effect when'
-textpy/abc.py: '        in a Jupyter notebook.'
-textpy/__init__.py: 'Also, when using a Jupyter notebook in VScode, you can run a cell like this:'
-textpy/__init__.py: 'Note that in the Jupyter notebook case, the matched substrings are **clickable**, linking to where'
-textpy/__init__.py: '>>> pattern = "note.*k" # type any regular expression here'
-textpy/__init__.py: '>>> res = textpy(module_path).findall("note.*k", styler=False, line_numbers=False)'
+textpy/abc.py:268: '            of result in a Jupyter notebook, this only takes effect when'
+textpy/abc.py:332: '            of result in a Jupyter notebook, this only takes effect when'
+textpy/__init__.py:58: 'Also, when using a Jupyter notebook in VScode, you can run a cell like this:'
+textpy/__init__.py:66: 'Note that in the Jupyter notebook case, the matched substrings are **clickable**, linking to where'
+textpy/__init__.py:74: '>>> pattern = "note.*k" # type any regular expression here'
+textpy/__init__.py:76: '>>> res = textpy(module_path).findall("note.*k", styler=False, line_numbers=False)'
 ```
 
 ## See Also
