@@ -9,6 +9,8 @@ NOTE: this module is private. All functions and objects are available in the mai
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Optional, Union
 
+from typing_extensions import deprecated
+
 from .abc import P, _ignore, as_path
 from .text import PyDir, PyFile
 
@@ -16,7 +18,7 @@ if TYPE_CHECKING:
     from .abc import PyText
 
 
-__all__ = ["module"]
+__all__ = ["module", "textpy"]
 
 
 def module(
@@ -67,3 +69,9 @@ def module(
     if path_or_text.is_dir():
         return PyDir(path_or_text, home=home, encoding=encoding)
     raise FileExistsError(f"file not exists: '{path_or_text}'")
+
+
+textpy = deprecated(
+    "tx.textpy() is deprecated and will be removed in a future version "
+    "- use tx.module() instead"
+)(module)

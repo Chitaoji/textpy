@@ -56,8 +56,8 @@ def print_my_book(book: MyBook) -> None:
 Run the following codes to find all the occurrences of the pattern "content" in `myfile.py`:
 
 ```py
->>> from textpy import textpy
->>> res = textpy("./examples/myfile.py").findall("content", styler=False)
+>>> import textpy as tx
+>>> res = tx.module("./examples/myfile.py").findall("content", styler=False)
 >>> res
 examples/myfile.py:20: '            self.content = "This book is empty."'
 examples/myfile.py:21: '        self.content = story'
@@ -67,7 +67,7 @@ examples/myfile.py:34: '    print(book.content)'
 Also, when using a Jupyter notebook in VScode, you can run a cell like this:
 
 ```py
->>> textpy("./examples/myfile.py").findall("content")
+>>> tx.module("./examples/myfile.py").findall("content")
 ```
 <!--html-->
 and the output will be like:
@@ -118,14 +118,14 @@ Now suppose you've got a python module consists of a few files, for example, our
 >>> module_path = "textpy/" # you can type any path here
 >>> pattern = "note.*k" # type any regular expression here
 
->>> res = textpy(module_path).findall(pattern, styler=False)
+>>> res = tx.module(module_path).findall(pattern, styler=False)
 >>> res
 textpy/abc.py:268: '            of result in a Jupyter notebook, this only takes effect when'
 textpy/abc.py:332: '            of result in a Jupyter notebook, this only takes effect when'
 textpy/__init__.py:58: 'Also, when using a Jupyter notebook in VScode, you can run a cell like this:'
 textpy/__init__.py:66: 'Note that in the Jupyter notebook case, the matched substrings are **clickable**, linking to where'
 textpy/__init__.py:74: '>>> pattern = "note.*k" # type any regular expression here'
-textpy/__init__.py:76: '>>> res = textpy(module_path).findall("note.*k", styler=False, line_numbers=False)'
+textpy/__init__.py:76: '>>> res = tx.module(module_path).findall("note.*k", styler=False, line_numbers=False)'
 ```
 
 ## See Also
@@ -140,6 +140,7 @@ This project falls under the BSD 3-Clause License.
 
 ## History
 ### v0.1.22
+* `textpy()` is going to be deprecated to avoid conflicts with the module-name `textpy`. Please use `module()` insead.
 * New method `PyText.replace()` for text replacing.
 * New class `Replacer` as the return of `PyText.replace()`, with public methods `.confirm()`, `.rollback()`, etc.
 * New class `PyComponent` for storing components of a file, class, or function.
