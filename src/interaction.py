@@ -51,10 +51,10 @@ class FindTextResult:
         self,
         pattern: Union[str, "Pattern[str]"],
         *,
-        styl: Optional[Callable] = None,
-        repre: Optional[Callable] = None,
+        styl: Optional[Callable[[Tuple["PyText", int, str], "Match[str]"], str]] = None,
+        repre: Optional[Callable[["Match[str]"], str]] = None,
     ) -> None:
-        self.res: List[Tuple[PyText, int, str]] = []
+        self.res: List[Tuple["PyText", int, str]] = []
         self.pattern = pattern
         self.styl = styl
         self.repre = repre
@@ -63,14 +63,12 @@ class FindTextResult:
         string: str = ""
         for t, n, _line in self.res:
             string += f"\n{t.relpath}" + f":{n}" * display_params.line_numbers + ": "
-            f: Callable[["Match[str]"], str] = (
-                self.repre if self.repre else self.__default_repr
-            )
+            f = self.repre if self.repre else self.__default_repr
             new = re.sub(self.pattern, f, " " * t.spaces + _line)
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
 
-    def __default_repr(self, m: "Match[str]") -> str:
+    def __default_repr(self, m: "Match[str]", /) -> str:
         if display_params.color_scheme == "no-color":
             return f"<{m.group()}>"
         return f"\033[100m{m.group()}\033[0m"
@@ -143,7 +141,7 @@ class FindTextResult:
         )
 
     @staticmethod
-    def __style_source(x: "PyText") -> str:
+    def __style_source(x: "PyText", /) -> str:
         return (
             NULL
             if x.name == NULL
@@ -153,7 +151,7 @@ class FindTextResult:
         )
 
     @staticmethod
-    def __style_match(r: Tuple["PyText", int, str], m: "Match[str]") -> str:
+    def __style_match(r: Tuple["PyText", int, str], m: "Match[str]", /) -> str:
         return (
             ""
             if m.group() == ""
