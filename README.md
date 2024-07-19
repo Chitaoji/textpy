@@ -56,6 +56,7 @@ Run the following codes to find all the occurrences of the pattern "MyBook" in `
 ```py
 >>> import textpy as tx
 >>> m = tx.module("./examples/myfile.py")
+
 >>> m.findall("MyBook", styler=False)
 examples/myfile.py:7: 'class <MyBook>:'
 examples/myfile.py:24: 'def print_my_book(book: <MyBook>) -> None:'
