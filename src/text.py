@@ -1,5 +1,5 @@
 """
-Contains subclasses of PyText: PyModule, PyFile, PyClass, etc.
+Contains subclasses of PyText: PyDir, PyFile, PyClass, etc.
 
 NOTE: this module is private. All functions and objects are available in the main
 `textpy` namespace - use that instead.
