@@ -498,11 +498,6 @@ def get_bg_colors() -> Tuple[str, str, str]:
     Tuple[str,str,str]
         Background colors.
 
-    Raises
-    ------
-    ValueError
-        Unrecognized color-scheme.
-
     """
     if display_params.color_scheme == "dark":
         return ["#505050", "#4d2f2f", "#2f4d2f"]
