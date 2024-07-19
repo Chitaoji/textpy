@@ -57,9 +57,9 @@ Run the following codes to find all the occurrences of the pattern "content" in 
 >>> import textpy as tx
 >>> res = tx.module("./examples/myfile.py").findall("content", styler=False)
 >>> res
-examples/myfile.py:20: '            self./content/ = "This book is empty."'
-examples/myfile.py:21: '        self./content/ = story'
-examples/myfile.py:34: '    print(book./content/)'
+examples/myfile.py:20: '            self.content = "This book is empty."'
+examples/myfile.py:21: '        self.content = story'
+examples/myfile.py:34: '    print(book.content)'
 ```
 If you are using a Jupyter notebook in VScode, you can run a cell like this:
 ```py
@@ -136,13 +136,13 @@ As mentioned before, use `.findall()` to find all non-overlapping matches of som
 ```py
 >>> m = tx.textpy("examples/myfile.py")
 >>> m.findall("book", styler=False)
-examples/myfile.py:9: '    A /book/ that records a story.'
-examples/myfile.py:20: '            self.content = "This /book/ is empty."'
-examples/myfile.py:24: 'def print_my_/book/(/book/: MyBook) -> None:'
-examples/myfile.py:26: '    Print a /book/.'
-examples/myfile.py:30: '    /book/ : MyBook'
-examples/myfile.py:31: '        A /book/.'
-examples/myfile.py:34: '    print(/book/.content)'
+examples/myfile.py:9: '    A book that records a story.'
+examples/myfile.py:20: '            self.content = "This book is empty."'
+examples/myfile.py:24: 'def print_my_book(book: MyBook) -> None:'
+examples/myfile.py:26: '    Print a book.'
+examples/myfile.py:30: '    book : MyBook'
+examples/myfile.py:31: '        A book.'
+examples/myfile.py:34: '    print(book.content)'
 ```
 The optional argument `styler=` determines whether to use a pandas `Styler` object to beautify the representation. If you are running python in the console, please always set `styler=False`. You can also disable the stylers in `display_params`, so that you don't need to repeat `styler=False` every time in the following examples:
 ```py
@@ -152,14 +152,14 @@ The optional argument `styler=` determines whether to use a pandas `Styler` obje
 Method `.findall()` also has some optional parameters including `whole_word=`, `case_sensitive=`, `regex=` to customize the match pattern:
 ```py
 >>> m.findall("book", case_sensitive=False, regex=False, whole_word=False, styler=False)
-examples/myfile.py:7: 'class My/Book/:'
-examples/myfile.py:9: '    A /book/ that records a story.'
-examples/myfile.py:20: '            self.content = "This /book/ is empty."'
-examples/myfile.py:24: 'def print_my_/book/(/book/: My/Book/) -> None:'
-examples/myfile.py:26: '    Print a /book/.'
-examples/myfile.py:30: '    /book/ : My/Book/'
-examples/myfile.py:31: '        A /book/.'
-examples/myfile.py:34: '    print(/book/.content)'
+examples/myfile.py:7: 'class MyBook:'
+examples/myfile.py:9: '    A book that records a story.'
+examples/myfile.py:20: '            self.content = "This book is empty."'
+examples/myfile.py:24: 'def print_my_book(book: MyBook) -> None:'
+examples/myfile.py:26: '    Print a book.'
+examples/myfile.py:30: '    book : MyBook'
+examples/myfile.py:31: '        A book.'
+examples/myfile.py:34: '    print(book.content)'
 ```
 
 ### tx.PyText.replace()
