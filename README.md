@@ -165,6 +165,8 @@ examples/myfile.py:34: '    print(book.content)'
 ### tx.PyText.replace()
 Use `.replace()` to find all non-overlapping matches of some pattern, and replace them with another string:
 ```py
+>>> display_params.color_scheme="no-color"
+
 >>> r = m.replace("book", "magazine")
 >>> r
 examples/myfile.py:9: '    A /book/magazine that records a story.'
