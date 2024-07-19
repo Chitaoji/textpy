@@ -65,41 +65,26 @@ If you are using a Jupyter notebook in VScode, you can run a cell like this:
 ```py
 >>> m.findall("content")
 ```
-<!--html-->
-and the output will be like:
-<table id="T_eb71c">
+<!--/html-->
+<table id="T_19b39">
   <thead>
     <tr>
-      <th id="T_eb71c_level0_col0" class="col_heading level0 col0">source</th>
-      <th id="T_eb71c_level0_col1" class="col_heading level0 col1">match</th>
+      <th id="T_19b39_level0_col0" class="col_heading level0 col0" >source</th>
+      <th id="T_19b39_level0_col1" class="col_heading level0 col1" >match</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td id="T_eb71c_row0_col0" class="data row0 col0"><a href='examples/myfile.py'
-          style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py'
-          style='text-decoration:none;color:inherit'>MyClass</a>.<a href='examples/myfile.py'
-          style='text-decoration:none;color:inherit'>__init__</a>:<a href='examples/myfile.py'
-          style='text-decoration:none;color:inherit'>20</a></td>
-      <td id="T_eb71c_row0_col1" class="data row0 col1"> self.<a href='examples/myfile.py'
-          style='text-decoration:none;color:#cccccc;background-color:#505050'>content</a> = "This book is empty."</td>
+      <td id="T_19b39_row0_col0" class="data row0 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>MyBook</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>7</a></td>
+      <td id="T_19b39_row0_col1" class="data row0 col1" >class <a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a>:</td>
     </tr>
     <tr>
-      <td id="T_eb71c_row1_col0" class="data row1 col0"><a href='examples/myfile.py'
-          style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py'
-          style='text-decoration:none;color:inherit'>MyClass</a>.<a href='examples/myfile.py'
-          style='text-decoration:none;color:inherit'>__init__</a>:<a href='examples/myfile.py'
-          style='text-decoration:none;color:inherit'>21</a></td>
-      <td id="T_eb71c_row1_col1" class="data row1 col1"> self.<a href='examples/myfile.py'
-          style='text-decoration:none;color:#cccccc;background-color:#505050'>content</a> = story</td>
+      <td id="T_19b39_row1_col0" class="data row1 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>print_my_book</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>24</a></td>
+      <td id="T_19b39_row1_col1" class="data row1 col1" >def print_my_book(book: <a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a>) -> None:</td>
     </tr>
     <tr>
-      <td id="T_eb71c_row2_col0" class="data row2 col0"><a href='examples/myfile.py'
-          style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py'
-          style='text-decoration:none;color:inherit'>print_my_class</a>:<a href='examples/myfile.py'
-          style='text-decoration:none;color:inherit'>34</a></td>
-      <td id="T_eb71c_row2_col1" class="data row2 col1"> print(book.<a href='examples/myfile.py'
-          style='text-decoration:none;color:#cccccc;background-color:#505050'>content</a>)</td>
+      <td id="T_19b39_row2_col0" class="data row2 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>print_my_book</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>30</a></td>
+      <td id="T_19b39_row2_col1" class="data row2 col1" >    book : <a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a></td>
     </tr>
   </tbody>
 </table>
@@ -128,7 +113,7 @@ In conclusion, suppose you've got a python package, you can simply give the pack
 As mentioned before, user can use `.findall()` to find all non-overlapping matches of some pattern in a python module.
 ```py
 >>> m.findall("optional", styler=False)
-repo/textpy/examples/myfile.py:13: '    story : str, <optional>'
+examples/myfile.py:13: '    story : str, <optional>'
 ```
 The optional argument `styler=` determines whether to use a pandas `Styler` object to beautify the representation. If you are running python in the console, please always set `styler=False`. You can also disable the stylers in `display_params`, so that you don't need to repeat `styler=False` every time in the following examples:
 ```py
