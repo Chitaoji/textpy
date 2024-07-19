@@ -323,7 +323,9 @@ class Replacer:
         if self.__confirmed:
             raise TypeError("replacement has been confirmed already")
         self.__confirmed = True
-        return self.__overwrite(log="\nTry running 'textpy(...).replace(...)' again.")
+        return self.__overwrite(
+            log="\nTry running 'tx.module(...).replace(...)' again."
+        )
 
     def rollback(self, force: bool = False) -> Dict[str, List[str]]:
         """

@@ -1,5 +1,5 @@
 """
-Contains the core of textpy: textpy().
+Contains the core of textpy: module().
 
 NOTE: this module is private. All functions and objects are available in the main
 `textpy` namespace - use that instead.
