@@ -106,7 +106,7 @@ In conclusion, suppose you've got a python package, you can simply give the pack
 >>> pkg_dir = "examples/" # you can type any path here
 >>> pattern = "" # you can type any regular expression here
 
->>> res = tx.module(pkg_dir).findall(pattern, styler=False)
+>>> res = tx.module(pkg_dir).findall(pattern)
 ```
 
 ### tx.PyText.findall()
