@@ -11,7 +11,17 @@ import re
 from dataclasses import dataclass
 from functools import cached_property, partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Optional, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import pandas as pd
 from typing_extensions import Self
@@ -31,7 +41,7 @@ NULL = "NULL"  # Path stems or filenames should avoid this.
 TextFinding = Tuple["PyText", int, str]
 
 
-@dataclass(slots=True)
+@dataclass
 class DisplayParams:
     """
     Params for displaying.
@@ -41,6 +51,25 @@ class DisplayParams:
     color_scheme: Literal["dark", "modern", "high-intensty", "no-color"] = "dark"
     enable_styler: bool = True
     line_numbers: bool = True
+
+    def __setattr__(self, __name: str, __value: Any) -> None:
+        if __name == "color_scheme":
+            if __value in ["dark", "modern", "high-intensty", "no-color"]:
+                super().__setattr__(__name, __value)
+                return
+        elif __name == "enable_styler":
+            if isinstance(__value, bool):
+                super().__setattr__(__name, __value)
+                return
+        elif __name == "line_numbers":
+            if isinstance(__value, bool):
+                super().__setattr__(__name, __value)
+                return
+        else:
+            raise AttributeError(
+                f"{self.__class__.__name__!r} object has no attribute {__name!r}"
+            )
+        raise ValueError(f"invalid value for {__name!r}: {__value!r}")
 
 
 display_params = DisplayParams()
@@ -481,6 +510,4 @@ def get_bg_colors() -> Tuple[str, str, str]:
         return ["#505050", "#701414", "#4e5d2d"]
     if display_params.color_scheme == "high-intensty":
         return ["#505050", "#701414", "#147014"]
-    if display_params.color_scheme == "no-color":
-        return ["#505050", "#505050", "#505050"]
-    raise ValueError(f"unrecognized color-scheme: {display_params.color_scheme!r}")
+    return ["#505050", "#505050", "#505050"]
