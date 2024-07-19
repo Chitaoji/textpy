@@ -99,7 +99,7 @@ The previous demonstration introduced the core function `tx.module()`. In fact, 
 >>> isinstance(m, tx.PyText)
 True
 ```
-Sometimes, your python module may contain not just one file but multiple files and folders, but don’t worry since `tx.module()` provides support for complex file hierarchies. The return type will be either `PyDir` or `PyFile` (both are subclasses of `PyText`) depending on the path type.
+Sometimes, your python module may contain not just one file but multiple files and folders, but don’t worry, since `tx.module()` provides support for complex file hierarchies. The return type will be either `PyDir` or `PyFile` (both are subclasses of `PyText`) depending on the path type.
 
 In conclusion, suppose you've got a python package, you can simply give the package dirpath to `tx.module()`, and do things like before:
 
@@ -123,7 +123,7 @@ The optional argument `styler=` determines whether to use a pandas `Styler` obje
 ``` 
 Method `.findall()` also has some optional parameters including `whole_word=`, `case_sensitive=`, `regex=` to customize the match pattern:
 ```py
->>> m.findall("mybook", case_sensitive=False, regex=False, whole_word=True, styler=False)
+>>> m.findall("mybook", case_sensitive=False, regex=False, whole_word=True)
 examples/myfile.py:7: 'class <MyBook>:'
 examples/myfile.py:24: 'def print_my_book(book: <MyBook>) -> None:'
 examples/myfile.py:30: '    book : <MyBook>'
