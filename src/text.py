@@ -19,27 +19,13 @@ from .utils.re_extensions import line_count_iter, rsplit
 if TYPE_CHECKING:
     from .abc import Docstring
 
-__all__ = ["PyModule", "PyFile", "PyClass", "PyFunc", "PyMethod", "PyComponent"]
+__all__ = ["PyDir", "PyFile", "PyClass", "PyFunc", "PyMethod", "PyComponent"]
 
 
-class PyModule(PyText):
-    """Contains a python module."""
+class PyDir(PyText):
+    """Store a directory of python files."""
 
     def text_init(self, path_or_text: Union[Path, str]) -> None:
-        """
-        Initialize the instance.
-
-        Parameters
-        ----------
-        path_or_text : Union[Path, str]
-            File path, module path or file text.
-
-        Raises
-        ------
-        NotADirectoryError
-            Raised when `path` is not a directory.
-
-        """
         self.path = as_path(path_or_text, home=self.home)
         if not self.path.is_dir():
             raise NotADirectoryError(f"not a dicretory: '{self.path}'")
@@ -62,7 +48,7 @@ class PyModule(PyText):
                     PyFile(_path, parent=self, home=self.home, encoding=self.encoding)
                 )
             elif _path.is_dir():
-                _module = PyModule(
+                _module = PyDir(
                     _path, parent=self, home=self.home, encoding=self.encoding
                 )
                 if len(_module.children) > 0:
@@ -71,7 +57,7 @@ class PyModule(PyText):
 
 
 class PyFile(PyText):
-    """Contains the code of a python file."""
+    """Store the code of a python file."""
 
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         if isinstance(path_or_text, Path):
@@ -121,7 +107,7 @@ class PyFile(PyText):
 
 
 class PyClass(PyText):
-    """Contains the code and docstring of a class."""
+    """Store the code and docstring of a class."""
 
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         self.text = path_or_text.strip()
@@ -165,7 +151,7 @@ class PyClass(PyText):
 
 
 class PyFunc(PyText):
-    """Contains the code and docstring of a function."""
+    """Store the code and docstring of a function."""
 
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         self.text = path_or_text.strip()
@@ -187,7 +173,7 @@ class PyFunc(PyText):
 
 
 class PyMethod(PyFunc):
-    """Contains the code and docstring of a class method."""
+    """Store the code and docstring of a class method."""
 
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         super().text_init(path_or_text=path_or_text)

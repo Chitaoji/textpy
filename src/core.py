@@ -10,16 +10,16 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Optional, Union
 
 from .abc import P, _ignore, as_path
-from .text import PyFile, PyModule
+from .text import PyDir, PyFile
 
 if TYPE_CHECKING:
     from .abc import PyText
 
 
-__all__ = ["textpy"]
+__all__ = ["module"]
 
 
-def textpy(
+def module(
     path_or_text: Union[Path, str],
     home: Optional[Union[Path, str]] = None,
     encoding: Optional[str] = None,
@@ -53,11 +53,11 @@ def textpy(
 
     See Also
     --------
-    PyModule : Contains a python module.
-    PyFile : Contains the code of a python file.
-    PyClass : Contains the code and docstring of a class.
-    PyMethod : Contains the code and docstring of a class method.
-    PyFunc : Contains the code and docstring of a function.
+    PyDir : Stores a directory of python files.
+    PyFile : Stores the code of a python file.
+    PyClass : Stores the code and docstring of a class.
+    PyMethod : Stores the code and docstring of a class method.
+    PyFunc : Stores the code and docstring of a function.
     NumpyFormatDocstring : Stores a numpy-formatted docstring.
 
     """
@@ -65,5 +65,5 @@ def textpy(
     if isinstance(path_or_text, str) or path_or_text.is_file():
         return PyFile(path_or_text, home=home, encoding=encoding)
     if path_or_text.is_dir():
-        return PyModule(path_or_text, home=home, encoding=encoding)
+        return PyDir(path_or_text, home=home, encoding=encoding)
     raise FileExistsError(f"file not exists: '{path_or_text}'")
