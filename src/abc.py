@@ -70,9 +70,13 @@ class PyText(ABC, Generic[P]):
 
         self.parent = parent
         self.start_line = start_line
-        self.home = as_path(Path(""), home=home)
-        self.encoding = encoding
         self.spaces = 0
+        if parent is None:
+            self.home = as_path(Path(""), home=home)
+            self.encoding = encoding
+        else:
+            self.home = parent.home
+            self.encoding = parent.encoding
 
         self._header: Optional[str] = None
         self.text_init(path_or_text)

@@ -44,13 +44,9 @@ class PyDir(PyText):
         children: List[PyText] = []
         for _path in self.path.iterdir():
             if _path.suffix == ".py":
-                children.append(
-                    PyFile(_path, parent=self, home=self.home, encoding=self.encoding)
-                )
+                children.append(PyFile(_path, parent=self))
             elif _path.is_dir():
-                _module = PyDir(
-                    _path, parent=self, home=self.home, encoding=self.encoding
-                )
+                _module = PyDir(_path, parent=self)
                 if len(_module.children) > 0:
                     children.append(_module)
         return children
@@ -78,7 +74,7 @@ class PyFile(PyText):
     def header(self) -> PyText:
         if self._header is None:
             _ = self.children
-        return PyContent(self._header, parent=self, home=self.home)
+        return PyContent(self._header, parent=self)
 
     @cached_property
     def children(self) -> List[PyText]:
@@ -89,19 +85,13 @@ class PyFile(PyText):
             _str = "\n" + _str.strip()
             start_line = int(i + 3 * (_cnt > 0))
             if re.match("(?:\n@.*)*\ndef ", _str):
-                children.append(
-                    PyFunc(_str, parent=self, start_line=start_line, home=self.home)
-                )
+                children.append(PyFunc(_str, parent=self, start_line=start_line))
             elif re.match("(?:\n@.*)*\nclass ", _str):
-                children.append(
-                    PyClass(_str, parent=self, start_line=start_line, home=self.home)
-                )
+                children.append(PyClass(_str, parent=self, start_line=start_line))
             elif _cnt == 0:
                 self._header = _str
             else:
-                children.append(
-                    PyFile(_str, parent=self, start_line=start_line, home=self.home)
-                )
+                children.append(PyFile(_str, parent=self, start_line=start_line))
             _cnt += 1
         return children
 
@@ -127,9 +117,7 @@ class PyClass(PyText):
     def header(self) -> PyText:
         if self._header is None:
             _ = self.children
-        return PyContent(
-            self._header, parent=self, start_line=self.start_line, home=self.home
-        )
+        return PyContent(self._header, parent=self, start_line=self.start_line)
 
     @cached_property
     def children(self) -> List[PyText]:
@@ -141,12 +129,7 @@ class PyClass(PyText):
                 self._header = _str.replace("\n", "\n    ")
             else:
                 children.append(
-                    PyMethod(
-                        _str,
-                        parent=self,
-                        start_line=self.start_line + i,
-                        home=self.home,
-                    )
+                    PyMethod(_str, parent=self, start_line=self.start_line + i)
                 )
             _cnt += 1
         return children
@@ -171,7 +154,7 @@ class PyFunc(PyText):
     @cached_property
     def header(self) -> PyText:
         _header = re.search(".*\n[^\\s][^\n]*", self.text, re.DOTALL).group()
-        return PyContent(_header, parent=self, home=self.home)
+        return PyContent(_header, parent=self)
 
 
 class PyMethod(PyFunc):
