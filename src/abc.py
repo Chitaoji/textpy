@@ -357,6 +357,45 @@ class PyText(ABC, Generic[P]):
             return cast("Replacer", replacer.to_styler())
         return replacer
 
+    @overload
+    def delete(
+        self,
+        pattern: Union[str, "Pattern[str]"],
+        overwrite: bool = True,
+        /,
+        *_: P.args,
+        **kwargs: P.kwargs,
+    ) -> "Replacer": ...
+    def delete(self, pattern, /, overwrite=True, styler=True, **kwargs) -> "Replacer":
+        """
+        An alternative to `.replace(pattern, "", *args, **kwargs)`
+
+        Parameters
+        ----------
+        pattern : Union[str, Pattern[str]]
+            String pattern.
+        overwrite : bool, optional
+            Determines whether to overwrite the original files. If False, the
+            replacement will take effect on copyed files, by default True.
+        whole_word : bool, optional
+            Whether to match whole words only, by default False.
+        case_sensitive : bool, optional
+            Specifies case sensitivity, by default True.
+        regex : bool, optional
+            Whether to enable regular expressions, by default True.
+        styler : bool, optional
+            Whether to use a `Styler` object to beautify the representation
+            of result in a Jupyter notebook, this only takes effect when
+            `pandas.__version__ >= 1.4.0`, by default True.
+
+        Returns
+        -------
+        Replacer
+            Text replacer.
+
+        """
+        return self.replace(pattern, "", overwrite, styler=styler, **kwargs)
+
     @staticmethod
     def __pattern_trans(
         pattern: Union[str, "Pattern[str]"],

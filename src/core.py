@@ -60,6 +60,7 @@ def module(
     PyClass : Stores the code and docstring of a class.
     PyMethod : Stores the code and docstring of a class method.
     PyFunc : Stores the code and docstring of a function.
+    PyContent : Stores a part of a file.
     NumpyFormatDocstring : Stores a numpy-formatted docstring.
 
     """

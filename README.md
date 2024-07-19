@@ -57,9 +57,9 @@ Run the following codes to find all the occurrences of the pattern "content" in 
 >>> import textpy as tx
 >>> res = tx.module("./examples/myfile.py").findall("content", styler=False)
 >>> res
-examples/myfile.py:20: '            self.content = "This book is empty."'
-examples/myfile.py:21: '        self.content = story'
-examples/myfile.py:34: '    print(book.content)'
+examples/myfile.py:20: '            self./content/ = "This book is empty."'
+examples/myfile.py:21: '        self./content/ = story'
+examples/myfile.py:34: '    print(book./content/)'
 ```
 If you are using a Jupyter notebook in VScode, you can run a cell like this:
 ```py
@@ -108,12 +108,12 @@ Note that in the Jupyter notebook case, the matched substrings are **clickable**
 
 ## Examples
 ### tx.module()
-The previous demonstration introduced the core function `tx.module()`. In fact, `tx.module()` generates a subinstance of the abstract class `PyText`, which supports various text manipulation methods:
+The previous demonstration introduced the core function `tx.module()`. In fact, the return type of `tx.module()` is a subclass of the abstract class `PyText`, who supports various text manipulation methods:
 ```py
 >>> isinstance(tx.module(""), tx.PyText)
 True
 ```
-Sometimes, your python module may contain not just one file but multiple files and folders. Don’t worry since `tx.module()` provides support for complex file hierarchies, and the return type will be a subclass of `PyText` (either `PyDir` or `PyFile`) depending on the path type.
+Sometimes, your python module may contain not just one file but multiple files and folders, but don’t worry since `tx.module()` provides support for complex file hierarchies, and the return type will be either `PyDir` or `PyFile` (both are subclasses of `PyText` ) depending on the path type.
 
 In conclusion, suppose you've got a python package, you can simply give the package dirpath to `tx.module()`, and do things like before:
 
@@ -132,7 +132,71 @@ textpy/__init__.py:76: '>>> res = tx.module(module_path).findall("note.*k", styl
 ```
 
 ### tx.PyText.findall()
-As mentioned before, use `.findall()` to find all the occurrences of some pattern 
+As mentioned before, use `.findall()` to find all non-overlapping matches of some pattern in a python module.
+```py
+>>> m = tx.textpy("examples/myfile.py")
+>>> m.findall("book", styler=False)
+examples/myfile.py:9: '    A /book/ that records a story.'
+examples/myfile.py:20: '            self.content = "This /book/ is empty."'
+examples/myfile.py:24: 'def print_my_/book/(/book/: MyBook) -> None:'
+examples/myfile.py:26: '    Print a /book/.'
+examples/myfile.py:30: '    /book/ : MyBook'
+examples/myfile.py:31: '        A /book/.'
+examples/myfile.py:34: '    print(/book/.content)'
+```
+The optional argument `styler=` determines whether to use a pandas `Styler` object to beautify the representation. If you are running python in the console, please always set `styler=False`. You can also disable the stylers in `display_params`, so that you don't need to repeat `styler=False` every time in the following examples:
+```py
+>>> from textpy import display_params
+>>> display_params.enable_styler = False
+``` 
+Method `.findall()` also has some optional parameters including `whole_word=`, `case_sensitive=`, `regex=` to customize the match pattern:
+```py
+>>> m.findall("book", case_sensitive=False, regex=False, whole_word=False, styler=False)
+examples/myfile.py:7: 'class My/Book/:'
+examples/myfile.py:9: '    A /book/ that records a story.'
+examples/myfile.py:20: '            self.content = "This /book/ is empty."'
+examples/myfile.py:24: 'def print_my_/book/(/book/: My/Book/) -> None:'
+examples/myfile.py:26: '    Print a /book/.'
+examples/myfile.py:30: '    /book/ : My/Book/'
+examples/myfile.py:31: '        A /book/.'
+examples/myfile.py:34: '    print(/book/.content)'
+```
+
+### tx.PyText.replace()
+Use `.replace()` to find all non-overlapping matches of some pattern, and replace them with another string:
+```py
+>>> r = m.replace("book", "magazine")
+>>> r
+examples/myfile.py:9: '    A /book/magazine that records a story.'
+examples/myfile.py:20: '            self.content = "This /book/magazine is empty."'
+examples/myfile.py:24: 'def print_my_/book/magazine(/book/magazine: MyBook) -> None:'
+examples/myfile.py:26: '    Print a /book/magazine.'
+examples/myfile.py:30: '    /book/magazine : MyBook'
+examples/myfile.py:31: '        A /book/magazine.'
+examples/myfile.py:34: '    print(/book/magazine.content)'
+```
+At this point, the replacement has not yet taken effect on the files. Use `.confirm()` to confirm the changes and make them done:
+```py
+>>> r.confirm()
+{'successful': ['examples/myfile.py'], 'failed': []}
+```
+
+### tx.PyText.replace()
+Use `.delete()` to find all non-overlapping matches of some pattern, and delete them:
+```py
+>>> d = m.delete("book")
+>>> d
+examples/myfile.py:9: '    A /book/ that records a story.'
+examples/myfile.py:20: '            self.content = "This /book/ is empty."'
+examples/myfile.py:24: 'def print_my_/book/(/book/: MyBook) -> None:'
+examples/myfile.py:26: '    Print a /book/.'
+examples/myfile.py:30: '    /book/ : MyBook'
+examples/myfile.py:31: '        A /book/.'
+examples/myfile.py:34: '    print(/book/.content)'
+
+>>> d.confirm()
+{'successful': ['examples/myfile.py'], 'failed': []}
+```
 
 ## See Also
 ### Github repository
@@ -147,10 +211,10 @@ This project falls under the BSD 3-Clause License.
 ## History
 ### v0.1.22
 * `textpy()` is going to be deprecated to avoid conflicts with the package name `textpy`. Please use `module()` insead.
-* New method `PyText.replace()` for text replacing.
-* New class `Replacer` as the returns of `PyText.replace()`, with public methods `.confirm()`, `.rollback()`, etc.
-* New class `PyComponent` for storing components of a file, class, or function.
+* New method `PyText.replace()`, `PyText.delete()`.
+* New class `Replacer` as the return type of `PyText.replace()`, with public methods `.confirm()`, `.rollback()`, etc.
 * Added a dunder method `PyText.__truediv__()` as an alternative to `PyText.jumpto()`.
+* New subclass `PyContent` inheriting from `PyText`. A `PyContent` object stores a part of a file that is not storable by instances of other subclasses.
 
 ### v0.1.21
 * Improved behavior of clickables.

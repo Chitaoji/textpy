@@ -36,7 +36,7 @@ class DisplayParams:
 
     """
 
-    color_scheme: Literal["dark", "modern", "high-intensty"] = "dark"
+    color_scheme: Literal["dark", "modern", "high-intensty", "no-color"] = "dark"
     enable_styler: bool = True
     line_numbers: bool = True
 
@@ -64,11 +64,16 @@ class FindTextResult:
         for t, n, _line in self.res:
             string += f"\n{t.relpath}" + f":{n}" * display_params.line_numbers + ": "
             f: Callable[["Match[str]"], str] = (
-                self.repre if self.repre else lambda x: f"\033[100m{x.group()}\033[0m"
+                self.repre if self.repre else self.__default_repr
             )
             new = re.sub(self.pattern, f, " " * t.spaces + _line)
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
+
+    def __default_repr(self, m: "Match[str]") -> str:
+        if display_params.color_scheme == "no-color":
+            return f"/{m.group()}/"
+        return f"\033[100m{m.group()}\033[0m"
 
     def append(self, finding: Tuple["PyText", int, str]) -> None:
         """
@@ -407,6 +412,8 @@ class Replacer:
         return before + make_ahref(url, new, color="#cccccc", bg_color=bgc[2])
 
     def __repr_repl(self, m: "Match[str]") -> str:
+        if display_params.color_scheme == "no-color":
+            return f"/{m.group()}/" + self.editors[0].counted_repl(m)
         before = f"\033[48;5;088m{m.group()}\033[0m"
         if (new := self.editors[0].counted_repl(m)) == "":
             return before
@@ -478,4 +485,6 @@ def get_bg_colors() -> Tuple[str, str, str]:
         return ["#505050", "#701414", "#4e5d2d"]
     if display_params.color_scheme == "high-intensty":
         return ["#505050", "#701414", "#147014"]
+    if display_params.color_scheme == "no-color":
+        return ["#505050", "#505050", "#505050"]
     raise ValueError(f"unrecognized color-scheme: {display_params.color_scheme!r}")

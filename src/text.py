@@ -19,11 +19,11 @@ from .utils.re_extensions import line_count_iter, rsplit
 if TYPE_CHECKING:
     from .abc import Docstring
 
-__all__ = ["PyDir", "PyFile", "PyClass", "PyFunc", "PyMethod", "PyComponent"]
+__all__ = ["PyDir", "PyFile", "PyClass", "PyFunc", "PyMethod", "PyContent"]
 
 
 class PyDir(PyText):
-    """Store a directory of python files."""
+    """Stores a directory of python files."""
 
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         self.path = as_path(path_or_text, home=self.home)
@@ -57,7 +57,7 @@ class PyDir(PyText):
 
 
 class PyFile(PyText):
-    """Store the code of a python file."""
+    """Stores the code of a python file."""
 
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         if isinstance(path_or_text, Path):
@@ -78,7 +78,7 @@ class PyFile(PyText):
     def header(self) -> PyText:
         if self._header is None:
             _ = self.children
-        return PyComponent(self._header, parent=self)
+        return PyContent(self._header, parent=self)
 
     @cached_property
     def children(self) -> List[PyText]:
@@ -107,7 +107,7 @@ class PyFile(PyText):
 
 
 class PyClass(PyText):
-    """Store the code and docstring of a class."""
+    """Stores the code and docstring of a class."""
 
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         self.text = path_or_text.strip()
@@ -127,7 +127,7 @@ class PyClass(PyText):
     def header(self) -> PyText:
         if self._header is None:
             _ = self.children
-        return PyComponent(self._header, parent=self, start_line=self.start_line)
+        return PyContent(self._header, parent=self, start_line=self.start_line)
 
     @cached_property
     def children(self) -> List[PyText]:
@@ -151,7 +151,7 @@ class PyClass(PyText):
 
 
 class PyFunc(PyText):
-    """Store the code and docstring of a function."""
+    """Stores the code and docstring of a function."""
 
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         self.text = path_or_text.strip()
@@ -169,19 +169,23 @@ class PyFunc(PyText):
     @cached_property
     def header(self) -> PyText:
         _header = re.search(".*\n[^\\s][^\n]*", self.text, re.DOTALL).group()
-        return PyComponent(_header)
+        return PyContent(_header)
 
 
 class PyMethod(PyFunc):
-    """Store the code and docstring of a class method."""
+    """Stores the code and docstring of a class method."""
 
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         super().text_init(path_or_text=path_or_text)
         self.spaces = 4
 
 
-class PyComponent(PyText):
-    """The smallest component of PyText."""
+class PyContent(PyText):
+    """
+    Stores a part of a file that is not storable by instances of other
+    subclasses.
+
+    """
 
     def text_init(self, path_or_text: Union[Path, str]) -> None:
         self.text = path_or_text.strip()
