@@ -409,6 +409,8 @@ class Replacer:
         )
         if (new := self.editors[0].counted_repl(m)) == "":
             return before
+        if display_params.color_scheme == "no-color" and before != "":
+            new = "/" + new
         return before + make_ahref(url, new, color="#cccccc", bg_color=bgc[2])
 
     def __repr_repl(self, m: "Match[str]") -> str:
