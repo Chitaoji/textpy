@@ -78,7 +78,7 @@ class PyFile(PyText):
     def header(self) -> PyText:
         if self._header is None:
             _ = self.children
-        return PyContent(self._header, parent=self)
+        return PyContent(self._header, parent=self, home=self.home)
 
     @cached_property
     def children(self) -> List[PyText]:
@@ -127,7 +127,9 @@ class PyClass(PyText):
     def header(self) -> PyText:
         if self._header is None:
             _ = self.children
-        return PyContent(self._header, parent=self, start_line=self.start_line)
+        return PyContent(
+            self._header, parent=self, start_line=self.start_line, home=self.home
+        )
 
     @cached_property
     def children(self) -> List[PyText]:
@@ -169,7 +171,7 @@ class PyFunc(PyText):
     @cached_property
     def header(self) -> PyText:
         _header = re.search(".*\n[^\\s][^\n]*", self.text, re.DOTALL).group()
-        return PyContent(_header)
+        return PyContent(_header, parent=self, home=self.home)
 
 
 class PyMethod(PyFunc):
