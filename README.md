@@ -9,9 +9,10 @@ $ pip install textpy
 ## Requirements
 ```txt
 lazyr>=0.0.16
-pandas>=1.4.0 # A lower version is also acceptable, but some features will be invalid
+pandas
 Jinja2
 ```
+NOTE: pandas>=1.4.0 is recommended. Lower versions of pandas are also available, but some functions of this package will be affected.
 
 ## Examples
 To demonstrate the usage of this module, we put a file named `myfile.py` under `./examples/` (you can find it in the repository, or create a new file of your own):
@@ -140,9 +141,9 @@ This project falls under the BSD 3-Clause License.
 
 ## History
 ### v0.1.22
-* `textpy()` is going to be deprecated to avoid conflicts with the module-name `textpy`. Please use `module()` insead.
+* `textpy()` is going to be deprecated to avoid conflicts with the package name `textpy`. Please use `module()` insead.
 * New method `PyText.replace()` for text replacing.
-* New class `Replacer` as the return of `PyText.replace()`, with public methods `.confirm()`, `.rollback()`, etc.
+* New class `Replacer` as the returns of `PyText.replace()`, with public methods `.confirm()`, `.rollback()`, etc.
 * New class `PyComponent` for storing components of a file, class, or function.
 * Added a dunder method `PyText.__truediv__()` as an alternative to `PyText.jumpto()`.
 
