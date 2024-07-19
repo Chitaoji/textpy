@@ -1,24 +1,33 @@
 """
-Contains the core of textpy: textpy().
+Contains the core of textpy: module().
 
 NOTE: this module is private. All functions and objects are available in the main
 `textpy` namespace - use that instead.
 
 """
+
 from pathlib import Path
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
-from .abc import PyText, as_path
-from .text import PyFile, PyModule
+from typing_extensions import deprecated
 
-__all__ = ["textpy"]
+from .abc import P, _ignore, as_path
+from .text import PyDir, PyFile
+
+if TYPE_CHECKING:
+    from .abc import PyText
 
 
-def textpy(
+__all__ = ["module", "textpy"]
+
+
+def module(
     path_or_text: Union[Path, str],
-    home: Union[Path, str, None] = None,
+    home: Optional[Union[Path, str]] = None,
     encoding: Optional[str] = None,
-) -> PyText:
+    *,
+    _: Callable[P, None] = _ignore,
+) -> "PyText[P]":
     """
     Statically analyzes a python file or a python module. Each python
     file is recommended to be formatted with `PEP-8`, otherwise the
@@ -28,10 +37,10 @@ def textpy(
     ----------
     path_or_text : Union[Path, str]
         File path, module path or file text.
-    home : Union[Path, str, None], optional
+    home : Union[Path, str], optional
         Specifies the home path when `path_or_text` is relative, by
         default None.
-    encoding : Optional[str]
+    encoding : str, optional
         Specifies encoding, by default None.
 
     Returns
@@ -46,11 +55,12 @@ def textpy(
 
     See Also
     --------
-    PyModule : Contains a python module.
-    PyFile : Contains the code of a python file.
-    PyClass : Contains the code and docstring of a class.
-    PyMethod : Contains the code and docstring of a class method.
-    PyFunc : Contains the code and docstring of a function.
+    PyDir : Stores a directory of python files.
+    PyFile : Stores the code of a python file.
+    PyClass : Stores the code and docstring of a class.
+    PyMethod : Stores the code and docstring of a class method.
+    PyFunc : Stores the code and docstring of a function.
+    PyContent : Stores a part of a file.
     NumpyFormatDocstring : Stores a numpy-formatted docstring.
 
     """
@@ -58,5 +68,11 @@ def textpy(
     if isinstance(path_or_text, str) or path_or_text.is_file():
         return PyFile(path_or_text, home=home, encoding=encoding)
     if path_or_text.is_dir():
-        return PyModule(path_or_text, home=home, encoding=encoding)
+        return PyDir(path_or_text, home=home, encoding=encoding)
     raise FileExistsError(f"file not exists: '{path_or_text}'")
+
+
+textpy = deprecated(
+    "tx.textpy() is deprecated and will be removed in a future version "
+    "- use tx.module() instead"
+)(module)

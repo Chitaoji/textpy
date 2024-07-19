@@ -7,6 +7,7 @@ AUTHOR: Chitaoji
 AUTHOR_EMAIL: 2360742040@qq.com
 REQUIRES_PYTHON: ">=3.8.13"
 REQUIRES: 
-  - lazyr>=0.0.11
+  - lazyr>=0.0.16
   - pandas
+  - Jinja2
 EXTRAS: {}

@@ -5,27 +5,39 @@ NOTE: this module is private. All functions and objects are available in the mai
 `textpy` namespace - use that instead.
 
 """
+
 import re
 from abc import ABC, abstractmethod
-from functools import cached_property, partial
+from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Union, overload
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Union,
+    cast,
+    overload,
+)
 
 import pandas as pd
-from typing_extensions import Self
+from typing_extensions import ParamSpec
 
+from .interaction import NULL, FindTextResult, PyEditor, Replacer, display_params
 from .utils.re_extensions import pattern_inreg, real_findall
 
 if TYPE_CHECKING:
-    from pandas.io.formats.style import Styler
+    from re import Match, Pattern
 
 
 __all__ = ["PyText", "Docstring"]
 
-NULL = "NULL"  # Path stems or filenames should avoid this.
+P = ParamSpec("P")
 
 
-class PyText(ABC):
+class PyText(ABC, Generic[P]):
     """
     Could be a python module, file, class, function, or method.
 
@@ -33,13 +45,13 @@ class PyText(ABC):
     ----------
     path_or_text : Union[Path, str]
         File path, module path or file text.
-    parent : Optional[&quot;PyText&quot;], optional
+    parent : PyText, optional
         Parent node (if exists), by default None.
     start_line : int, optional
         Starting line number, by default 1.
     home : Union[Path, str, None], optional
         Specifies the home path if `path_or_text` is relative, by default None.
-    encoding : Optional[str], optional
+    encoding : str, optional
         Specifies encoding, by default None.
 
     """
@@ -56,17 +68,24 @@ class PyText(ABC):
         self.name: str = ""
         self.path: Path = Path(NULL + ".py")
 
-        self.parent: Optional["PyText"] = parent
-        self.start_line: int = start_line
-        self.home: Path = as_path(Path(""), home=home)
-        self.encoding: Optional[str] = encoding
-        self.spaces: int = 0
+        self.parent = parent
+        self.start_line = start_line
+        self.spaces = 0
+        if parent is None:
+            self.home = as_path(Path(""), home=home)
+            self.encoding = encoding
+        else:
+            self.home = parent.home
+            self.encoding = parent.encoding
 
         self._header: Optional[str] = None
         self.text_init(path_or_text)
 
     def __repr__(self) -> None:
-        return f"{self.__class__.__name__}('{self.absname}')"
+        return f"{self.__class__.__name__}({self.absname!r})"
+
+    def __truediv__(self, __value: "str") -> "PyText":
+        return self.jumpto(__value)
 
     @abstractmethod
     def text_init(self, path_or_text: Union[Path, str]) -> None:
@@ -101,8 +120,8 @@ class PyText(ABC):
 
         Returns
         -------
-        TextPy
-            An instance of `TextPy`.
+        PyText
+            An instance of `PyText`.
 
         """
 
@@ -113,7 +132,7 @@ class PyText(ABC):
 
         Returns
         -------
-        Dict[str, TextPy]
+        Dict[str, PyText]
             List of the children nodes.
 
         """
@@ -139,7 +158,7 @@ class PyText(ABC):
 
         Returns
         -------
-        Dict[str, TextPy]
+        Dict[str, PyText]
             Dictionary of children nodes.
 
         """
@@ -161,8 +180,9 @@ class PyText(ABC):
         """
         if self.parent is None:
             return self.name
-        else:
-            return self.parent.absname + ("." + self.name).replace(".NULL", "")
+        elif self.name == "NULL":
+            return self.parent.absname
+        return self.parent.absname + "." + self.name
 
     @cached_property
     def relname(self) -> str:
@@ -228,43 +248,19 @@ class PyText(ABC):
     @overload
     def findall(
         self,
-        pattern: Union[str, re.Pattern],
-        whole_word: bool = False,
-        case_sensitive: bool = True,
-        regex: bool = True,
-        styler: Literal[True] = True,
-        line_numbers: bool = True,
-    ) -> "Styler":
-        ...
-
-    @overload
-    def findall(
-        self,
-        pattern: Union[str, re.Pattern],
-        whole_word: bool = False,
-        case_sensitive: bool = True,
-        regex: bool = True,
-        styler: Literal[False] = False,
-        line_numbers: bool = True,
-    ) -> "FindTextResult":
-        ...
-
-    def findall(
-        self,
-        pattern: Union[str, re.Pattern],
-        whole_word: bool = False,
-        case_sensitive: bool = True,
-        regex: bool = True,
-        styler: bool = True,
-        line_numbers: bool = True,
-    ) -> Union["Styler", "FindTextResult"]:
+        pattern: Union[str, "Pattern[str]"],
+        /,
+        *_: P.args,
+        **kwargs: P.kwargs,
+    ) -> "FindTextResult": ...
+    def findall(self, pattern, /, styler=True, **kwargs) -> "FindTextResult":
         """
         Finds all non-overlapping matches of `pattern`.
 
         Parameters
         ----------
-        pattern : Union[str, re.Pattern]
-            Regex pattern.
+        pattern : Union[str, Pattern[str]]
+            String pattern.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
         case_sensitive : bool, optional
@@ -272,18 +268,145 @@ class PyText(ABC):
         regex : bool, optional
             Whether to enable regular expressions, by default True.
         styler : bool, optional
-            Whether to return a `Styler` object in convenience of displaying
-            in a Jupyter notebook, this only takes effect when
+            Whether to use a `Styler` object to beautify the representation
+            of result in a Jupyter notebook, this only takes effect when
             `pandas.__version__ >= 1.4.0`, by default True.
-        line_numbers : bool, optional
-            Whether to display the line numbers, by default True.
 
         Returns
         -------
-        Union[Styler, FindTextResult]
+        FindTextResult
             Searching result.
 
         """
+        pattern = self.__pattern_trans(pattern, **kwargs)
+        res = FindTextResult(pattern)
+        if not self.children:
+            for nline, _, group in real_findall(
+                ".*" + pattern.pattern + ".*",
+                self.text,
+                linemode=True,
+                flags=pattern.flags,
+            ):
+                if group != "":
+                    res.append((self, self.start_line + nline - 1, group))
+        else:
+            res.join(self.header.findall(pattern, styler=False))
+            for c in self.children:
+                res.join(c.findall(pattern, styler=False))
+        if styler and display_params.enable_styler and pd.__version__ >= "1.4.0":
+            return res.to_styler()
+        return res
+
+    @overload
+    def replace(
+        self,
+        pattern: Union[str, "Pattern[str]"],
+        repl: Union[str, Callable[["Match[str]"], str]],
+        overwrite: bool = True,
+        /,
+        *_: P.args,
+        **kwargs: P.kwargs,
+    ) -> "Replacer": ...
+    def replace(
+        self, pattern, repl, /, overwrite=True, styler=True, **kwargs
+    ) -> "Replacer":
+        """
+        Finds all non-overlapping matches of `pattern`, and replace them with
+        `repl`. If you want the replacement to take effect on files, use
+        `.confirm()` immediately after this method (e.g.
+        `.replace("a", "b").confirm()`).
+
+        Parameters
+        ----------
+        pattern : Union[str, Pattern[str]]
+            String pattern.
+        repl : Union[str, Callable[[str], str]]
+            Speficies the string to replace the patterns. If Callable, should
+            be a function that receives the Match object, and gives back
+            the replacement string to be used.
+        overwrite : bool, optional
+            Determines whether to overwrite the original files. If False, the
+            replacement will take effect on copyed files, by default True.
+        whole_word : bool, optional
+            Whether to match whole words only, by default False.
+        case_sensitive : bool, optional
+            Specifies case sensitivity, by default True.
+        regex : bool, optional
+            Whether to enable regular expressions, by default True.
+        styler : bool, optional
+            Whether to use a `Styler` object to beautify the representation
+            of result in a Jupyter notebook, this only takes effect when
+            `pandas.__version__ >= 1.4.0`, by default True.
+
+        Returns
+        -------
+        Replacer
+            Text replacer.
+
+        """
+        pattern = self.__pattern_trans(pattern, **kwargs)
+        replacer = Replacer(pattern)
+        if self.path.suffix == ".py":
+            editor = PyEditor(self, overwrite=overwrite)
+            if editor.replace(pattern, repl) > 0:
+                replacer.append(editor)
+        else:
+            for c in self.children:
+                replacer.join(
+                    c.replace(
+                        pattern, repl, overwrite=overwrite, styler=False, **kwargs
+                    )
+                )
+        if styler and display_params.enable_styler:
+            return cast("Replacer", replacer.to_styler())
+        return replacer
+
+    @overload
+    def delete(
+        self,
+        pattern: Union[str, "Pattern[str]"],
+        overwrite: bool = True,
+        /,
+        *_: P.args,
+        **kwargs: P.kwargs,
+    ) -> "Replacer": ...
+    def delete(self, pattern, /, overwrite=True, styler=True, **kwargs) -> "Replacer":
+        """
+        An alternative to `.replace(pattern, "", *args, **kwargs)`
+
+        Parameters
+        ----------
+        pattern : Union[str, Pattern[str]]
+            String pattern.
+        overwrite : bool, optional
+            Determines whether to overwrite the original files. If False, the
+            replacement will take effect on copyed files, by default True.
+        whole_word : bool, optional
+            Whether to match whole words only, by default False.
+        case_sensitive : bool, optional
+            Specifies case sensitivity, by default True.
+        regex : bool, optional
+            Whether to enable regular expressions, by default True.
+        styler : bool, optional
+            Whether to use a `Styler` object to beautify the representation
+            of result in a Jupyter notebook, this only takes effect when
+            `pandas.__version__ >= 1.4.0`, by default True.
+
+        Returns
+        -------
+        Replacer
+            Text replacer.
+
+        """
+        return self.replace(pattern, "", overwrite, styler=styler, **kwargs)
+
+    @staticmethod
+    def __pattern_trans(
+        pattern: Union[str, "Pattern[str]"],
+        whole_word: bool = False,
+        case_sensitive: bool = True,
+        regex: bool = True,
+    ) -> "Pattern[str]":
         flags: int = 0
         if isinstance(pattern, re.Pattern):
             pattern, flags = str(pattern.pattern), pattern.flags
@@ -294,27 +417,11 @@ class PyText(ABC):
         if whole_word:
             pattern = "\\b" + pattern + "\\b"
         pattern = re.compile(pattern, flags=flags)
-
-        res = FindTextResult(pattern, line_numbers=line_numbers)
-        if not self.children:
-            to_match = self.text
-            for nline, _, group in real_findall(
-                ".*" + pattern.pattern + ".*",
-                to_match,
-                linemode=True,
-                flags=pattern.flags,
-            ):
-                if group != "":
-                    res.append((self, self.start_line + nline - 1, group))
-        else:
-            res = res.join(self.header.findall(pattern, styler=False))
-            for c in self.children:
-                res = res.join(c.findall(pattern, styler=False))
-        return res.to_styler() if styler and pd.__version__ >= "1.4.0" else res
+        return pattern
 
     def jumpto(self, target: str) -> "PyText":
         """
-        Jump to another `TextPy` instance.
+        Jump to another `PyText` instance.
 
         Parameters
         ----------
@@ -323,8 +430,8 @@ class PyText(ABC):
 
         Returns
         -------
-        TextPy
-            An instance of `TextPy`.
+        PyText
+            An instance of `PyText`.
 
         Raises
         ------
@@ -348,27 +455,14 @@ class PyText(ABC):
         else:
             raise ValueError(f"'{splits[0]}' is not a child of '{self.absname}'")
 
-    def as_header(self) -> Self:
-        """
-        Declare `self` as a class header (rather than the class itself).
-
-        Returns
-        -------
-        self
-            An instance of self.
-
-        """
-        self.name = NULL
-        return self
-
     def track(self) -> List["PyText"]:
         """
         Returns a list of all the parents and `self`.
 
         Returns
         -------
-        List[TextPy]
-            List of `TextPy` instances.
+        List[PyText]
+            List of `PyText` instances.
 
         """
         track: List["PyText"] = []
@@ -389,7 +483,7 @@ class Docstring(ABC):
     ----------
     text : str
         Docstring text.
-    parent : Optional[PyText], optional
+    parent : PyText, optional
         Parent node (if exists), by default None.
 
     """
@@ -414,192 +508,12 @@ class Docstring(ABC):
         return {}
 
 
-class FindTextResult:
-    """
-    Result of text finding, only as a return of `TextPy.findall`.
-
-    Parameters
-    ----------
-    pattern : Union[str, re.Pattern]
-        Regex pattern.
-    line_numbers : bool, optional
-        Whether to display the line numbers, by default True.
-
-    """
-
-    def __init__(
-        self, pattern: Union[str, re.Pattern], line_numbers: bool = True
-    ) -> None:
-        self.pattern = pattern
-        self.line_numbers = line_numbers
-        self.res: List[Tuple[PyText, int, str]] = []
-
-    def __repr__(self) -> str:
-        string: str = ""
-        for tp, nline, group in self.res:
-            string += f"\n{tp.relpath}" + f":{nline}" * self.line_numbers + ": "
-            _sub = re.sub(
-                self.pattern,
-                lambda x: "\033[100m" + x.group() + "\033[0m",
-                " " * tp.spaces + group,
-            )
-            string += re.sub("\\\\x1b\\[", "\033[", _sub.__repr__())
-        return string.lstrip()
-
-    def append(self, finding: Tuple[PyText, int, str]) -> None:
-        """
-        Append a new finding.
-
-        Parameters
-        ----------
-        finding : Tuple[TextPy, int, str]
-            Contains a `TextPy` instance, the line number where pattern
-            is found, and a matched string.
-
-        """
-        self.res.append(finding)
-
-    def extend(self, findings: List[Tuple[PyText, int, str]]) -> None:
-        """
-        Extend a few new findings.
-
-        Parameters
-        ----------
-        findings : List[Tuple[TextPy, int, str]]
-            A finding contains a `TextPy` instance, the line number where
-            pattern is found, and a matched string.
-
-        """
-        self.res.extend(findings)
-
-    def join(self, other: "FindTextResult") -> "FindTextResult":
-        """
-        Joins two `FindTextResult` instance, only works when they share the
-        same `pattern`.
-
-        Parameters
-        ----------
-        other : FindTextResult
-            The other instance.
-
-        Returns
-        -------
-        FindTextResult
-            A new instance.
-
-        Raises
-        ------
-        ValueError
-            Raised when the two instances have different patterns.
-
-        """
-        if other.pattern != self.pattern:
-            raise ValueError("joined instances must have the same pattern")
-        obj = self.__class__(self.pattern, line_numbers=self.line_numbers)
-        obj.extend(self.res + other.res)
-        return obj
-
-    def to_styler(self) -> "Styler":
-        """
-        Convert `self` to a `Styler` of dataframe in convenience of displaying
-        in a Jupyter notebook.
-
-        Returns
-        -------
-        Styler
-            A `Styler` of dataframe.
-
-        """
-        df = pd.DataFrame("", index=range(len(self.res)), columns=["source", "match"])
-        for i, r in enumerate(self.res):
-            _tp, _n, _match = r
-            df.iloc[i, 0] = ".".join(
-                [self.__display_source(x) for x in _tp.track()]
-            ).replace(".NULL", "")
-            if self.line_numbers:
-                df.iloc[i, 0] += ":" + make_ahref(
-                    f"{_tp.execpath}:{_n}", str(_n), color="inherit"
-                )
-            df.iloc[i, 1] = re.sub(
-                self.pattern, partial(self.__display_match, r), _match
-            )
-        return (
-            df.style.hide(axis=0)
-            .set_properties(**{"text-align": "left"})
-            .set_table_styles([dict(selector="th", props=[("text-align", "center")])])
-        )
-
-    def __display_source(self, x: PyText) -> str:
-        return (
-            NULL
-            if x.name == NULL
-            else make_ahref(
-                f"{x.execpath}:{x.start_line}:{1+x.spaces}", x.name, color="inherit"
-            )
-        )
-
-    def __display_match(self, r: Tuple[PyText, int, str], m: re.Match) -> str:
-        return (
-            ""
-            if m.group() == ""
-            else make_ahref(
-                f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.span()[0]}",
-                m.group(),
-                color="#cccccc",
-                background_color="#595959",
-            )
-        )
-
-
-def make_ahref(
-    url: str,
-    display: str,
-    color: Optional[str] = None,
-    background_color: Optional[str] = None,
-) -> str:
-    """
-    Makes an HTML <a> tag.
-
-    Parameters
-    ----------
-    url : str
-        URL to link.
-    display : str
-        Word to display.
-    color : Optional[str], optional
-        Text color, by default None.
-    background_color : Optional[str], optional
-        Background color, by default None.
-
-    Returns
-    -------
-    str
-        An HTML <a> tag.
-
-    """
-    style_list = ["text-decoration:none"]
-    if color is not None:
-        style_list.append(f"color:{color}")
-    if background_color is not None:
-        style_list.append(f"background-color:{background_color}")
-    style = ";".join(style_list)
-    if Path(url).stem == NULL:
-        href = ""
-    else:
-        href = f"href='{url}' "
-    return f"<a {href}style='{style}'>{display}</a>"
-
-
 @overload
-def as_path(path_or_text: Path, home: Union[Path, str, None] = None) -> Path:
-    ...
-
-
+def as_path(path_or_text: Path, home: Union[Path, str, None] = None) -> Path: ...
 @overload
-def as_path(path_or_text: str, home: Union[Path, str, None] = None) -> Union[Path, str]:
-    ...
-
-
+def as_path(
+    path_or_text: str, home: Union[Path, str, None] = None
+) -> Union[Path, str]: ...
 def as_path(
     path_or_text: Union[Path, str], home: Union[Path, str, None] = None
 ) -> Union[Path, str]:
@@ -633,3 +547,12 @@ def as_path(
     if not path_or_text.is_absolute():
         path_or_text = home / path_or_text
     return path_or_text
+
+
+# pylint: disable=unused-argument
+def _ignore(
+    whole_word: bool = False,
+    case_sensitive: bool = True,
+    regex: bool = True,
+    styler: bool = True,
+) -> None: ...

@@ -1,10 +1,22 @@
 """Extensions to the `re` package."""
-import re
-from typing import Iterable, List, Literal, Tuple, TypeVar, Union, overload
 
+import re
+from typing import (
+    TYPE_CHECKING,
+    Iterable,
+    List,
+    Literal,
+    Tuple,
+    TypeVar,
+    Union,
+    overload,
+)
+
+if TYPE_CHECKING:
+    from re import Pattern
 SpanNGroup = Tuple[Tuple[int, int], str]
 LineSpanNGroup = Tuple[int, Tuple[int, int], str]
-StrPattern = TypeVar("StrPattern", str, re.Pattern)
+StrPattern = TypeVar("StrPattern", str, "Pattern[str]")
 
 __all__ = [
     "rsplit",
@@ -17,7 +29,7 @@ __all__ = [
 
 
 def rsplit(
-    pattern: Union[str, re.Pattern],
+    pattern: Union[str, "Pattern[str]"],
     string: str,
     maxsplit: int = 0,
     flags: Union[int, re.RegexFlag] = 0,
@@ -29,7 +41,7 @@ def rsplit(
 
     Parameters
     ----------
-    pattern : Union[str, re.Pattern]
+    pattern : Union[str, Pattern[str]]
         Pattern string.
     string : str
         String to be splitted.
@@ -61,7 +73,7 @@ def rsplit(
 
 
 def lsplit(
-    pattern: Union[str, re.Pattern],
+    pattern: Union[str, "Pattern[str]"],
     string: str,
     maxsplit: int = 0,
     flags: Union[int, re.RegexFlag] = 0,
@@ -73,7 +85,7 @@ def lsplit(
 
     Parameters
     ----------
-    pattern : Union[str, re.Pattern]
+    pattern : Union[str, Pattern[str]]
         Pattern string.
     string : str
         String to be splitted.
@@ -104,26 +116,24 @@ def lsplit(
 
 @overload
 def real_findall(
-    pattern: Union[str, re.Pattern],
+    pattern: Union[str, "Pattern[str]"],
     string: str,
     flags: Union[int, re.RegexFlag] = 0,
     linemode: Literal[False] = False,
-) -> List[SpanNGroup]:
-    ...
+) -> List[SpanNGroup]: ...
 
 
 @overload
 def real_findall(
-    pattern: Union[str, re.Pattern],
+    pattern: Union[str, "Pattern[str]"],
     string: str,
     flags: Union[int, re.RegexFlag] = 0,
     linemode: Literal[True] = True,
-) -> List[LineSpanNGroup]:
-    ...
+) -> List[LineSpanNGroup]: ...
 
 
 def real_findall(
-    pattern: Union[str, re.Pattern],
+    pattern: Union[str, "Pattern[str]"],
     string: str,
     flags: Union[int, re.RegexFlag] = 0,
     linemode: bool = False,
@@ -134,7 +144,7 @@ def real_findall(
 
     Parameters
     ----------
-    pattern : Union[str, re.Pattern]
+    pattern : Union[str, Pattern[str]]
         Regex pattern.
     string : str
         String to be searched.
