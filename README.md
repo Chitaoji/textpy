@@ -1,5 +1,5 @@
 # textpy
-Reads a python file/module and statically analyzes it. This works well with Jupyter extensions in VScode, and has better performance when the file/module is formatted with *PEP-8*.
+Reads a python module and statically analyzes it. This works well with Jupyter extensions in VScode, and will have better performance when the module files are formatted with *PEP-8*.
 
 ## Installation
 ```sh
@@ -12,7 +12,7 @@ lazyr>=0.0.16
 pandas
 Jinja2
 ```
-NOTE: pandas>=1.4.0 is recommended. Lower versions of pandas are also available, but some functions of this package will be affected.
+NOTE: pandas>=1.4.0 is recommended. Lower versions of pandas are also available, but some properties of this package will be affected.
 
 ## Quick Start
 To demonstrate the usage of this module, we put a file named `myfile.py` under `./examples/` (you can find it in the repository, or create a new file of your own):
