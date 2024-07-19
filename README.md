@@ -55,15 +55,15 @@ def print_my_book(book: MyBook) -> None:
 Run the following codes to find all the occurrences of the pattern "MyBook" in `myfile.py`:
 ```py
 >>> import textpy as tx
->>> res = tx.module("./examples/myfile.py").findall("MyBook", styler=False)
->>> res
+>>> m = tx.module("./examples/myfile.py")
+>>> m.findall("MyBook", styler=False)
 examples/myfile.py:7: 'class <MyBook>:'
 examples/myfile.py:24: 'def print_my_book(book: <MyBook>) -> None:'
 examples/myfile.py:30: '    book : <MyBook>'
 ```
 If you are using a Jupyter notebook in VScode, you can run a cell like this:
 ```py
->>> tx.module("./examples/myfile.py").findall("content")
+>>> m.findall("content")
 ```
 <!--html-->
 and the output will be like:
@@ -110,7 +110,7 @@ Note that in the Jupyter notebook case, the matched substrings are **clickable**
 ### tx.module()
 The previous demonstration introduced the core function `tx.module()`. In fact, the return type of `tx.module()` is a subclass of the abstract class `PyText`, who supports various text manipulation methods:
 ```py
->>> isinstance(tx.module(""), tx.PyText)
+>>> isinstance(m, tx.PyText)
 True
 ```
 Sometimes, your python module may contain not just one file but multiple files and folders, but don’t worry since `tx.module()` provides support for complex file hierarchies, and the return type will be either `PyDir` or `PyFile` (both are subclasses of `PyText` ) depending on the path type.
@@ -127,7 +127,6 @@ In conclusion, suppose you've got a python package, you can simply give the pack
 ### tx.PyText.findall()
 As mentioned before, user can use `.findall()` to find all non-overlapping matches of some pattern in a python module.
 ```py
->>> m = tx.textpy("examples/myfile.py")
 >>> m.findall("optional", styler=False)
 repo/textpy/examples/myfile.py:13: '    story : str, <optional>'
 ```
@@ -147,8 +146,8 @@ examples/myfile.py:30: '    book : <MyBook>'
 ### tx.PyText.replace()
 Use `.replace()` to find all non-overlapping matches of some pattern, and replace them with another string:
 ```py
->>> r = m.replace("book", "magazine")
->>> r
+>>> replacer = m.replace("book", "magazine")
+>>> replacer
 examples/myfile.py:9: '    A <book/magazine> that records a story.'
 examples/myfile.py:20: '            self.content = "This <book/magazine> is empty."'
 examples/myfile.py:24: 'def print_my_<book/magazine>(<book/magazine>: MyBook) -> None:'
@@ -159,15 +158,15 @@ examples/myfile.py:34: '    print(<book/magazine>.content)'
 ```
 At this point, the replacement has not yet taken effect on the files. Use `.confirm()` to confirm the changes and make them done:
 ```py
->>> r.confirm()
+>>> replacer.confirm()
 {'successful': ['examples/myfile.py'], 'failed': []}
 ```
 
 ### tx.PyText.replace()
 Use `.delete()` to find all non-overlapping matches of some pattern, and delete them:
 ```py
->>> d = m.delete("book")
->>> d
+>>> deleter = m.delete("book")
+>>> deleter
 examples/myfile.py:9: '    A <book> that records a story.'
 examples/myfile.py:20: '            self.content = "This <book> is empty."'
 examples/myfile.py:24: 'def print_my_<book>(<book>: MyBook) -> None:'
@@ -176,7 +175,7 @@ examples/myfile.py:30: '    <book> : MyBook'
 examples/myfile.py:31: '        A <book>.'
 examples/myfile.py:34: '    print(<book>.content)'
 
->>> d.confirm()
+>>> deleter.confirm()
 {'successful': ['examples/myfile.py'], 'failed': []}
 ```
 
