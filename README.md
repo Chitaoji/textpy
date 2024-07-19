@@ -14,9 +14,8 @@ Jinja2
 ```
 NOTE: pandas>=1.4.0 is recommended. Lower versions of pandas are also available, but some functions of this package will be affected.
 
-## Examples
+## Quick Start
 To demonstrate the usage of this module, we put a file named `myfile.py` under `./examples/` (you can find it in the repository, or create a new file of your own):
-
 ```py
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
@@ -53,9 +52,7 @@ def print_my_book(book: MyBook) -> None:
     """
     print(book.content)
 ```
-
 Run the following codes to find all the occurrences of the pattern "content" in `myfile.py`:
-
 ```py
 >>> import textpy as tx
 >>> res = tx.module("./examples/myfile.py").findall("content", styler=False)
@@ -64,15 +61,12 @@ examples/myfile.py:20: '            self.content = "This book is empty."'
 examples/myfile.py:21: '        self.content = story'
 examples/myfile.py:34: '    print(book.content)'
 ```
-
-Also, when using a Jupyter notebook in VScode, you can run a cell like this:
-
+If you are using a Jupyter notebook in VScode, you can run a cell like this:
 ```py
 >>> tx.module("./examples/myfile.py").findall("content")
 ```
 <!--html-->
 and the output will be like:
-
 <table id="T_eb71c">
   <thead>
     <tr>
@@ -110,16 +104,24 @@ and the output will be like:
   </tbody>
 </table>
 <!--/html-->
-
 Note that in the Jupyter notebook case, the matched substrings are **clickable**, linking to where the patterns were found.
 
-Now suppose you've got a python module consists of a few files, for example, our `textpy` module itself, you can do almost the same thing by giving the module path:
+## Examples
+### tx.module()
+The previous demonstration introduced the core function `tx.module()`. In fact, `tx.module()` generates a subinstance of the abstract class `PyText`, which supports various text manipulation methods:
+```py
+>>> isinstance(tx.module(""), tx.PyText)
+True
+```
+Sometimes, your python module may contain not just one file but multiple files and folders. Don’t worry since `tx.module()` provides support for complex file hierarchies, and the return type will be a subclass of `PyText` (either `PyDir` or `PyFile`) depending on the path type.
+
+In conclusion, suppose you've got a python package, you can simply give the package dirpath to `tx.module()`, and do things like before:
 
 ```py
->>> module_path = "textpy/" # you can type any path here
+>>> pkg_dir = "textpy/" # you can type any path here
 >>> pattern = "note.*k" # type any regular expression here
 
->>> res = tx.module(module_path).findall(pattern, styler=False)
+>>> res = tx.module(pkg_dir).findall(pattern, styler=False)
 >>> res
 textpy/abc.py:268: '            of result in a Jupyter notebook, this only takes effect when'
 textpy/abc.py:332: '            of result in a Jupyter notebook, this only takes effect when'
@@ -128,6 +130,9 @@ textpy/__init__.py:66: 'Note that in the Jupyter notebook case, the matched subs
 textpy/__init__.py:74: '>>> pattern = "note.*k" # type any regular expression here'
 textpy/__init__.py:76: '>>> res = tx.module(module_path).findall("note.*k", styler=False, line_numbers=False)'
 ```
+
+### tx.PyText.findall()
+As mentioned before, use `.findall()` to find all the occurrences of some pattern 
 
 ## See Also
 ### Github repository

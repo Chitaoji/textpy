@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from .abc import PyText
 
 
-__all__ = ["module"]
+__all__ = ["module", "textpy"]
 
 
 def module(

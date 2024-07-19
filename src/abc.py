@@ -25,7 +25,7 @@ from typing import (
 import pandas as pd
 from typing_extensions import ParamSpec
 
-from .interaction import NULL, FindTextResult, PyEditor, Replacer
+from .interaction import NULL, FindTextResult, PyEditor, Replacer, display_params
 from .utils.re_extensions import pattern_inreg, real_findall
 
 if TYPE_CHECKING:
@@ -289,7 +289,9 @@ class PyText(ABC, Generic[P]):
             res.join(self.header.findall(pattern, styler=False))
             for c in self.children:
                 res.join(c.findall(pattern, styler=False))
-        return res.to_styler() if styler and pd.__version__ >= "1.4.0" else res
+        if styler and display_params.enable_styler and pd.__version__ >= "1.4.0":
+            return res.to_styler()
+        return res
 
     @overload
     def replace(
@@ -351,7 +353,7 @@ class PyText(ABC, Generic[P]):
                         pattern, repl, overwrite=overwrite, styler=False, **kwargs
                     )
                 )
-        if styler:
+        if styler and display_params.enable_styler:
             return cast("Replacer", replacer.to_styler())
         return replacer
 

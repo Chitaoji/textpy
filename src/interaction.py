@@ -37,6 +37,7 @@ class DisplayParams:
     """
 
     color_scheme: Literal["dark", "modern", "high-intensty"] = "dark"
+    enable_styler: bool = True
     line_numbers: bool = True
 
 
