@@ -119,17 +119,17 @@ In conclusion, suppose you've got a python package, you can simply give the pack
 
 ```py
 >>> pkg_dir = "examples/" # you can type any path here
->>> pattern = "" # type any regular expression here
+>>> pattern = "" # you can type any regular expression here
 
 >>> res = tx.module(pkg_dir).findall(pattern, styler=False)
 ```
 
 ### tx.PyText.findall()
-As mentioned before, use `.findall()` to find all non-overlapping matches of some pattern in a python module.
+As mentioned before, user can use `.findall()` to find all non-overlapping matches of some pattern in a python module.
 ```py
 >>> m = tx.textpy("examples/myfile.py")
->>> m.findall("book is empty", styler=False)
-examples/myfile.py:20: '            self.content = "This <book is empty>."'
+>>> m.findall("optional", styler=False)
+repo/textpy/examples/myfile.py:13: '    story : str, <optional>'
 ```
 The optional argument `styler=` determines whether to use a pandas `Styler` object to beautify the representation. If you are running python in the console, please always set `styler=False`. You can also disable the stylers in `display_params`, so that you don't need to repeat `styler=False` every time in the following examples:
 ```py
