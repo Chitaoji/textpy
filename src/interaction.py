@@ -72,7 +72,7 @@ class FindTextResult:
 
     def __default_repr(self, m: "Match[str]") -> str:
         if display_params.color_scheme == "no-color":
-            return f"/{m.group()}/"
+            return f"<{m.group()}>"
         return f"\033[100m{m.group()}\033[0m"
 
     def append(self, finding: Tuple["PyText", int, str]) -> None:
@@ -412,12 +412,11 @@ class Replacer:
         return before + make_ahref(url, new, color="#cccccc", bg_color=bgc[2])
 
     def __repr_repl(self, m: "Match[str]") -> str:
+        new = self.editors[0].counted_repl(m)
         if display_params.color_scheme == "no-color":
-            return f"/{m.group()}/" + self.editors[0].counted_repl(m)
+            return f"<{m.group()}/{new}>" if new else f"<{m.group()}>"
         before = f"\033[48;5;088m{m.group()}\033[0m"
-        if (new := self.editors[0].counted_repl(m)) == "":
-            return before
-        return before + f"\033[48;5;028m{new}\033[0m"
+        return before + f"\033[48;5;028m{new}\033[0m" if new else before
 
     @cached_property
     def __find_text_result(self) -> FindTextResult:
