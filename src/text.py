@@ -68,7 +68,12 @@ class PyFile(PyText):
 
     @cached_property
     def doc(self) -> "Docstring":
-        return NumpyFormatDocstring("", parent=self)
+        matched = re.match('""".*?"""', self.header.text, re.DOTALL)
+        if matched:
+            _doc = matched.group()[3:-3]
+        else:
+            _doc = ""
+        return NumpyFormatDocstring(_doc, parent=self)
 
     @cached_property
     def header(self) -> PyText:
@@ -80,18 +85,25 @@ class PyFile(PyText):
     def children(self) -> List[PyText]:
         children: List[PyText] = []
         _cnt: int = 0
-        self._header = ""
-        for i, _str in line_count_iter(rsplit("\n\n\n+[^\\s]", self.text)):
+
+        matched = re.match('""".*?"""', self.text, re.DOTALL)
+        if matched:
+            self._header = matched.group()
+            text = self.text[matched.end() :]
+        else:
+            self._header = ""
+            text = self.text
+        header_lines = len(re.findall("\n", self._header))
+
+        for i, _str in line_count_iter(rsplit("\n\n\n+[^\\s]", text)):
             _str = "\n" + _str.strip()
-            start_line = int(i + 3 * (_cnt > 0))
+            start_line = int(header_lines + i + 3 * (_cnt > 0))
             if re.match("(?:\n@.*)*\ndef ", _str):
                 children.append(PyFunc(_str, parent=self, start_line=start_line))
             elif re.match("(?:\n@.*)*\nclass ", _str):
                 children.append(PyClass(_str, parent=self, start_line=start_line))
-            elif _cnt == 0:
-                self._header = _str
             else:
-                children.append(PyFile(_str, parent=self, start_line=start_line))
+                children.append(PyContent(_str, parent=self, start_line=start_line))
             _cnt += 1
         return children
 
