@@ -66,7 +66,7 @@ If you are using a Jupyter notebook in VScode, you can run a cell like this:
 ```py
 >>> myfile.findall("content")
 ```
-<!--/html-->
+<!--html-->
 <table id="T_19b39">
   <thead>
     <tr>
