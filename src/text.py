@@ -33,7 +33,11 @@ class PyDir(PyText):
 
     @cached_property
     def doc(self) -> "Docstring":
-        return NumpyFormatDocstring("", parent=self)
+        if "__init__" in self.children_names:
+            _doc = self.jumpto("__init__").doc.text
+        else:
+            _doc = ""
+        return NumpyFormatDocstring(_doc, parent=self)
 
     @cached_property
     def header(self) -> PyText:
@@ -85,6 +89,8 @@ class PyFile(PyText):
         children: List[PyText] = []
 
         matched = re.match('""".*?"""', self.text, re.DOTALL)
+        if not matched:
+            matched = re.match("'''.*?'''", self.text, re.DOTALL)
         if matched:
             self._header = matched.group()
             text = self.text[matched.end() :]
