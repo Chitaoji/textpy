@@ -68,11 +68,10 @@ class PyFile(PyText):
 
     @cached_property
     def doc(self) -> "Docstring":
-        matched = re.match('""".*?"""', self.header.text, re.DOTALL)
-        if matched:
-            _doc = matched.group()[3:-3]
-        else:
+        if self.header.text == "":
             _doc = ""
+        else:
+            _doc = self.header.text[3:-3]
         return NumpyFormatDocstring(_doc, parent=self)
 
     @cached_property
