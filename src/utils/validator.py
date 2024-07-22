@@ -5,7 +5,7 @@ from typing import Any, Callable, Optional, Tuple, Union
 
 class SimpleValidator:
     """
-    Simple Validator.
+    Simple attribute validator, only for dict classes.
 
     Parameters
     ----------
@@ -34,10 +34,10 @@ class SimpleValidator:
         self.default = default
         self.name: str
 
-    def __set_name__(self, _, name: str) -> None:
+    def __set_name__(self, _: type, name: str) -> None:
         self.name = name
 
-    def __set__(self, instance, value) -> None:
+    def __set__(self, instance: object, value: Any) -> None:
         if isinstance(value, self.__class__):
             return
         if not isinstance(value, self._type):
@@ -57,7 +57,7 @@ class SimpleValidator:
             raise ValueError(f"invalid value for {self.name!r}: {value}")
         instance.__dict__[self.name] = value
 
-    def __get__(self, instance, owner) -> Any:
+    def __get__(self, instance: object, owner: type) -> Any:
         if not instance:
             return self
         if self.name not in instance.__dict__:
@@ -68,7 +68,7 @@ class SimpleValidator:
             instance.__dict__[self.name] = self.default
         return instance.__dict__[self.name]
 
-    def __delete__(self, instance) -> None:
+    def __delete__(self, instance: object) -> None:
         del instance.__dict__[self.name]
 
 
