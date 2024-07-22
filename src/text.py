@@ -84,7 +84,6 @@ class PyFile(PyText):
     @cached_property
     def children(self) -> List[PyText]:
         children: List[PyText] = []
-        _cnt: int = 0
 
         matched = re.match('""".*?"""', self.text, re.DOTALL)
         if matched:
@@ -95,16 +94,16 @@ class PyFile(PyText):
             text = self.text
         header_lines = len(re.findall("\n", self._header))
 
-        for i, _str in line_count_iter(rsplit("\n\n\n+[^\\s]", text)):
+        for i, x in enumerate(line_count_iter(rsplit("\n\n\n+[^\\s]", text))):
+            _lines, _str = x
             _str = "\n" + _str.strip()
-            start_line = int(header_lines + i + 3 * (_cnt > 0))
+            start_line = int(header_lines + _lines + 3 * (i > 0))
             if re.match("(?:\n@.*)*\ndef ", _str):
                 children.append(PyFunc(_str, parent=self, start_line=start_line))
             elif re.match("(?:\n@.*)*\nclass ", _str):
                 children.append(PyClass(_str, parent=self, start_line=start_line))
             else:
                 children.append(PyContent(_str, parent=self, start_line=start_line))
-            _cnt += 1
         return children
 
 
