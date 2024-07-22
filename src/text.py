@@ -25,7 +25,7 @@ __all__ = ["PyDir", "PyFile", "PyClass", "PyFunc", "PyMethod", "PyContent"]
 class PyDir(PyText):
     """Stores a directory of python files."""
 
-    def text_init(self, path_or_text: Union[Path, str]) -> None:
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         self.path = as_path(path_or_text, home=self.home)
         if not self.path.is_dir():
             raise NotADirectoryError(f"not a dicretory: '{self.path}'")
@@ -33,7 +33,11 @@ class PyDir(PyText):
 
     @cached_property
     def doc(self) -> "Docstring":
-        return NumpyFormatDocstring("", parent=self)
+        if "__init__" in self.children_names:
+            _doc = self.jumpto("__init__").doc.text
+        else:
+            _doc = ""
+        return NumpyFormatDocstring(_doc, parent=self)
 
     @cached_property
     def header(self) -> PyText:
@@ -55,7 +59,7 @@ class PyDir(PyText):
 class PyFile(PyText):
     """Stores the code of a python file."""
 
-    def text_init(self, path_or_text: Union[Path, str]) -> None:
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         if isinstance(path_or_text, Path):
             self.path = as_path(path_or_text, home=self.home)
             self.text = self.path.read_text(encoding=self.encoding).strip()
@@ -68,7 +72,11 @@ class PyFile(PyText):
 
     @cached_property
     def doc(self) -> "Docstring":
-        return NumpyFormatDocstring("", parent=self)
+        if self.header.text == "":
+            _doc = ""
+        else:
+            _doc = self.header.text[3:-3]
+        return NumpyFormatDocstring(_doc, parent=self)
 
     @cached_property
     def header(self) -> PyText:
@@ -79,27 +87,35 @@ class PyFile(PyText):
     @cached_property
     def children(self) -> List[PyText]:
         children: List[PyText] = []
-        _cnt: int = 0
-        self._header = ""
-        for i, _str in line_count_iter(rsplit("\n\n\n+[^\\s]", self.text)):
+
+        matched = re.match('""".*?"""', self.text, re.DOTALL)
+        if not matched:
+            matched = re.match("'''.*?'''", self.text, re.DOTALL)
+        if matched:
+            self._header = matched.group()
+            text = self.text[matched.end() :]
+        else:
+            self._header = ""
+            text = self.text
+        header_lines = len(re.findall("\n", self._header))
+
+        for i, x in enumerate(line_count_iter(rsplit("\n\n\n+[^\\s]", text))):
+            _lines, _str = x
             _str = "\n" + _str.strip()
-            start_line = int(i + 3 * (_cnt > 0))
+            start_line = int(header_lines + _lines + 3 * (i > 0))
             if re.match("(?:\n@.*)*\ndef ", _str):
                 children.append(PyFunc(_str, parent=self, start_line=start_line))
             elif re.match("(?:\n@.*)*\nclass ", _str):
                 children.append(PyClass(_str, parent=self, start_line=start_line))
-            elif _cnt == 0:
-                self._header = _str
             else:
-                children.append(PyFile(_str, parent=self, start_line=start_line))
-            _cnt += 1
+                children.append(PyContent(_str, parent=self, start_line=start_line))
         return children
 
 
 class PyClass(PyText):
     """Stores the code and docstring of a class."""
 
-    def text_init(self, path_or_text: Union[Path, str]) -> None:
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         self.text = path_or_text.strip()
         self.name = re.search("class .*?[(:]", self.text).group()[6:-1]
 
@@ -110,14 +126,18 @@ class PyClass(PyText):
         ):
             _doc = t
         else:
-            _doc = self.header.text
+            searched = re.search('""".*?"""', self.header.text, re.DOTALL)
+            if searched:
+                _doc = re.sub("\n    ", "\n", searched.group()[3:-3])
+            else:
+                _doc = ""
         return NumpyFormatDocstring(_doc, parent=self)
 
     @cached_property
     def header(self) -> PyText:
         if self._header is None:
             _ = self.children
-        return PyContent(self._header, parent=self, start_line=self.start_line)
+        return PyContent(self._header, parent=self)
 
     @cached_property
     def children(self) -> List[PyText]:
@@ -138,7 +158,7 @@ class PyClass(PyText):
 class PyFunc(PyText):
     """Stores the code and docstring of a function."""
 
-    def text_init(self, path_or_text: Union[Path, str]) -> None:
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         self.text = path_or_text.strip()
         self.name = re.search("def .*?\\(", self.text).group()[4:-1]
 
@@ -160,8 +180,8 @@ class PyFunc(PyText):
 class PyMethod(PyFunc):
     """Stores the code and docstring of a class method."""
 
-    def text_init(self, path_or_text: Union[Path, str]) -> None:
-        super().text_init(path_or_text=path_or_text)
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
+        super().__pytext_post_init__(path_or_text=path_or_text)
         self.spaces = 4
 
 
@@ -172,7 +192,7 @@ class PyContent(PyText):
 
     """
 
-    def text_init(self, path_or_text: Union[Path, str]) -> None:
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         self.text = path_or_text.strip()
         self.name = NULL
 

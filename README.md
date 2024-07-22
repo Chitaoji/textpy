@@ -1,5 +1,5 @@
 # textpy
-Reads a python file/module and statically analyzes it. This works well with Jupyter extensions in VScode, and has better performance when the file/module is formatted with *PEP-8*.
+Reads a python module and statically analyzes it. This works well with Jupyter extensions in VScode, and will have better performance when the module files are formatted with *PEP-8*.
 
 ## Installation
 ```sh
@@ -12,7 +12,7 @@ lazyr>=0.0.16
 pandas
 Jinja2
 ```
-NOTE: pandas>=1.4.0 is recommended. Lower versions of pandas are also available, but some functions of this package will be affected.
+NOTE: pandas>=1.4.0 is recommended. Lower versions of pandas are also available, but some properties of this package will be affected.
 
 ## Quick Start
 To demonstrate the usage of this module, we put a file named `myfile.py` under `./examples/` (you can find it in the repository, or create a new file of your own):
@@ -52,19 +52,19 @@ def print_my_book(book: MyBook) -> None:
     """
     print(book.content)
 ```
-Run the following codes to find all the occurrences of the pattern "MyBook" in `myfile.py`:
+Run the following codes to find all the occurrences of some pattern (for example, "MyBook") in `myfile.py`:
 ```py
 >>> import textpy as tx
->>> m = tx.module("./examples/myfile.py")
+>>> myfile = tx.module("./examples/myfile.py") # reads the python module
 
->>> m.findall("MyBook", styler=False)
+>>> myfile.findall("MyBook", styler=False)
 examples/myfile.py:7: 'class <MyBook>:'
 examples/myfile.py:24: 'def print_my_book(book: <MyBook>) -> None:'
 examples/myfile.py:30: '    book : <MyBook>'
 ```
 If you are using a Jupyter notebook in VScode, you can run a cell like this:
 ```py
->>> m.findall("content")
+>>> myfile.findall("content")
 ```
 <!--/html-->
 <table id="T_19b39">
@@ -99,7 +99,7 @@ The previous demonstration introduced the core function `tx.module()`. In fact, 
 >>> isinstance(m, tx.PyText)
 True
 ```
-Sometimes, your python module may contain not just one file but multiple files and folders, but don’t worry since `tx.module()` provides support for complex file hierarchies. The return type will be either `PyDir` or `PyFile` (both are subclasses of `PyText`) depending on the path type.
+Sometimes, your python module may contain not just one file but multiple files and folders, but don’t worry, since `tx.module()` provides support for complex file hierarchies. The return type will be either `PyDir` or `PyFile`, both subclasses of `PyText`, depending on the path type.
 
 In conclusion, suppose you've got a python package, you can simply give the package dirpath to `tx.module()`, and do things like before:
 
@@ -113,7 +113,7 @@ In conclusion, suppose you've got a python package, you can simply give the pack
 ### tx.PyText.findall()
 As mentioned before, user can use `.findall()` to find all non-overlapping matches of some pattern in a python module.
 ```py
->>> m.findall("optional", styler=False)
+>>> myfile.findall("optional", styler=False)
 examples/myfile.py:13: '    story : str, <optional>'
 ```
 The optional argument `styler=` determines whether to use a pandas `Styler` object to beautify the representation. If you are running python in the console, please always set `styler=False`. You can also disable the stylers in `display_params`, so that you don't need to repeat `styler=False` every time in the following examples:
@@ -121,9 +121,9 @@ The optional argument `styler=` determines whether to use a pandas `Styler` obje
 >>> from textpy import display_params
 >>> display_params.enable_styler = False
 ``` 
-Method `.findall()` also has some optional parameters including `whole_word=`, `case_sensitive=`, `regex=` to customize the match pattern:
+In addition, the `.findall()` method has some optional parameters to customize the matching pattern, including `whole_word=`, `case_sensitive=`, and `regex=`.
 ```py
->>> m.findall("mybook", case_sensitive=False, regex=False, whole_word=True, styler=False)
+>>> myfile.findall("mybook", case_sensitive=False, regex=False, whole_word=True)
 examples/myfile.py:7: 'class <MyBook>:'
 examples/myfile.py:24: 'def print_my_book(book: <MyBook>) -> None:'
 examples/myfile.py:30: '    book : <MyBook>'
@@ -132,7 +132,7 @@ examples/myfile.py:30: '    book : <MyBook>'
 ### tx.PyText.replace()
 Use `.replace()` to find all non-overlapping matches of some pattern, and replace them with another string:
 ```py
->>> replacer = m.replace("book", "magazine")
+>>> replacer = myfile.replace("book", "magazine")
 >>> replacer
 examples/myfile.py:9: '    A <book/magazine> that records a story.'
 examples/myfile.py:20: '            self.content = "This <book/magazine> is empty."'
@@ -151,7 +151,7 @@ At this point, the replacement has not yet taken effect on the files. Use `.conf
 ### tx.PyText.delete()
 Use `.delete()` to find all non-overlapping matches of some pattern, and delete them:
 ```py
->>> deleter = m.delete("book")
+>>> deleter = myfile.delete("book")
 >>> deleter
 examples/myfile.py:9: '    A <book> that records a story.'
 examples/myfile.py:20: '            self.content = "This <book> is empty."'
@@ -176,6 +176,10 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.23
+* New utility function `word_wrap()` in `textpy.utils.re_extensions`.
+* Various improvements.
+
 ### v0.1.22
 * `textpy()` is going to be deprecated to avoid conflicts with the package name `textpy`. Please use `module()` insead.
 * New method `PyText.replace()`, `PyText.delete()`.

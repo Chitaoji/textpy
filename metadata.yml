@@ -1,7 +1,7 @@
 # Package meta-data.
 NAME: textpy
 VERSION:
-SUMMARY: Reads a python file/module and statically analyzes it.
+SUMMARY: Reads a python module and statically analyzes it.
 HOMEPAGE: https://github.com/Chitaoji/textpy/
 AUTHOR: Chitaoji
 AUTHOR_EMAIL: 2360742040@qq.com

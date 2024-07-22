@@ -48,7 +48,7 @@ class PyText(ABC, Generic[P]):
     parent : PyText, optional
         Parent node (if exists), by default None.
     start_line : int, optional
-        Starting line number, by default 1.
+        Starting line number, by default None.
     home : Union[Path, str, None], optional
         Specifies the home path if `path_or_text` is relative, by default None.
     encoding : str, optional
@@ -60,7 +60,7 @@ class PyText(ABC, Generic[P]):
         self,
         path_or_text: Union[Path, str],
         parent: Optional["PyText"] = None,
-        start_line: int = 1,
+        start_line: Optional[int] = None,
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
     ) -> None:
@@ -69,8 +69,13 @@ class PyText(ABC, Generic[P]):
         self.path: Path = Path(NULL + ".py")
 
         self.parent = parent
-        self.start_line = start_line
         self.spaces = 0
+
+        if start_line is None:
+            self.start_line = 1 if parent is None else parent.start_line
+        else:
+            self.start_line = start_line
+
         if parent is None:
             self.home = as_path(Path(""), home=home)
             self.encoding = encoding
@@ -79,7 +84,7 @@ class PyText(ABC, Generic[P]):
             self.encoding = parent.encoding
 
         self._header: Optional[str] = None
-        self.text_init(path_or_text)
+        self.__pytext_post_init__(path_or_text)
 
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}({self.absname!r})"
@@ -88,9 +93,9 @@ class PyText(ABC, Generic[P]):
         return self.jumpto(__value)
 
     @abstractmethod
-    def text_init(self, path_or_text: Union[Path, str]) -> None:
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         """
-        Initialize the instance.
+        Post init.
 
         Parameters
         ----------
@@ -163,7 +168,11 @@ class PyText(ABC, Generic[P]):
 
         """
         children_dict: Dict[str, "PyText"] = {}
+        null_cnt: int = 0
         for child, childname in zip(self.children, self.children_names):
+            if childname == NULL:
+                childname = f"NULL_{null_cnt}"
+                null_cnt += 1
             children_dict[childname] = child
         return children_dict
 
@@ -491,6 +500,9 @@ class Docstring(ABC):
     def __init__(self, text: str, parent: Optional[PyText] = None) -> None:
         self.text = text.strip()
         self.parent = parent
+
+    def __repr__(self) -> str:
+        return self.text
 
     @property
     @abstractmethod

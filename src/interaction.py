@@ -1,5 +1,5 @@
 """
-Contains display tools: .
+Contains interaction tools: display_params().
 
 NOTE: this module is private. All functions and objects are available in the main
 `textpy` namespace - use that instead.
@@ -11,10 +11,22 @@ import re
 from dataclasses import dataclass
 from functools import cached_property, partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Optional, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+    get_args,
+)
 
 import pandas as pd
 from typing_extensions import Self
+
+from .utils.validator import SimpleValidator
 
 if TYPE_CHECKING:
     from re import Match, Pattern
@@ -24,21 +36,26 @@ if TYPE_CHECKING:
     from .abc import PyText
     from .text import PyFile
 
-NULL = "NULL"  # Path stems or filenames should avoid this.
 
 __all__ = ["display_params"]
 
+NULL = "NULL"  # Path stems or filenames should avoid this.
+TextFinding = Tuple["PyText", int, str]
+ColorSchemeStr = Literal["dark", "modern", "high-intensty", "no-color"]
 
-@dataclass(slots=True)
+
+@dataclass
 class DisplayParams:
     """
     Params for displaying.
 
     """
 
-    color_scheme: Literal["dark", "modern", "high-intensty", "no-color"] = "dark"
-    enable_styler: bool = True
-    line_numbers: bool = True
+    color_scheme: ColorSchemeStr = SimpleValidator(
+        literal=get_args(ColorSchemeStr), default="dark"
+    )
+    enable_styler: bool = SimpleValidator(bool, default=True)
+    line_numbers: bool = SimpleValidator(bool, default=True)
 
 
 display_params = DisplayParams()
@@ -51,52 +68,48 @@ class FindTextResult:
         self,
         pattern: Union[str, "Pattern[str]"],
         *,
-        styl: Optional[Callable] = None,
-        repre: Optional[Callable] = None,
+        stylfunc: Optional[Callable[[TextFinding, "Match[str]"], str]] = None,
+        reprfunc: Optional[Callable[["Match[str]"], str]] = None,
     ) -> None:
-        self.res: List[Tuple[PyText, int, str]] = []
+        self.res: List[TextFinding] = []
         self.pattern = pattern
-        self.styl = styl
-        self.repre = repre
+        self.styl = stylfunc if stylfunc else self.__style_match
+        self._repr = reprfunc if reprfunc else self.__default_repr
 
     def __repr__(self) -> str:
         string: str = ""
         for t, n, _line in self.res:
             string += f"\n{t.relpath}" + f":{n}" * display_params.line_numbers + ": "
-            f: Callable[["Match[str]"], str] = (
-                self.repre if self.repre else self.__default_repr
-            )
-            new = re.sub(self.pattern, f, " " * t.spaces + _line)
+            new = re.sub(self.pattern, self._repr, " " * t.spaces + _line)
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
 
-    def __default_repr(self, m: "Match[str]") -> str:
+    def __default_repr(self, m: "Match[str]", /) -> str:
         if display_params.color_scheme == "no-color":
             return f"<{m.group()}>"
         return f"\033[100m{m.group()}\033[0m"
 
-    def append(self, finding: Tuple["PyText", int, str]) -> None:
+    def append(self, finding: TextFinding) -> None:
         """
         Append a new finding.
 
         Parameters
         ----------
-        finding : Tuple[PyText, int, str]
-            Contains a `PyText` instance, the line number where pattern
-            is found, and a matched string.
+        finding : TextFinding
+            Tuple of 3 elements: a `PyText` instance, the line number
+            where the pattern is found, and the text of the line.
 
         """
         self.res.append(finding)
 
-    def extend(self, findings: List[Tuple["PyText", int, str]]) -> None:
+    def extend(self, findings: List[TextFinding]) -> None:
         """
         Extend a few new findings.
 
         Parameters
         ----------
-        findings : List[Tuple[PyText, int, str]]
-            A finding contains a `PyText` instance, the line number where
-            pattern is found, and a matched string.
+        findings : TextFinding
+            List of findings.
 
         """
         self.res.extend(findings)
@@ -134,8 +147,7 @@ class FindTextResult:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
-            f = partial(self.styl if self.styl else self.__style_match, res)
-            df.iloc[i, 1] = re.sub(self.pattern, f, _line)
+            df.iloc[i, 1] = re.sub(self.pattern, partial(self.styl, res), _line)
         return (
             df.style.hide(axis=0)
             .set_properties(**{"text-align": "left"})
@@ -143,7 +155,7 @@ class FindTextResult:
         )
 
     @staticmethod
-    def __style_source(x: "PyText") -> str:
+    def __style_source(x: "PyText", /) -> str:
         return (
             NULL
             if x.name == NULL
@@ -153,7 +165,7 @@ class FindTextResult:
         )
 
     @staticmethod
-    def __style_match(r: Tuple["PyText", int, str], m: "Match[str]") -> str:
+    def __style_match(r: TextFinding, m: "Match[str]", /) -> str:
         return (
             ""
             if m.group() == ""
@@ -399,7 +411,7 @@ class Replacer:
         setattr(styler, "rollback", self.rollback)
         return styler
 
-    def __style_repl(self, r: Tuple["PyText", int, str], m: "Match[str]") -> str:
+    def __style(self, r: TextFinding, m: "Match[str]") -> str:
         url = f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.start()}"
         bgc = get_bg_colors()
         before = (
@@ -413,7 +425,7 @@ class Replacer:
             new = "/" + new
         return before + make_ahref(url, new, color="#cccccc", bg_color=bgc[2])
 
-    def __repr_repl(self, m: "Match[str]") -> str:
+    def __repr(self, m: "Match[str]") -> str:
         new = self.editors[0].counted_repl(m)
         if display_params.color_scheme == "no-color":
             return f"<{m.group()}/{new}>" if new else f"<{m.group()}>"
@@ -422,9 +434,7 @@ class Replacer:
 
     @cached_property
     def __find_text_result(self) -> FindTextResult:
-        res = FindTextResult(
-            self.pattern, styl=self.__style_repl, repre=self.__repr_repl
-        )
+        res = FindTextResult(self.pattern, stylfunc=self.__style, reprfunc=self.__repr)
         for e in self.editors:
             res.join(e.pyfile.findall(self.pattern, styler=False))
         return res
@@ -474,11 +484,6 @@ def get_bg_colors() -> Tuple[str, str, str]:
     Tuple[str,str,str]
         Background colors.
 
-    Raises
-    ------
-    ValueError
-        Unrecognized color-scheme.
-
     """
     if display_params.color_scheme == "dark":
         return ["#505050", "#4d2f2f", "#2f4d2f"]
@@ -486,6 +491,4 @@ def get_bg_colors() -> Tuple[str, str, str]:
         return ["#505050", "#701414", "#4e5d2d"]
     if display_params.color_scheme == "high-intensty":
         return ["#505050", "#701414", "#147014"]
-    if display_params.color_scheme == "no-color":
-        return ["#505050", "#505050", "#505050"]
-    raise ValueError(f"unrecognized color-scheme: {display_params.color_scheme!r}")
+    return ["#505050", "#505050", "#505050"]

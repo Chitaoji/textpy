@@ -25,6 +25,7 @@ __all__ = [
     "pattern_inreg",
     "line_count",
     "line_count_iter",
+    "word_wrap",
 ]
 
 
@@ -272,3 +273,45 @@ def line_count_iter(iterstr: Iterable[str]) -> Iterable[Tuple[int, str]]:
     for s in iterstr:
         yield cnt, s
         cnt += len(re.findall("\n", s))
+
+
+def word_wrap(string: str, maximum: int = 80) -> str:
+    """
+    Takes a string as input and wraps the text into multiple lines,
+    ensuring that each line has a maximum length of characters.
+
+    Parameters
+    ----------
+    string : str
+        The input text that needs to be word-wrapped.
+    maximum : int, optional
+        Specifies the maximum length of each line in the word-wrapped
+        string, by default 80.
+
+    Returns
+    -------
+        Wrapped string.
+
+    """
+    if maximum < 1:
+        raise ValueError(f"expected maximum > 0, got {maximum} instead")
+    lines: List[str] = []
+    for x in string.splitlines():
+        while True:
+            l, x = __maxsplit(x, maximum=maximum)
+            lines.append(l)
+            if not x:
+                break
+    return "\n".join(lines)
+
+
+def __maxsplit(string: str, maximum: int = 1):
+    head, tail = string, ""
+    if len(string) > maximum:
+        if (i := string.rfind(" ", None, 1 + maximum)) > 0 and (
+            l := string[:i]
+        ).strip():
+            head, tail = l, string[1 + i :]
+        elif (j := string.find(" ", 1 + maximum)) > 0:
+            head, tail = string[:j], string[1 + j :]
+    return head.rstrip(), tail.strip()
