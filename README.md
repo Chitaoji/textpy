@@ -99,7 +99,7 @@ The previous demonstration introduced the core function `tx.module()`. In fact, 
 >>> isinstance(m, tx.PyText)
 True
 ```
-Sometimes, your python module may contain not just one file but multiple files and folders, but don’t worry, since `tx.module()` provides support for complex file hierarchies. The return type will be either `PyDir` or `PyFile`, both subclasses of `PyText`, depending on the path type.
+Sometimes, your python module may contain not just one file but multiple files and folders, but don't worry, since `tx.module()` provides support for complex file hierarchies. The return type will be either `PyDir` or `PyFile`, both subclasses of `PyText`, depending on the path type.
 
 In conclusion, suppose you've got a python package, you can simply give the package dirpath to `tx.module()`, and do things like before:
 
