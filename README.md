@@ -176,6 +176,10 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.23
+* New utility function `word_wrap()` in `textpy.utils.re_extensions`.
+* Various improvements.
+
 ### v0.1.22
 * `textpy()` is going to be deprecated to avoid conflicts with the package name `textpy`. Please use `module()` insead.
 * New method `PyText.replace()`, `PyText.delete()`.
