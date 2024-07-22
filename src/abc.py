@@ -501,6 +501,9 @@ class Docstring(ABC):
         self.text = text.strip()
         self.parent = parent
 
+    def __repr__(self) -> str:
+        return self.text
+
     @property
     @abstractmethod
     def sections(self) -> Dict[str, str]:
