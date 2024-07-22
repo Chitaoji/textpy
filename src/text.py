@@ -121,7 +121,7 @@ class PyClass(PyText):
     def header(self) -> PyText:
         if self._header is None:
             _ = self.children
-        return PyContent(self._header, parent=self, start_line=self.start_line)
+        return PyContent(self._header, parent=self)
 
     @cached_property
     def children(self) -> List[PyText]:

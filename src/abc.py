@@ -48,7 +48,7 @@ class PyText(ABC, Generic[P]):
     parent : PyText, optional
         Parent node (if exists), by default None.
     start_line : int, optional
-        Starting line number, by default 1.
+        Starting line number, by default None.
     home : Union[Path, str, None], optional
         Specifies the home path if `path_or_text` is relative, by default None.
     encoding : str, optional
@@ -60,7 +60,7 @@ class PyText(ABC, Generic[P]):
         self,
         path_or_text: Union[Path, str],
         parent: Optional["PyText"] = None,
-        start_line: int = 1,
+        start_line: Optional[int] = None,
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
     ) -> None:
@@ -69,8 +69,13 @@ class PyText(ABC, Generic[P]):
         self.path: Path = Path(NULL + ".py")
 
         self.parent = parent
-        self.start_line = start_line
         self.spaces = 0
+
+        if start_line is None:
+            self.start_line = 1 if parent is None else parent.start_line
+        else:
+            self.start_line = start_line
+
         if parent is None:
             self.home = as_path(Path(""), home=home)
             self.encoding = encoding
