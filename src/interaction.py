@@ -82,19 +82,19 @@ class FindTextResult:
         self,
         pattern: Union[str, "Pattern[str]"],
         *,
-        styl: Optional[Callable[[TextFinding, "Match[str]"], str]] = None,
-        repre: Optional[Callable[["Match[str]"], str]] = None,
+        stylfunc: Optional[Callable[[TextFinding, "Match[str]"], str]] = None,
+        reprfunc: Optional[Callable[["Match[str]"], str]] = None,
     ) -> None:
         self.res: List[TextFinding] = []
         self.pattern = pattern
-        self.styl = styl if styl else self.__style_match
-        self.repre = repre if repre else self.__default_repr
+        self.styl = stylfunc if stylfunc else self.__style_match
+        self._repr = reprfunc if reprfunc else self.__default_repr
 
     def __repr__(self) -> str:
         string: str = ""
         for t, n, _line in self.res:
             string += f"\n{t.relpath}" + f":{n}" * display_params.line_numbers + ": "
-            new = re.sub(self.pattern, self.repre, " " * t.spaces + _line)
+            new = re.sub(self.pattern, self._repr, " " * t.spaces + _line)
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
 
@@ -448,7 +448,7 @@ class Replacer:
 
     @cached_property
     def __find_text_result(self) -> FindTextResult:
-        res = FindTextResult(self.pattern, styl=self.__style, repre=self.__repr)
+        res = FindTextResult(self.pattern, stylfunc=self.__style, reprfunc=self.__repr)
         for e in self.editors:
             res.join(e.pyfile.findall(self.pattern, styler=False))
         return res
