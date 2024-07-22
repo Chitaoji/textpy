@@ -1,5 +1,5 @@
 """
-Contains display tools: .
+Contains interaction tools: display_params().
 
 NOTE: this module is private. All functions and objects are available in the main
 `textpy` namespace - use that instead.
