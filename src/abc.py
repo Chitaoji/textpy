@@ -84,7 +84,7 @@ class PyText(ABC, Generic[P]):
             self.encoding = parent.encoding
 
         self._header: Optional[str] = None
-        self.text_init(path_or_text)
+        self.__pytext_post_init__(path_or_text)
 
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}({self.absname!r})"
@@ -93,9 +93,9 @@ class PyText(ABC, Generic[P]):
         return self.jumpto(__value)
 
     @abstractmethod
-    def text_init(self, path_or_text: Union[Path, str]) -> None:
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         """
-        Initialize the instance.
+        Post init.
 
         Parameters
         ----------

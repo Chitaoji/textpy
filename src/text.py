@@ -25,7 +25,7 @@ __all__ = ["PyDir", "PyFile", "PyClass", "PyFunc", "PyMethod", "PyContent"]
 class PyDir(PyText):
     """Stores a directory of python files."""
 
-    def text_init(self, path_or_text: Union[Path, str]) -> None:
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         self.path = as_path(path_or_text, home=self.home)
         if not self.path.is_dir():
             raise NotADirectoryError(f"not a dicretory: '{self.path}'")
@@ -55,7 +55,7 @@ class PyDir(PyText):
 class PyFile(PyText):
     """Stores the code of a python file."""
 
-    def text_init(self, path_or_text: Union[Path, str]) -> None:
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         if isinstance(path_or_text, Path):
             self.path = as_path(path_or_text, home=self.home)
             self.text = self.path.read_text(encoding=self.encoding).strip()
@@ -99,7 +99,7 @@ class PyFile(PyText):
 class PyClass(PyText):
     """Stores the code and docstring of a class."""
 
-    def text_init(self, path_or_text: Union[Path, str]) -> None:
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         self.text = path_or_text.strip()
         self.name = re.search("class .*?[(:]", self.text).group()[6:-1]
 
@@ -142,7 +142,7 @@ class PyClass(PyText):
 class PyFunc(PyText):
     """Stores the code and docstring of a function."""
 
-    def text_init(self, path_or_text: Union[Path, str]) -> None:
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         self.text = path_or_text.strip()
         self.name = re.search("def .*?\\(", self.text).group()[4:-1]
 
@@ -164,8 +164,8 @@ class PyFunc(PyText):
 class PyMethod(PyFunc):
     """Stores the code and docstring of a class method."""
 
-    def text_init(self, path_or_text: Union[Path, str]) -> None:
-        super().text_init(path_or_text=path_or_text)
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
+        super().__pytext_post_init__(path_or_text=path_or_text)
         self.spaces = 4
 
 
@@ -176,7 +176,7 @@ class PyContent(PyText):
 
     """
 
-    def text_init(self, path_or_text: Union[Path, str]) -> None:
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         self.text = path_or_text.strip()
         self.name = NULL
 
