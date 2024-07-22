@@ -110,7 +110,11 @@ class PyClass(PyText):
         ):
             _doc = t
         else:
-            _doc = self.header.text
+            searched = re.search('""".*?"""', self.header.text, re.DOTALL)
+            if searched:
+                _doc = re.sub("\n    ", "\n", searched.group()[3:-3])
+            else:
+                _doc = ""
         return NumpyFormatDocstring(_doc, parent=self)
 
     @cached_property
