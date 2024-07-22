@@ -56,7 +56,6 @@ class DisplayParams:
     )
     enable_styler: bool = SimpleValidator(bool, default=True)
     line_numbers: bool = SimpleValidator(bool, default=True)
-    test: bool = SimpleValidator(bool)
 
 
 display_params = DisplayParams()
