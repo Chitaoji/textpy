@@ -163,7 +163,11 @@ class PyText(ABC, Generic[P]):
 
         """
         children_dict: Dict[str, "PyText"] = {}
+        null_cnt: int = 0
         for child, childname in zip(self.children, self.children_names):
+            if childname == NULL:
+                childname = f"NULL_{null_cnt}"
+                null_cnt += 1
             children_dict[childname] = child
         return children_dict
 
