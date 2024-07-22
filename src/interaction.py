@@ -13,7 +13,6 @@ from functools import cached_property, partial
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
-    Any,
     Callable,
     Dict,
     List,
@@ -21,10 +20,13 @@ from typing import (
     Optional,
     Tuple,
     Union,
+    get_args,
 )
 
 import pandas as pd
 from typing_extensions import Self
+
+from .utils.validator import SimpleValidator
 
 if TYPE_CHECKING:
     from re import Match, Pattern
@@ -39,6 +41,7 @@ __all__ = ["display_params"]
 
 NULL = "NULL"  # Path stems or filenames should avoid this.
 TextFinding = Tuple["PyText", int, str]
+ColorSchemeStr = Literal["dark", "modern", "high-intensty", "no-color"]
 
 
 @dataclass
@@ -48,28 +51,12 @@ class DisplayParams:
 
     """
 
-    color_scheme: Literal["dark", "modern", "high-intensty", "no-color"] = "dark"
-    enable_styler: bool = True
-    line_numbers: bool = True
-
-    def __setattr__(self, __name: str, __value: Any) -> None:
-        if __name == "color_scheme":
-            if __value in ["dark", "modern", "high-intensty", "no-color"]:
-                super().__setattr__(__name, __value)
-                return
-        elif __name == "enable_styler":
-            if isinstance(__value, bool):
-                super().__setattr__(__name, __value)
-                return
-        elif __name == "line_numbers":
-            if isinstance(__value, bool):
-                super().__setattr__(__name, __value)
-                return
-        else:
-            raise AttributeError(
-                f"{self.__class__.__name__!r} object has no attribute {__name!r}"
-            )
-        raise ValueError(f"invalid value for {__name!r}: {__value!r}")
+    color_scheme: ColorSchemeStr = SimpleValidator(
+        literal=get_args(ColorSchemeStr), default="dark"
+    )
+    enable_styler: bool = SimpleValidator(bool, default=True)
+    line_numbers: bool = SimpleValidator(bool, default=True)
+    test: bool = SimpleValidator(bool)
 
 
 display_params = DisplayParams()
