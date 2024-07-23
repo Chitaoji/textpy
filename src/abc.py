@@ -260,7 +260,9 @@ class PyText(ABC, Generic[P]):
     def findall(
         self, pattern: "PatternStr", /, *_: P.args, **kwargs: P.kwargs
     ) -> FindTextResult: ...
-    def findall(self, pattern, /, styler=True, **kwargs) -> FindTextResult:
+    def findall(
+        self, pattern, /, styler=True, based_on=None, **kwargs
+    ) -> FindTextResult:
         """
         Finds all non-overlapping matches of `pattern`.
 
@@ -296,10 +298,19 @@ class PyText(ABC, Generic[P]):
             ):
                 if group != "":
                     res.append((self, pattern, self.start_line + nline - 1, group))
+        elif based_on and self.__class__.__name__ == "PyFile":
+            latest = self
+            if based_on:
+                based_on = cast(Replacer, based_on).to_replacer()
+                for e in based_on.editors:
+                    if e.pyfile.path == self.path and not e.is_based_on:
+                        latest = self.__class__(e.new_text)
+                        break
+            res.join(latest.findall(pattern, styler=False))
         else:
-            res.join(self.header.findall(pattern, styler=False))
+            res.join(self.header.findall(pattern, styler=False, based_on=based_on))
             for c in self.children:
-                res.join(c.findall(pattern, styler=False))
+                res.join(c.findall(pattern, styler=False, based_on=based_on))
         if styler and pd.__version__ >= "1.4.0":
             return res.to_styler()
         return res
@@ -315,7 +326,7 @@ class PyText(ABC, Generic[P]):
         **kwargs: P.kwargs,
     ) -> "Replacer": ...
     def replace(
-        self, pattern, repl, /, overwrite=True, styler=True, **kwargs
+        self, pattern, repl, /, overwrite=True, styler=True, based_on=None, **kwargs
     ) -> "Replacer":
         """
         Finds all non-overlapping matches of `pattern`, and replace them with
@@ -354,14 +365,26 @@ class PyText(ABC, Generic[P]):
         pattern = self.__pattern_trans(pattern, **kwargs)
         replacer = Replacer()
         if self.path.suffix == ".py":
-            editor = PyEditor(self, overwrite=overwrite)
+            old = None
+            if based_on:
+                based_on = cast(Replacer, based_on).to_replacer()
+                for e in based_on.editors:
+                    if e.pyfile.path == self.path and not e.is_based_on:
+                        old = e
+                        break
+            editor = PyEditor(self, overwrite=overwrite, based_on=old)
             if editor.replace(pattern, repl) > 0:
                 replacer.append(editor)
         else:
             for c in self.children:
                 replacer.join(
                     c.replace(
-                        pattern, repl, overwrite=overwrite, styler=False, **kwargs
+                        pattern,
+                        repl,
+                        overwrite=overwrite,
+                        styler=False,
+                        based_on=based_on,
+                        **kwargs,
                     )
                 )
         if styler:
@@ -377,7 +400,9 @@ class PyText(ABC, Generic[P]):
         *_: P.args,
         **kwargs: P.kwargs,
     ) -> "Replacer": ...
-    def delete(self, pattern, /, overwrite=True, styler=True, **kwargs) -> "Replacer":
+    def delete(
+        self, pattern, /, overwrite=True, styler=True, based_on=None, **kwargs
+    ) -> "Replacer":
         """
         An alternative to `.replace(pattern, "", *args, **kwargs)`
 
@@ -405,7 +430,9 @@ class PyText(ABC, Generic[P]):
             Text replacer.
 
         """
-        return self.replace(pattern, "", overwrite, styler=styler, **kwargs)
+        return self.replace(
+            pattern, "", overwrite, styler=styler, based_on=based_on, **kwargs
+        )
 
     @staticmethod
     def __pattern_trans(
@@ -565,4 +592,5 @@ def _ignore(
     case_sensitive: bool = True,
     regex: bool = True,
     styler: bool = True,
+    based_on: Optional[Replacer] = None,
 ) -> None: ...

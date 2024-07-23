@@ -48,5 +48,5 @@ def __type_hint_generics(module: "PyText") -> Replacer:
         ("type\\[.*?\\]", lambda m: "T" + m.group()[1:]),
     ]
     for p in pairs:
-        replacer.join(module.replace(*p))
+        replacer.join(module.replace(*p, based_on=replacer))
     return replacer

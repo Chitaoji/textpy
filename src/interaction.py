@@ -206,6 +206,8 @@ class PyEditor:
         PyFile object.
     overwrite : bool, optional
         Determines whether to overwrite the original file, by default True.
+    based_on : Self, optional
+        Specifies another editor to base on.
 
     Raises
     ------
@@ -214,7 +216,9 @@ class PyEditor:
 
     """
 
-    def __init__(self, pyfile: "PyFile", overwrite: bool = True) -> None:
+    def __init__(
+        self, pyfile: "PyFile", overwrite: bool = True, based_on: Optional[Self] = None
+    ) -> None:
         if pyfile.path.stem == NULL:
             raise ValueError(f"not a python file: {pyfile}")
         path = pyfile.path
@@ -227,6 +231,8 @@ class PyEditor:
         self.overwrite = overwrite
         self.new_text = ""
         self.pattern: "PatternStr" = ""
+        self.based_on = based_on
+        self.is_based_on = False
         self.__repl: Union[str, Callable[["Match[str]"], str]] = ""
         self.__count: int = 0
 
@@ -252,7 +258,8 @@ class PyEditor:
             Text to write.
 
         """
-        self.path.write_text(text + "\n", encoding=self.pyfile.encoding)
+        if not self.is_based_on:
+            self.path.write_text(text + "\n", encoding=self.pyfile.encoding)
 
     def compare(self, text: str) -> bool:
         """
@@ -294,8 +301,14 @@ class PyEditor:
         """
         self.__count = 0
         self.__repl = repl
-        self.new_text = re.sub(pattern, self.counted_repl, self.pyfile.text)
+        self.new_text = re.sub(
+            pattern,
+            self.counted_repl,
+            self.based_on.new_text if self.based_on else self.pyfile.text,
+        )
         self.pattern = pattern
+        if self.__count > 0 and self.based_on:
+            self.based_on.is_based_on = True
         return self.__count
 
     def counted_repl(self, x: "Match[str]") -> str:
@@ -398,6 +411,8 @@ class Replacer:
     ) -> Dict[str, List[str]]:
         info: Dict[str, List[str]] = {"successful": [], "failed": []}
         for e in self.editors:
+            if e.is_based_on:
+                continue
             if fc or e.compare(e.new_text if rb else e.pyfile.text):
                 e.write(e.pyfile.text if rb else e.new_text)
                 info["successful"].append(str(e.path))
@@ -428,7 +443,20 @@ class Replacer:
         styler = self.__find_text_result.to_styler()
         setattr(styler, "confirm", self.confirm)
         setattr(styler, "rollback", self.rollback)
+        setattr(styler, "to_replacer", lambda: self)
         return styler
+
+    def to_replacer(self) -> Self:
+        """
+        Returns self.
+
+        Returns
+        -------
+        Self
+            An instance of self.
+
+        """
+        return self
 
     def __style(self, r: TextFinding, m: "Match[str]", /, extra: int = 0) -> str:
         url = f"{r[0].execpath}:{r[2]}:{1+r[0].spaces+m.start()}"
@@ -455,7 +483,11 @@ class Replacer:
     def __find_text_result(self) -> FindTextResult:
         res = FindTextResult(stylfunc=self.__style, reprfunc=self.__repr)
         for i, e in enumerate(self.editors):
-            res.join(e.pyfile.findall(e.pattern, styler=False), extra=i)
+            if e.based_on:
+                pyfile = e.pyfile.__class__(e.based_on.new_text)
+            else:
+                pyfile = e.pyfile
+            res.join(pyfile.findall(e.pattern, styler=False), extra=i)
         return res
 
 
