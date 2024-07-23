@@ -25,11 +25,13 @@ from typing import (
 import pandas as pd
 from typing_extensions import ParamSpec
 
-from .interaction import NULL, FindTextResult, PyEditor, Replacer, display_params
+from .interaction import NULL, FindTextResult, PyEditor, Replacer
 from .utils.re_extensions import pattern_inreg, real_findall
 
 if TYPE_CHECKING:
     from re import Match, Pattern
+
+    from .utils.re_extensions import PatternStr
 
 
 __all__ = ["PyText", "Docstring"]
@@ -256,19 +258,15 @@ class PyText(ABC, Generic[P]):
 
     @overload
     def findall(
-        self,
-        pattern: Union[str, "Pattern[str]"],
-        /,
-        *_: P.args,
-        **kwargs: P.kwargs,
-    ) -> "FindTextResult": ...
-    def findall(self, pattern, /, styler=True, **kwargs) -> "FindTextResult":
+        self, pattern: "PatternStr", /, *_: P.args, **kwargs: P.kwargs
+    ) -> FindTextResult: ...
+    def findall(self, pattern, /, styler=True, **kwargs) -> FindTextResult:
         """
         Finds all non-overlapping matches of `pattern`.
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str]]
+        pattern : PatternStr
             String pattern.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
@@ -288,7 +286,7 @@ class PyText(ABC, Generic[P]):
 
         """
         pattern = self.__pattern_trans(pattern, **kwargs)
-        res = FindTextResult(pattern)
+        res = FindTextResult()
         if not self.children:
             for nline, _, group in real_findall(
                 ".*" + pattern.pattern + ".*",
@@ -297,19 +295,19 @@ class PyText(ABC, Generic[P]):
                 flags=pattern.flags,
             ):
                 if group != "":
-                    res.append((self, self.start_line + nline - 1, group))
+                    res.append((self, pattern, self.start_line + nline - 1, group))
         else:
             res.join(self.header.findall(pattern, styler=False))
             for c in self.children:
                 res.join(c.findall(pattern, styler=False))
-        if styler and display_params.enable_styler and pd.__version__ >= "1.4.0":
+        if styler and pd.__version__ >= "1.4.0":
             return res.to_styler()
         return res
 
     @overload
     def replace(
         self,
-        pattern: Union[str, "Pattern[str]"],
+        pattern: "PatternStr",
         repl: Union[str, Callable[["Match[str]"], str]],
         overwrite: bool = True,
         /,
@@ -327,7 +325,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str]]
+        pattern : PatternStr
             String pattern.
         repl : Union[str, Callable[[str], str]]
             Speficies the string to replace the patterns. If Callable, should
@@ -354,7 +352,7 @@ class PyText(ABC, Generic[P]):
 
         """
         pattern = self.__pattern_trans(pattern, **kwargs)
-        replacer = Replacer(pattern)
+        replacer = Replacer()
         if self.path.suffix == ".py":
             editor = PyEditor(self, overwrite=overwrite)
             if editor.replace(pattern, repl) > 0:
@@ -366,14 +364,14 @@ class PyText(ABC, Generic[P]):
                         pattern, repl, overwrite=overwrite, styler=False, **kwargs
                     )
                 )
-        if styler and display_params.enable_styler:
+        if styler:
             return cast("Replacer", replacer.to_styler())
         return replacer
 
     @overload
     def delete(
         self,
-        pattern: Union[str, "Pattern[str]"],
+        pattern: "PatternStr",
         overwrite: bool = True,
         /,
         *_: P.args,
@@ -385,7 +383,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str]]
+        pattern : PatternStr
             String pattern.
         overwrite : bool, optional
             Determines whether to overwrite the original files. If False, the
@@ -411,7 +409,7 @@ class PyText(ABC, Generic[P]):
 
     @staticmethod
     def __pattern_trans(
-        pattern: Union[str, "Pattern[str]"],
+        pattern: "PatternStr",
         whole_word: bool = False,
         case_sensitive: bool = True,
         regex: bool = True,

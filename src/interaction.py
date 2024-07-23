@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 __all__ = ["display_params"]
 
 NULL = "NULL"  # Path stems or filenames should avoid this.
-TextFinding = Tuple["PyText", int, str]
+TextFinding = Tuple["PyText", "PatternStr", int, str]
 ColorSchemeStr = Literal["dark", "modern", "high-intensty", "no-color"]
 
 
@@ -67,21 +67,19 @@ class FindTextResult:
 
     def __init__(
         self,
-        pattern: "PatternStr",
         *,
         stylfunc: Optional[Callable[[TextFinding, "Match[str]"], str]] = None,
         reprfunc: Optional[Callable[["Match[str]"], str]] = None,
     ) -> None:
         self.res: List[TextFinding] = []
-        self.pattern = pattern
         self.styl = stylfunc if stylfunc else self.__style_match
         self._repr = reprfunc if reprfunc else self.__default_repr
 
     def __repr__(self) -> str:
         string: str = ""
-        for t, n, _line in self.res:
+        for t, p, n, _line in self.res:
             string += f"\n{t.relpath}" + f":{n}" * display_params.line_numbers + ": "
-            new = re.sub(self.pattern, self._repr, " " * t.spaces + _line)
+            new = re.sub(p, self._repr, " " * t.spaces + _line)
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
 
@@ -97,8 +95,8 @@ class FindTextResult:
         Parameters
         ----------
         finding : TextFinding
-            Tuple of 3 elements: a `PyText` instance, the line number
-            where the pattern is found, and the text of the line.
+            Tuple of 4 elements: a `PyText` instance, the pattern, the line
+            number where the pattern was found, and the text of the line.
 
         """
         self.res.append(finding)
@@ -140,7 +138,7 @@ class FindTextResult:
         """
         df = pd.DataFrame("", index=range(len(self.res)), columns=["source", "match"])
         for i, res in enumerate(self.res):
-            t, n, _line = res
+            t, p, n, _line = res
             df.iloc[i, 0] = ".".join(
                 [self.__style_source(x) for x in t.track()]
             ).replace(".NULL", "")
@@ -148,7 +146,7 @@ class FindTextResult:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
-            df.iloc[i, 1] = re.sub(self.pattern, partial(self.styl, res), _line)
+            df.iloc[i, 1] = re.sub(p, partial(self.styl, res), _line)
         return (
             df.style.hide(axis=0)
             .set_properties(**{"text-align": "left"})
@@ -171,7 +169,7 @@ class FindTextResult:
             ""
             if m.group() == ""
             else make_ahref(
-                f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.start()}",
+                f"{r[0].execpath}:{r[2]}:{1+r[0].spaces+m.start()}",
                 m.group(),
                 color="#cccccc",
                 bg_color=get_bg_colors()[0],
@@ -209,6 +207,7 @@ class PyEditor:
         self.pyfile = pyfile
         self.overwrite = overwrite
         self.new_text = ""
+        self.pattern: "PatternStr" = ""
         self.__repl: Union[str, Callable[["Match[str]"], str]] = ""
         self.__count: int = 0
 
@@ -277,6 +276,7 @@ class PyEditor:
         self.__count = 0
         self.__repl = repl
         self.new_text = re.sub(pattern, self.counted_repl, self.pyfile.text)
+        self.pattern = pattern
         return self.__count
 
     def counted_repl(self, x: "Match[str]") -> str:
@@ -288,9 +288,8 @@ class PyEditor:
 class Replacer:
     """Text replacer, only as a return of `PyText.replace()`."""
 
-    def __init__(self, pattern: "PatternStr"):
+    def __init__(self):
         self.editors: List[PyEditor] = []
-        self.pattern = pattern
         self.__confirmed = False
 
     def __repr__(self) -> str:
@@ -394,24 +393,26 @@ class Replacer:
             )
         return info
 
-    def to_styler(self) -> "Styler":
+    def to_styler(self) -> Union["Styler", Self]:
         """
         Return a `Styler` of dataframe to beautify the representation in a
         Jupyter notebook.
 
         Returns
         -------
-        Styler
-            A `Styler` of dataframe.
+        Union[Styler, Self]
+            A `Styler` or an instance of self.
 
         """
+        if not display_params.enable_styler:
+            return self
         styler = self.__find_text_result.to_styler()
         setattr(styler, "confirm", self.confirm)
         setattr(styler, "rollback", self.rollback)
         return styler
 
     def __style(self, r: TextFinding, m: "Match[str]") -> str:
-        url = f"{r[0].execpath}:{r[1]}:{1+r[0].spaces+m.start()}"
+        url = f"{r[0].execpath}:{r[2]}:{1+r[0].spaces+m.start()}"
         bgc = get_bg_colors()
         before = (
             ""
@@ -433,9 +434,9 @@ class Replacer:
 
     @cached_property
     def __find_text_result(self) -> FindTextResult:
-        res = FindTextResult(self.pattern, stylfunc=self.__style, reprfunc=self.__repr)
+        res = FindTextResult(stylfunc=self.__style, reprfunc=self.__repr)
         for e in self.editors:
-            res.join(e.pyfile.findall(self.pattern, styler=False))
+            res.join(e.pyfile.findall(e.pattern, styler=False))
         return res
 
 
