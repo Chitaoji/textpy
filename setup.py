@@ -89,24 +89,22 @@ def _readme2doc(
     doc, rd = "", ""
     for i, s in enumerate(rsplit("\n## ", readme)):
         head = re.search(" .*\n", s).group()[1:-1]
-        if head not in {"Installation", "Requirements", "History"}:
-            doc += s
         if i == 0:
-            rd += re.sub("^\n# .*", f"\n# {name}", s)
+            s = re.sub("^\n# .*", f"\n# {name}", s)
         elif head == "Requirements":
-            rd += re.sub(
+            s = re.sub(
                 "```txt.*```",
                 "```txt\n" + "\n".join(requires) + "\n```",
                 s,
                 flags=re.DOTALL,
             )
         elif head == "Installation":
-            rd += re.sub(
+            s = re.sub(
                 "```sh.*```", f"```sh\n$ pip install {name}\n```", s, flags=re.DOTALL
             )
         elif head == "See Also":
             pypipage = f"https://pypi.org/project/{name}/"
-            rd += re.sub(
+            s = re.sub(
                 "### PyPI project\n.*",
                 f"### PyPI project\n* {pypipage}",
                 re.sub(
@@ -116,10 +114,11 @@ def _readme2doc(
                 ),
             )
         elif head == "License":
-            rd += f"\n## License\nThis project falls under the {pkg_license}.\n"
+            s = f"\n## License\nThis project falls under the {pkg_license}.\n"
 
-        else:
-            rd += s
+        rd += s
+        if head not in {"Installation", "Requirements", "History"}:
+            doc += s
     doc = re.sub("<!--html-->.*<!--/html-->", "", doc, flags=re.DOTALL)
     return word_wrap(doc, maximum=88) + "\n\n", rd
 
