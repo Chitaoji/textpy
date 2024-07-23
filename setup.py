@@ -34,6 +34,7 @@ REQUIRES_PYTHON: Final[str] = yml["REQUIRES_PYTHON"]
 REQUIRES: Final[List[str]] = yml["REQUIRES"]
 EXTRAS: Final[Dict] = yml["EXTRAS"]
 PACKAGE_DIR = "src"
+LICENSE = re.match(".*", (here / "LICENSE").read_text()).group()
 
 # Import the README and use it as the long-description.
 readme_path = here / "README.md"
@@ -82,6 +83,7 @@ def _readme2doc(
     name: str = NAME,
     requires: List[str] = REQUIRES,
     homepage: str = HOMEPAGE,
+    pkg_license: str = LICENSE,
 ) -> Tuple[str, str]:
     doc, rd = "", ""
     for i, s in enumerate(rsplit("\n## ", readme)):
@@ -112,6 +114,9 @@ def _readme2doc(
                     s,
                 ),
             )
+        elif head == "License":
+            rd += f"\n## License\nThis project falls under the {pkg_license}.\n"
+
         else:
             rd += s
     doc = re.sub("<!--html-->.*<!--/html-->", "", doc, flags=re.DOTALL)

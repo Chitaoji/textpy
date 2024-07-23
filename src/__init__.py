@@ -150,10 +150,10 @@ examples/myfile.py:34: '    print(<book>.content)'
 
 ## See Also
 ### Github repository
-* *auto-generated*
+* https://github.com/Chitaoji/textpy/
 
 ### PyPI project
-* *auto-generated*
+* https://pypi.org/project/textpy/
 
 ## License
 This project falls under the BSD 3-Clause License.
