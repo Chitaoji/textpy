@@ -13,6 +13,7 @@ from functools import cached_property, partial
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
+    Any,
     Callable,
     Dict,
     List,
@@ -68,27 +69,31 @@ class FindTextResult:
     def __init__(
         self,
         *,
-        stylfunc: Optional[Callable[[TextFinding, "Match[str]"], str]] = None,
-        reprfunc: Optional[Callable[["Match[str]"], str]] = None,
+        stylfunc: Optional[Callable] = None,
+        reprfunc: Optional[Callable] = None,
     ) -> None:
         self.res: List[TextFinding] = []
         self.styl = stylfunc if stylfunc else self.__style_match
         self._repr = reprfunc if reprfunc else self.__default_repr
+        self.extra: List[Any] = []
 
     def __repr__(self) -> str:
         string: str = ""
-        for t, p, n, _line in self.res:
+        for i, res in enumerate(self.res):
+            t, p, n, _line = res
             string += f"\n{t.relpath}" + f":{n}" * display_params.line_numbers + ": "
-            new = re.sub(p, self._repr, " " * t.spaces + _line)
+            new = re.sub(
+                p, partial(self._repr, extra=self.extra[i]), " " * t.spaces + _line
+            )
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
 
-    def __default_repr(self, m: "Match[str]", /) -> str:
+    def __default_repr(self, m: "Match[str]", /, **_) -> str:
         if display_params.color_scheme == "no-color":
             return f"<{m.group()}>"
         return f"\033[100m{m.group()}\033[0m"
 
-    def append(self, finding: TextFinding) -> None:
+    def append(self, finding: TextFinding, *, extra: Any = None) -> None:
         """
         Append a new finding.
 
@@ -97,11 +102,14 @@ class FindTextResult:
         finding : TextFinding
             Tuple of 4 elements: a `PyText` instance, the pattern, the line
             number where the pattern was found, and the text of the line.
+        extra : Any, optional
+            Extra infomation, by default None.
 
         """
         self.res.append(finding)
+        self.extra.append(extra)
 
-    def extend(self, findings: List[TextFinding]) -> None:
+    def extend(self, findings: List[TextFinding], *, extra: Any = None) -> None:
         """
         Extend a few new findings.
 
@@ -109,11 +117,14 @@ class FindTextResult:
         ----------
         findings : TextFinding
             List of findings.
+        extra : Any, optional
+            Extra infomation, by default None.
 
         """
         self.res.extend(findings)
+        self.extra.extend([extra] * len(findings))
 
-    def join(self, other: Self) -> None:
+    def join(self, other: Self, *, extra: Any = None) -> None:
         """
         Joins the other instance of self.__class__.
 
@@ -121,9 +132,15 @@ class FindTextResult:
         ----------
         other : Self
             The other instance.
+        extra : Any, optional
+            Extra infomation, by default None.
 
         """
-        self.extend(other.res)
+        if extra is None:
+            self.extend(other.res)
+            self.extra.extend(other.extra)
+        else:
+            self.extend(other.res, extra=extra)
 
     def to_styler(self) -> "Styler":
         """
@@ -146,7 +163,9 @@ class FindTextResult:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
-            df.iloc[i, 1] = re.sub(p, partial(self.styl, res), _line)
+            df.iloc[i, 1] = re.sub(
+                p, partial(self.styl, res, extra=self.extra[i]), _line
+            )
         return (
             df.style.hide(axis=0)
             .set_properties(**{"text-align": "left"})
@@ -164,7 +183,7 @@ class FindTextResult:
         )
 
     @staticmethod
-    def __style_match(r: TextFinding, m: "Match[str]", /) -> str:
+    def __style_match(r: TextFinding, m: "Match[str]", /, **_) -> str:
         return (
             ""
             if m.group() == ""
@@ -411,7 +430,7 @@ class Replacer:
         setattr(styler, "rollback", self.rollback)
         return styler
 
-    def __style(self, r: TextFinding, m: "Match[str]") -> str:
+    def __style(self, r: TextFinding, m: "Match[str]", /, extra: int = 0) -> str:
         url = f"{r[0].execpath}:{r[2]}:{1+r[0].spaces+m.start()}"
         bgc = get_bg_colors()
         before = (
@@ -419,14 +438,14 @@ class Replacer:
             if m.group() == ""
             else make_ahref(url, m.group(), color="#cccccc", bg_color=bgc[1])
         )
-        if (new := self.editors[0].counted_repl(m)) == "":
+        if (new := self.editors[extra].counted_repl(m)) == "":
             return before
         if display_params.color_scheme == "no-color" and before != "":
             new = "/" + new
         return before + make_ahref(url, new, color="#cccccc", bg_color=bgc[2])
 
-    def __repr(self, m: "Match[str]") -> str:
-        new = self.editors[0].counted_repl(m)
+    def __repr(self, m: "Match[str]", /, extra: int = 0) -> str:
+        new = self.editors[extra].counted_repl(m)
         if display_params.color_scheme == "no-color":
             return f"<{m.group()}/{new}>" if new else f"<{m.group()}>"
         before = f"\033[48;5;088m{m.group()}\033[0m"
@@ -435,8 +454,8 @@ class Replacer:
     @cached_property
     def __find_text_result(self) -> FindTextResult:
         res = FindTextResult(stylfunc=self.__style, reprfunc=self.__repr)
-        for e in self.editors:
-            res.join(e.pyfile.findall(e.pattern, styler=False))
+        for i, e in enumerate(self.editors):
+            res.join(e.pyfile.findall(e.pattern, styler=False), extra=i)
         return res
 
 
