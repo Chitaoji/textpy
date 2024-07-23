@@ -29,12 +29,13 @@ from typing_extensions import Self
 from .utils.validator import SimpleValidator
 
 if TYPE_CHECKING:
-    from re import Match, Pattern
+    from re import Match
 
     from pandas.io.formats.style import Styler
 
     from .abc import PyText
     from .text import PyFile
+    from .utils.re_extensions import PatternStr
 
 
 __all__ = ["display_params"]
@@ -66,7 +67,7 @@ class FindTextResult:
 
     def __init__(
         self,
-        pattern: Union[str, "Pattern[str]"],
+        pattern: "PatternStr",
         *,
         stylfunc: Optional[Callable[[TextFinding, "Match[str]"], str]] = None,
         reprfunc: Optional[Callable[["Match[str]"], str]] = None,
@@ -255,16 +256,14 @@ class PyEditor:
         return True
 
     def replace(
-        self,
-        pattern: Union[str, "Pattern[str]"],
-        repl: Union[str, Callable[["Match[str]"], str]],
+        self, pattern: "PatternStr", repl: Union[str, Callable[["Match[str]"], str]]
     ) -> int:
         """
         Replace patterns with replacement.
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str]]
+        pattern : PatternStr
             String pattern.
         repl : Union[str, Callable[[Match[str]], str]]
             Replacement.
@@ -289,7 +288,7 @@ class PyEditor:
 class Replacer:
     """Text replacer, only as a return of `PyText.replace()`."""
 
-    def __init__(self, pattern: Union[str, "Pattern[str]"]):
+    def __init__(self, pattern: "PatternStr"):
         self.editors: List[PyEditor] = []
         self.pattern = pattern
         self.__confirmed = False
