@@ -1,4 +1,4 @@
-"""Extensions to the `re` package."""
+"""Extensions for the `re` package."""
 
 import re
 from typing import (
@@ -16,7 +16,8 @@ if TYPE_CHECKING:
     from re import Pattern
 SpanNGroup = Tuple[Tuple[int, int], str]
 LineSpanNGroup = Tuple[int, Tuple[int, int], str]
-StrPattern = TypeVar("StrPattern", str, "Pattern[str]")
+PatternStr = Union[str, "Pattern[str]"]
+PatternStrVar = TypeVar("PatternStrVar", str, "Pattern[str]")
 
 __all__ = [
     "rsplit",
@@ -30,7 +31,7 @@ __all__ = [
 
 
 def rsplit(
-    pattern: Union[str, "Pattern[str]"],
+    pattern: "PatternStr",
     string: str,
     maxsplit: int = 0,
     flags: Union[int, re.RegexFlag] = 0,
@@ -42,7 +43,7 @@ def rsplit(
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str]]
+    pattern : PatternStr
         Pattern string.
     string : str
         String to be splitted.
@@ -74,7 +75,7 @@ def rsplit(
 
 
 def lsplit(
-    pattern: Union[str, "Pattern[str]"],
+    pattern: "PatternStr",
     string: str,
     maxsplit: int = 0,
     flags: Union[int, re.RegexFlag] = 0,
@@ -86,7 +87,7 @@ def lsplit(
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str]]
+    pattern : PatternStr
         Pattern string.
     string : str
         String to be splitted.
@@ -117,35 +118,31 @@ def lsplit(
 
 @overload
 def real_findall(
-    pattern: Union[str, "Pattern[str]"],
+    pattern: "PatternStr",
     string: str,
     flags: Union[int, re.RegexFlag] = 0,
     linemode: Literal[False] = False,
-) -> List[SpanNGroup]: ...
-
-
+) -> List["SpanNGroup"]: ...
 @overload
 def real_findall(
-    pattern: Union[str, "Pattern[str]"],
+    pattern: "PatternStr",
     string: str,
     flags: Union[int, re.RegexFlag] = 0,
     linemode: Literal[True] = True,
-) -> List[LineSpanNGroup]: ...
-
-
+) -> List["LineSpanNGroup"]: ...
 def real_findall(
-    pattern: Union[str, "Pattern[str]"],
+    pattern: "PatternStr",
     string: str,
     flags: Union[int, re.RegexFlag] = 0,
     linemode: bool = False,
-) -> List[Union[SpanNGroup, LineSpanNGroup]]:
+) -> List[Union["SpanNGroup", "LineSpanNGroup"]]:
     """
     Finds all non-overlapping matches in the string. Differences to
     `re.findall` that it also returns the spans of patterns.
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str]]
+    pattern : PatternStr
         Regex pattern.
     string : str
         String to be searched.
@@ -208,18 +205,18 @@ def real_findall(
     return finds
 
 
-def pattern_inreg(pattern: StrPattern) -> StrPattern:
+def pattern_inreg(pattern: "PatternStrVar") -> "PatternStrVar":
     """
     Invalidates the regular expressions in `pattern`.
 
     Parameters
     ----------
-    pattern : StrPattern
+    pattern : PatternStrVar
         Pattern to be invalidated.
 
     Returns
     -------
-    StrPattern
+    PatternStrVar
         A new pattern.
 
     """
