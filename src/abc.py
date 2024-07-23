@@ -65,6 +65,7 @@ class PyText(ABC, Generic[P]):
         start_line: Optional[int] = None,
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
+        path_mask: Optional[Path] = None,
     ) -> None:
         self.text: str = ""
         self.name: str = ""
@@ -87,6 +88,9 @@ class PyText(ABC, Generic[P]):
 
         self._header: Optional[str] = None
         self.__pytext_post_init__(path_or_text)
+        if path_mask:
+            self.path = path_mask
+            self.name = path_mask.stem
 
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}({self.absname!r})"
@@ -256,6 +260,14 @@ class PyText(ABC, Generic[P]):
         except ValueError:
             return self.abspath
 
+    def is_file(self) -> bool:
+        """Returns whether self is an instance of `PyFile`."""
+        return self.__class__.__name__ == "PyFile"
+
+    def is_dir(self) -> bool:
+        """Returns whether self is an instance of `PyDir`."""
+        return self.__class__.__name__ == "PyDir"
+
     @overload
     def findall(
         self, pattern: "PatternStr", /, *_: P.args, **kwargs: P.kwargs
@@ -289,7 +301,16 @@ class PyText(ABC, Generic[P]):
         """
         pattern = self.__pattern_trans(pattern, **kwargs)
         res = FindTextResult()
-        if not self.children:
+        if based_on and self.is_file():
+            latest = self
+            if based_on:
+                based_on = cast(Replacer, based_on).to_replacer()
+                for e in based_on.editors:
+                    if e.pyfile.path == self.path and not e.is_based_on:
+                        latest = self.__class__(e.new_text, path_mask=self.path)
+                        break
+            res.join(latest.findall(pattern, styler=False))
+        elif not self.children:
             for nline, _, group in real_findall(
                 ".*" + pattern.pattern + ".*",
                 self.text,
@@ -298,15 +319,6 @@ class PyText(ABC, Generic[P]):
             ):
                 if group != "":
                     res.append((self, pattern, self.start_line + nline - 1, group))
-        elif based_on and self.__class__.__name__ == "PyFile":
-            latest = self
-            if based_on:
-                based_on = cast(Replacer, based_on).to_replacer()
-                for e in based_on.editors:
-                    if e.pyfile.path == self.path and not e.is_based_on:
-                        latest = self.__class__(e.new_text)
-                        break
-            res.join(latest.findall(pattern, styler=False))
         else:
             res.join(self.header.findall(pattern, styler=False, based_on=based_on))
             for c in self.children:

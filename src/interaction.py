@@ -484,7 +484,9 @@ class Replacer:
         res = FindTextResult(stylfunc=self.__style, reprfunc=self.__repr)
         for i, e in enumerate(self.editors):
             if e.based_on:
-                pyfile = e.pyfile.__class__(e.based_on.new_text)
+                pyfile = e.pyfile.__class__(
+                    e.based_on.new_text, path_mask=e.pyfile.path
+                )
             else:
                 pyfile = e.pyfile
             res.join(pyfile.findall(e.pattern, styler=False), extra=i)
