@@ -72,7 +72,7 @@ various text manipulation methods:
 True
 ```
 Sometimes, your python module may contain not just one file but multiple files and
-folders, but don’t worry, since `tx.module()` provides support for complex file
+folders, but don't worry, since `tx.module()` provides support for complex file
 hierarchies. The return type will be either `PyDir` or `PyFile`, both subclasses of
 `PyText`, depending on the path type.
 
@@ -150,10 +150,10 @@ examples/myfile.py:34: '    print(<book>.content)'
 
 ## See Also
 ### Github repository
-* https://github.com/Chitaoji/textpy/
+* *auto-generated*
 
 ### PyPI project
-* https://pypi.org/project/textpy/
+* *auto-generated*
 
 ## License
 This project falls under the BSD 3-Clause License.

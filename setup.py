@@ -14,7 +14,7 @@ $ pip install wheel
 # -*- coding: utf-8 -*-
 import re
 from pathlib import Path
-from typing import Any, Dict, Final, List, Optional
+from typing import Any, Dict, Final, List, Optional, Tuple
 
 import yaml
 from setuptools import Command, find_packages, setup
@@ -36,8 +36,9 @@ EXTRAS: Final[Dict] = yml["EXTRAS"]
 PACKAGE_DIR = "src"
 
 # Import the README and use it as the long-description.
+readme_path = here / "README.md"
 try:
-    long_description = "\n" + (here / "README.md").read_text()
+    long_description = "\n" + readme_path.read_text()
 except FileNotFoundError:
     long_description = SUMMARY
 
@@ -76,29 +77,45 @@ class UploadCommand(Command):
         raise NotImplementedError
 
 
-def readme2doc(readme: str) -> str:
-    """
-    Takes a readme string as input and returns a modified version of the
-    readme string without certain sections.
-
-    Parameters
-    ----------
-    readme : str
-        A string containing the content of a README file.
-
-    Returns
-    -------
-    str
-        A modified version of the readme string.
-
-    """
-    doc = ""
-    for i in rsplit("\n## ", readme):
-        head = re.search(" .*\n", i).group()[1:-1]
+def _readme2doc(
+    readme: str,
+    name: str = NAME,
+    requires: List[str] = REQUIRES,
+    homepage: str = HOMEPAGE,
+) -> Tuple[str, str]:
+    doc, rd = "", ""
+    for i, s in enumerate(rsplit("\n## ", readme)):
+        head = re.search(" .*\n", s).group()[1:-1]
         if head not in {"Installation", "Requirements", "History"}:
-            doc += i
+            doc += s
+        if i == 0:
+            rd += re.sub("^\n# .*", f"\n# {name}", s)
+        elif head == "Requirements":
+            rd += re.sub(
+                "```txt.*```",
+                "```txt\n" + "\n".join(requires) + "\n```",
+                s,
+                flags=re.DOTALL,
+            )
+        elif head == "Installation":
+            rd += re.sub(
+                "```sh.*```", f"```sh\n$ pip install {name}\n```", s, flags=re.DOTALL
+            )
+        elif head == "See Also":
+            pypipage = f"https://pypi.org/project/{name}/"
+            rd += re.sub(
+                "### PyPI project\n.*",
+                f"### PyPI project\n* {pypipage}",
+                re.sub(
+                    "### Github repository\n.*",
+                    f"### Github repository\n* {homepage}",
+                    s,
+                ),
+            )
+        else:
+            rd += s
     doc = re.sub("<!--html-->.*<!--/html-->", "", doc, flags=re.DOTALL)
-    return word_wrap(doc, maximum=88) + "\n\n"
+    return word_wrap(doc, maximum=88) + "\n\n", rd
 
 
 class ReadmeFormatError(Exception):
@@ -110,7 +127,9 @@ if __name__ == "__main__":
     try:
         init_path = here / PACKAGE_DIR / "__init__.py"
         module_file = init_path.read_text()
-        new_doc = readme2doc(long_description)  # pylint: disable=invalid-name
+        new_doc, long_description = _readme2doc(
+            long_description
+        )  # pylint: disable=invalid-name
         if "'''" in new_doc and '"""' in new_doc:
             raise ReadmeFormatError("Both \"\"\" and ''' are found in the README")
         if '"""' in new_doc:
@@ -121,6 +140,7 @@ if __name__ == "__main__":
             "^\"\"\".*\"\"\"|^'''.*'''|^", new_doc, module_file, flags=re.DOTALL
         )
         init_path.write_text(module_file)
+        readme_path.write_text(long_description.strip())
     except FileNotFoundError:
         pass
 
