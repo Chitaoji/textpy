@@ -7,6 +7,7 @@ To use the full functionality of this file, you must:
 $ pip install pyyaml
 $ pip install twine
 $ pip install wheel
+$ pip install textpy
 ```
 """
 
