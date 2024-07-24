@@ -88,6 +88,7 @@ class PyText(ABC, Generic[P]):
 
         self._header: Optional[str] = None
         self.__pytext_post_init__(path_or_text)
+
         if mask:
             self.path = mask.path
             self.name = mask.name
