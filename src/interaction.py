@@ -42,7 +42,6 @@ if TYPE_CHECKING:
 __all__ = ["display_params"]
 
 NULL = "NULL"  # Path stems or filenames should avoid this.
-TextFinding = Tuple["PyText", "PatternStr", int, str]
 ColorSchemeStr = Literal["dark", "modern", "high-intensty", "no-color"]
 
 
@@ -63,6 +62,21 @@ class DisplayParams:
 display_params = DisplayParams()
 
 
+@dataclass
+class TextFinding:
+    """Finding of text."""
+
+    obj: "PyText"
+    pattern: "PatternStr"
+    nline: int
+    linestr: str
+    extra: Any = None
+
+    def to_tuple(self) -> Tuple["PyText", "PatternStr", int, str]:
+        """To tuple."""
+        return self.obj, self.pattern, self.nline, self.linestr
+
+
 class FindTextResult:
     """Result of text finding, only as a return of `PyText.findall()`."""
 
@@ -80,7 +94,7 @@ class FindTextResult:
     def __repr__(self) -> str:
         string: str = ""
         for i, res in enumerate(self.res):
-            t, p, n, _line = res
+            t, p, n, _line = res.to_tuple()
             string += f"\n{t.relpath}" + f":{n}" * display_params.line_numbers + ": "
             new = re.sub(
                 p, partial(self._repr, extra=self.extra[i]), " " * t.spaces + _line
@@ -100,8 +114,7 @@ class FindTextResult:
         Parameters
         ----------
         finding : TextFinding
-            Tuple of 4 elements: a `PyText` instance, the pattern, the line
-            number where the pattern was found, and the text of the line.
+            TextFinding object.
         extra : Any, optional
             Extra infomation, by default None.
 
@@ -116,7 +129,7 @@ class FindTextResult:
         Parameters
         ----------
         findings : TextFinding
-            List of findings.
+            List of TextFinding objects.
         extra : Any, optional
             Extra infomation, by default None.
 
@@ -155,7 +168,7 @@ class FindTextResult:
         """
         df = pd.DataFrame("", index=range(len(self.res)), columns=["source", "match"])
         for i, res in enumerate(self.res):
-            t, p, n, _line = res
+            t, p, n, _line = res.to_tuple()
             df.iloc[i, 0] = ".".join(
                 [self.__style_source(x) for x in t.track()]
             ).replace(".NULL", "")
@@ -188,7 +201,7 @@ class FindTextResult:
             ""
             if m.group() == ""
             else make_ahref(
-                f"{r[0].execpath}:{r[2]}:{1+r[0].spaces+m.start()}",
+                f"{r.obj.execpath}:{r.nline}:{1+r.obj.spaces+m.start()}",
                 m.group(),
                 color="#cccccc",
                 bg_color=get_bg_colors()[0],
@@ -459,7 +472,7 @@ class Replacer:
         return self
 
     def __style(self, r: TextFinding, m: "Match[str]", /, extra: int = 0) -> str:
-        url = f"{r[0].execpath}:{r[2]}:{1+r[0].spaces+m.start()}"
+        url = f"{r.obj.execpath}:{r.nline}:{1+r.obj.spaces+m.start()}"
         bgc = get_bg_colors()
         before = (
             ""

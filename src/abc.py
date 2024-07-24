@@ -25,7 +25,7 @@ from typing import (
 import pandas as pd
 from typing_extensions import ParamSpec, Self
 
-from .interaction import NULL, FindTextResult, PyEditor, Replacer
+from .interaction import NULL, FindTextResult, PyEditor, Replacer, TextFinding
 from .utils.re_extensions import pattern_inreg, real_findall
 
 if TYPE_CHECKING:
@@ -326,8 +326,10 @@ class PyText(ABC, Generic[P]):
                 linemode=True,
                 flags=pattern.flags,
             ):
-                if group != "":
-                    res.append((self, pattern, self.start_line + nline - 1, group))
+                if group:
+                    res.append(
+                        TextFinding(self, pattern, self.start_line + nline - 1, group)
+                    )
         else:
             res.join(self.header.findall(pattern, styler=False, based_on=based_on))
             for c in self.children:
