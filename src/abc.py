@@ -92,6 +92,7 @@ class PyText(ABC, Generic[P]):
             self.path = mask.path
             self.name = mask.name
             self.parent = mask.parent
+            self.home = mask.home
 
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}({self.absname!r})"
