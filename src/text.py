@@ -99,7 +99,7 @@ class PyFile(PyText):
             text = self.text
 
         header_lines = line_count(self._header)
-        stored, dec = "", ""
+        stored, dec, s = "", "", ""
         for n, s in line_count_iter(rsplit("\n[^\\s)\\]}]", text)):
             start_line = header_lines + n
             if re.match("\ndef ", s):
@@ -139,7 +139,13 @@ class PyFile(PyText):
             else:
                 stored += s
         if stored:
-            children.append(PyContent(stored, parent=self, start_line=start_line))
+            children.append(
+                PyContent(
+                    stored,
+                    parent=self,
+                    start_line=start_line - line_count(stored) + line_count(s) - 1,
+                )
+            )
         return children
 
 
@@ -232,7 +238,7 @@ class PyContent(PyText):
 
     @cached_property
     def doc(self) -> "Docstring":
-        return NumpyFormatDocstring(self.text, parent=self)
+        return NumpyFormatDocstring("", parent=self)
 
     @cached_property
     def header(self) -> PyText:
