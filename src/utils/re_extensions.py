@@ -233,12 +233,13 @@ def pattern_inreg(pattern: "PatternStrVar") -> "PatternStrVar":
 
 def line_count(string: str) -> int:
     """
-    Counts the number of lines in the string.
+    Counts the number of lines in the string, which equals to (number
+    of "\\n") + 1.
 
     Parameters
     ----------
     string : str
-        A string.
+        String.
 
     Returns
     -------
@@ -312,3 +313,26 @@ def __maxsplit(string: str, maximum: int = 1):
         elif (j := string.find(" ", 1 + maximum)) > 0:
             head, tail = string[:j], string[1 + j :]
     return head.rstrip(), tail.strip()
+
+
+def counted_strip(string: str) -> Tuple[str, int, int]:
+    """
+    Return a copy of the string with leading and trailing whitespace
+    removed, together with the number of removed leading whitespaces
+    and the number of removed leading whitespaces.
+
+    Parameters
+    ----------
+    string : str
+        String.
+
+    Returns
+    -------
+    Tuple[str, int, int]
+        The new string, the number of removed leading whitespace, and
+        the number of removed trailing whitespace.
+
+    """
+    l = len(re.match("\n*", string).group())
+    r = len(re.search("\n*$", string).group())
+    return string.strip(), l, r
