@@ -23,7 +23,7 @@ from typing import (
 )
 
 import pandas as pd
-from typing_extensions import ParamSpec
+from typing_extensions import ParamSpec, Self
 
 from .interaction import NULL, FindTextResult, PyEditor, Replacer
 from .utils.re_extensions import pattern_inreg, real_findall
@@ -109,6 +109,15 @@ class PyText(ABC, Generic[P]):
             File path, module path or file text.
 
         """
+
+    def __eq__(self, __other: Self) -> bool:
+        return self.abspath == __other.abspath
+
+    def __gt__(self, __other: Self) -> bool:
+        return self.abspath > __other.abspath
+
+    def __ge__(self, __other: Self) -> bool:
+        return self.abspath >= __other.abspath
 
     @cached_property
     @abstractmethod
@@ -306,7 +315,7 @@ class PyText(ABC, Generic[P]):
             if based_on:
                 based_on = cast(Replacer, based_on).to_replacer()
                 for e in based_on.editors:
-                    if e.pyfile.path == self.path and not e.is_based_on:
+                    if e.pyfile == self and not e.is_based_on:
                         latest = self.__class__(e.new_text, path_mask=self.path)
                         break
             res.join(latest.findall(pattern, styler=False))
@@ -381,7 +390,7 @@ class PyText(ABC, Generic[P]):
             if based_on:
                 based_on = cast(Replacer, based_on).to_replacer()
                 for e in based_on.editors:
-                    if e.pyfile.path == self.path and not e.is_based_on:
+                    if e.pyfile == self and not e.is_based_on:
                         old = e
                         break
             editor = PyEditor(self, overwrite=overwrite, based_on=old)
