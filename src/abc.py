@@ -65,7 +65,7 @@ class PyText(ABC, Generic[P]):
         start_line: Optional[int] = None,
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
-        path_mask: Optional[Path] = None,
+        mask: Optional[Self] = None,
     ) -> None:
         self.text: str = ""
         self.name: str = ""
@@ -88,9 +88,10 @@ class PyText(ABC, Generic[P]):
 
         self._header: Optional[str] = None
         self.__pytext_post_init__(path_or_text)
-        if path_mask:
-            self.path = path_mask
-            self.name = path_mask.stem
+        if mask:
+            self.path = mask.path
+            self.name = mask.name
+            self.parent = mask.parent
 
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}({self.absname!r})"
@@ -316,7 +317,7 @@ class PyText(ABC, Generic[P]):
                 based_on = cast(Replacer, based_on).to_replacer()
                 for e in based_on.editors:
                     if e.pyfile == self and not e.is_based_on:
-                        latest = self.__class__(e.new_text, path_mask=self.path)
+                        latest = self.__class__(e.new_text, mask=self)
                         break
             res.join(latest.findall(pattern, styler=False))
         elif not self.children:
