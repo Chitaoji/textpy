@@ -25,7 +25,7 @@ from typing import (
 import pandas as pd
 from typing_extensions import ParamSpec, Self
 
-from .interaction import NULL, FindTextResult, PyEditor, Replacer, TextFinding
+from .interaction import NULL, FileEditor, FindTextResult, Replacer, TextFinding
 from .utils.re_extensions import pattern_inreg, real_findall
 
 if TYPE_CHECKING:
@@ -398,7 +398,7 @@ class PyText(ABC, Generic[P]):
                     if e.pyfile == self and not e.is_based_on:
                         old = e
                         break
-            editor = PyEditor(self, overwrite=overwrite, based_on=old)
+            editor = FileEditor(self, overwrite=overwrite, based_on=old)
             if editor.replace(pattern, repl) > 0:
                 replacer.append(editor)
         else:

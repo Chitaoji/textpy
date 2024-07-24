@@ -227,7 +227,7 @@ class FindTextResult:
         )
 
 
-class PyEditor:
+class FileEditor:
     """
     Python file editor.
 
@@ -352,13 +352,16 @@ class Replacer:
     """Text replacer, only as a return of `PyText.replace()`."""
 
     def __init__(self):
-        self.editors: List[PyEditor] = []
+        self.editors: List[FileEditor] = []
         self.__confirmed = False
 
     def __repr__(self) -> str:
         return repr(self.__find_text_result)
 
-    def append(self, editor: PyEditor) -> None:
+    def __bool__(self) -> bool:
+        return bool(self.editors)
+
+    def append(self, editor: FileEditor) -> None:
         """
         Append an editor.
 
