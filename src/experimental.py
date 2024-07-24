@@ -36,17 +36,34 @@ def back_to_py38(module: "PyText") -> Replacer:
     return replacer.to_styler()
 
 
+def __union_types(module: "PyText") -> Replacer:
+    """See PEP 604."""
+    replacer = Replacer()
+    return replacer
+
+
 def __type_hint_generics(module: "PyText") -> Replacer:
     """See PEP 585."""
     replacer = Replacer()
-    pairs: List[Tuple["PatternStr", Union[str, Callable[["Match[str]"], str]]]] = [
-        ("list\\[.*?\\]", lambda m: "L" + m.group()[1:]),
-        ("tuple\\[.*?\\]", lambda m: "T" + m.group()[1:]),
-        ("dict\\[.*?\\]", lambda m: "D" + m.group()[1:]),
-        ("set\\[.*?\\]", lambda m: "S" + m.group()[1:]),
-        ("frozenset\\[.*?\\]", lambda m: "FrozenSet" + m.group()[9:]),
-        ("type\\[.*?\\]", lambda m: "T" + m.group()[1:]),
+    pairs: List[Tuple[str, str]] = [
+        ("list", "List"),
+        ("tuple", "Tuple"),
+        ("dict", "Dict"),
+        ("set", "Set"),
+        ("frozenset", "FrozenSet"),
+        ("type", "Type"),
     ]
     for p in pairs:
-        replacer.join(module.replace(*p, based_on=replacer))
+        args = __type_hint_generics_pair(*p)
+        while r := module.replace(*args, based_on=replacer):
+            replacer.join(r)
     return replacer
+
+
+def __type_hint_generics_pair(
+    replaced: str, to_replace: str
+) -> Tuple[str, Union[str, Callable[["Match[str]"], str]]]:
+    return (
+        f"(->|:)[^=\n]*?\\W{replaced}[\\[\\]),:]",
+        lambda m: m.group()[: -1 - len(replaced)] + to_replace + m.group()[-1],
+    )
