@@ -63,10 +63,9 @@ def rsplit(
     searched = re.search(pattern, string, flags=flags)
     left: str = ""
     while searched:
-        span = searched.span()
-        splits.append(left + string[: span[0]])
+        splits.append(left + string[: searched.start()])
         left = searched.group()
-        string = string[span[1] :]
+        string = string[searched.end() :]
         if len(splits) >= maxsplit > 0:
             break
         searched = re.search(pattern, string, flags=flags)
@@ -106,9 +105,8 @@ def lsplit(
     splits: List[str] = []
     searched = re.search(pattern, string, flags=flags)
     while searched:
-        span = searched.span()
-        splits.append(string[: span[1]])
-        string = string[span[1] :]
+        splits.append(string[: searched.end()])
+        string = string[searched.end() :]
         if len(splits) >= maxsplit > 0:
             break
         searched = re.search(pattern, string, flags=flags)
