@@ -26,7 +26,7 @@ import pandas as pd
 from typing_extensions import ParamSpec, Self
 
 from .interaction import NULL, FileEditor, FindTextResult, Replacer, TextFinding
-from .utils.re_extensions import pattern_inreg, real_findall
+from .utils.re_extensions import full_findall, pattern_inreg
 
 if TYPE_CHECKING:
     from re import Match, Pattern
@@ -323,7 +323,7 @@ class PyText(ABC, Generic[P]):
                         break
             res.join(latest.findall(pattern, styler=False))
         elif not self.children:
-            for nline, _, group in real_findall(
+            for nline, _, group in full_findall(
                 ".*" + pattern.pattern + ".*",
                 self.text,
                 linemode=True,

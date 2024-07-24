@@ -22,7 +22,7 @@ PatternStrVar = TypeVar("PatternStrVar", str, "Pattern[str]")
 __all__ = [
     "rsplit",
     "lsplit",
-    "real_findall",
+    "full_findall",
     "pattern_inreg",
     "line_count",
     "line_count_iter",
@@ -115,20 +115,20 @@ def lsplit(
 
 
 @overload
-def real_findall(
+def full_findall(
     pattern: "PatternStr",
     string: str,
     flags: Union[int, re.RegexFlag] = 0,
     linemode: Literal[False] = False,
 ) -> List["SpanNGroup"]: ...
 @overload
-def real_findall(
+def full_findall(
     pattern: "PatternStr",
     string: str,
     flags: Union[int, re.RegexFlag] = 0,
     linemode: Literal[True] = True,
 ) -> List["LineSpanNGroup"]: ...
-def real_findall(
+def full_findall(
     pattern: "PatternStr",
     string: str,
     flags: Union[int, re.RegexFlag] = 0,
