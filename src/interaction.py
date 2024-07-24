@@ -367,7 +367,7 @@ class Replacer:
 
         Parameters
         ----------
-        editor : PyEditor
+        editor : FileEditor
             Python file editor.
 
         """
