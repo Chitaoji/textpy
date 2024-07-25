@@ -30,6 +30,7 @@ __all__ = [
     "rsplit",
     "lsplit",
     "full_findall",
+    "real_findall",
     "pattern_inreg",
     "line_count",
     "line_count_iter",

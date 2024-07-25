@@ -176,8 +176,14 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.24
+* New method `PyText.is_file()` and `PyText.is_dir()` to find out whether the instance represents a file / directory.
+* Defined the comparison ordering methods `__eq__()`, `__gt__()`, and `__ge__()` for `PyText`. They compares two `PyText` object via their absolute paths.
+*  New utility function `utils.re_extensions.smart_search()`.
+* Renamed utility function `utils.re_extensions.real_findall()` to `full_findall()`.
+
 ### v0.1.23
-* New utility function `word_wrap()` in `textpy.utils.re_extensions`.
+* New utility function `utils.re_extensions.word_wrap()`.
 * Various improvements.
 
 ### v0.1.22
