@@ -10,17 +10,7 @@ import re
 from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Callable,
-    Dict,
-    Generic,
-    List,
-    Optional,
-    Union,
-    cast,
-    overload,
-)
+from typing import TYPE_CHECKING, Dict, Generic, List, Optional, Union, cast, overload
 
 import pandas as pd
 from typing_extensions import ParamSpec, Self
@@ -29,9 +19,9 @@ from .interaction import NULL, FileEditor, FindTextResult, Replacer, TextFinding
 from .utils.re_extensions import full_findall, pattern_inreg
 
 if TYPE_CHECKING:
-    from re import Match, Pattern
+    from re import Pattern
 
-    from .utils.re_extensions import PatternStr
+    from .utils.re_extensions import PatternStr, ReprStr
 
 
 __all__ = ["PyText", "Docstring"]
@@ -345,7 +335,7 @@ class PyText(ABC, Generic[P]):
     def replace(
         self,
         pattern: "PatternStr",
-        repl: Union[str, Callable[["Match[str]"], str]],
+        repl: "ReprStr",
         overwrite: bool = True,
         /,
         *_: P.args,
@@ -364,7 +354,7 @@ class PyText(ABC, Generic[P]):
         ----------
         pattern : PatternStr
             String pattern.
-        repl : Union[str, Callable[[str], str]]
+        repl : ReprStr
             Speficies the string to replace the patterns. If Callable, should
             be a function that receives the Match object, and gives back
             the replacement string to be used.

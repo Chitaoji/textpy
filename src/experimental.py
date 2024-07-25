@@ -3,15 +3,13 @@ Experimental properties of textpy: back_to_py38(), etc.
 
 """
 
-from typing import TYPE_CHECKING, Callable, List, Tuple, Union
+from typing import TYPE_CHECKING, List, Tuple
 
 from .interaction import Replacer, display_params
 
 if TYPE_CHECKING:
-    from re import Match
-
     from .abc import PyText
-    from .utils.re_extensions import PatternStr
+    from .utils.re_extensions import PatternStr, ReprStr
 
 __all__ = ["back_to_py38"]
 
@@ -60,9 +58,7 @@ def __type_hint_generics(module: "PyText") -> Replacer:
     return replacer
 
 
-def __type_hint_generics_pair(
-    replaced: str, to_replace: str
-) -> Tuple[str, Union[str, Callable[["Match[str]"], str]]]:
+def __type_hint_generics_pair(replaced: str, to_replace: str) -> Tuple[str, "ReprStr"]:
     return (
         f"(->|:)[^=\n]*?\\W{replaced}[\\[\\]),:]",
         lambda m: m.group()[: -1 - len(replaced)] + to_replace + m.group()[-1],
