@@ -3,6 +3,7 @@
 import re
 from typing import (
     TYPE_CHECKING,
+    Callable,
     Iterable,
     List,
     Literal,
@@ -12,12 +13,18 @@ from typing import (
     overload,
 )
 
+from typing_extensions import deprecated
+
 if TYPE_CHECKING:
-    from re import Pattern
+    from re import Match, Pattern
+
+
 SpanNGroup = Tuple[Tuple[int, int], str]
 LineSpanNGroup = Tuple[int, Tuple[int, int], str]
 PatternStr = Union[str, "Pattern[str]"]
 PatternStrVar = TypeVar("PatternStrVar", str, "Pattern[str]")
+ReprStr = Union[str, Callable[["Match[str]"], str]]
+FlagInt = Union[int, re.RegexFlag]
 
 __all__ = [
     "rsplit",
@@ -31,10 +38,7 @@ __all__ = [
 
 
 def rsplit(
-    pattern: "PatternStr",
-    string: str,
-    maxsplit: int = 0,
-    flags: Union[int, re.RegexFlag] = 0,
+    pattern: "PatternStr", string: str, maxsplit: int = 0, flags: FlagInt = 0
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
@@ -50,7 +54,7 @@ def rsplit(
     maxsplit : int, optional
         Max number of splits, if specified to be 0, there will be no
         more limits, by default 0.
-    flags : Union[int, re.RegexFlag], optional
+    flags : FlagInt, optional
         Regex flag, by default 0.
 
     Returns
@@ -74,10 +78,7 @@ def rsplit(
 
 
 def lsplit(
-    pattern: "PatternStr",
-    string: str,
-    maxsplit: int = 0,
-    flags: Union[int, re.RegexFlag] = 0,
+    pattern: "PatternStr", string: str, maxsplit: int = 0, flags: FlagInt = 0
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
@@ -93,7 +94,7 @@ def lsplit(
     maxsplit : int, optional
         Max number of splits, if specified to be 0, there will be no
         more limits, by default 0.
-    flags : Union[int, re.RegexFlag], optional
+    flags : FlagInt, optional
         Regex flag, by default 0.
 
     Returns
@@ -118,25 +119,22 @@ def lsplit(
 def full_findall(
     pattern: "PatternStr",
     string: str,
-    flags: Union[int, re.RegexFlag] = 0,
+    flags: FlagInt = 0,
     linemode: Literal[False] = False,
 ) -> List["SpanNGroup"]: ...
 @overload
 def full_findall(
     pattern: "PatternStr",
     string: str,
-    flags: Union[int, re.RegexFlag] = 0,
+    flags: FlagInt = 0,
     linemode: Literal[True] = True,
 ) -> List["LineSpanNGroup"]: ...
 def full_findall(
-    pattern: "PatternStr",
-    string: str,
-    flags: Union[int, re.RegexFlag] = 0,
-    linemode: bool = False,
+    pattern: "PatternStr", string: str, flags: FlagInt = 0, linemode: bool = False
 ) -> List[Union["SpanNGroup", "LineSpanNGroup"]]:
     """
     Finds all non-overlapping matches in the string. Differences to
-    `re.findall` that it also returns the spans of patterns.
+    `re.findall()` that it also returns the spans of patterns.
 
     Parameters
     ----------
@@ -144,7 +142,7 @@ def full_findall(
         Regex pattern.
     string : str
         String to be searched.
-    flags : Union[int, re.RegexFlag], optional
+    flags : FlagInt, optional
         Regex flag, by default 0.
     linemode : bool, optional
         Determines whether to match the pattern on each line of the
@@ -201,6 +199,52 @@ def full_findall(
             string = string[span[1] :]
         searched = re.search(pattern, string, flags=flags)  # search again
     return finds
+
+
+real_findall = deprecated(
+    "re_extensions.real_findall() is deprecated and will be removed in a"
+    "future version - use re_extensions.full_findall() instead"
+)(full_findall)
+
+
+def smart_search(
+    pattern: "PatternStr", string: str, flags: FlagInt = 0, ignore: str = "()[]{}"
+) -> SpanNGroup:
+    """
+    Finds the first match in the string. Differences to `re.search()` that
+    it can ignore certain patterns (like the content enclosed in a pair of
+    brackets) while searching. Use "{}" to represent where the ignored
+    pattern should be.
+
+    Examples
+    --------
+    * When ignore="()", pattern "a{}b" can match the string "ab" or "a(c)b",
+    but not "a(b)c".
+    * When ignore="()[]", pattern "a{}b" can match the string "ab", "a(c)b",
+    "a[c]b", or "a(c)[c]b", but not "a(b)[b]c".
+    * Similarly, when ignore="()[]{}", pattern "a{}b" can match the string
+    "a(c)[c]{c}b", but not "a(b)[b]{b}c".
+
+    Parameters
+    ----------
+    pattern : PatternStr
+        Regex pattern.
+    string : str
+        String to be searched.
+    flags : FlagInt, optional
+        Regex flag, by default 0.
+    ignore : ignore, optional
+        Patterns to ignore while searching, by default "()[]{}".
+
+    Returns
+    -------
+    SpanNGroup
+        The span and the group of the matched pattern.
+
+    """
+    patterns = pattern.split("{}")
+    for pattern in patterns[:-1]:
+        searched = re.search(pattern, string, flags=flags)
 
 
 def pattern_inreg(pattern: "PatternStrVar") -> "PatternStrVar":
