@@ -286,6 +286,9 @@ class PyText(ABC, Generic[P]):
             String pattern.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
+        dotall : bool, optional
+            Whether the "." matches any character at all, including a newline,
+            by default False.
         case_sensitive : bool, optional
             Specifies case sensitivity, by default True.
         regex : bool, optional
@@ -363,6 +366,9 @@ class PyText(ABC, Generic[P]):
             replacement will take effect on copyed files, by default True.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
+        dotall : bool, optional
+            Whether the "." matches any character at all, including a newline,
+            by default False.
         case_sensitive : bool, optional
             Specifies case sensitivity, by default True.
         regex : bool, optional
@@ -431,6 +437,9 @@ class PyText(ABC, Generic[P]):
             replacement will take effect on copyed files, by default True.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
+        dotall : bool, optional
+            Whether the "." matches any character at all, including a newline,
+            by default False.
         case_sensitive : bool, optional
             Specifies case sensitivity, by default True.
         regex : bool, optional
@@ -454,6 +463,7 @@ class PyText(ABC, Generic[P]):
     def __pattern_trans(
         pattern: "PatternStr",
         whole_word: bool = False,
+        dotall: bool = False,
         case_sensitive: bool = True,
         regex: bool = True,
     ) -> "Pattern[str]":
@@ -466,6 +476,8 @@ class PyText(ABC, Generic[P]):
             flags = flags | re.I
         if whole_word:
             pattern = "\\b" + pattern + "\\b"
+        if dotall:
+            flags = flags | re.DOTALL
         pattern = re.compile(pattern, flags=flags)
         return pattern
 
@@ -605,6 +617,7 @@ def as_path(
 # pylint: disable=unused-argument
 def _ignore(
     whole_word: bool = False,
+    dotall: bool = False,
     case_sensitive: bool = True,
     regex: bool = True,
     styler: bool = True,
