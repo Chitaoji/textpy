@@ -3,6 +3,7 @@
 import re
 from typing import (
     TYPE_CHECKING,
+    Any,
     Callable,
     Iterable,
     List,
@@ -13,8 +14,6 @@ from typing import (
     overload,
 )
 
-from typing_extensions import deprecated
-
 if TYPE_CHECKING:
     from re import Match, Pattern
 
@@ -22,6 +21,8 @@ if TYPE_CHECKING:
 SpanNGroup = Tuple[Tuple[int, int], str]
 LineSpanNGroup = Tuple[int, Tuple[int, int], str]
 PatternStr = Union[str, "Pattern[str]"]
+SmartPatternStr = Union[str, "Pattern[str]", "SmartPattern"]
+AnyPatternStr = Union[str, "Pattern[str]", Any]
 PatternStrVar = TypeVar("PatternStrVar", str, "Pattern[str]")
 ReprStr = Union[str, Callable[["Match[str]"], str]]
 FlagInt = Union[int, re.RegexFlag]
@@ -29,7 +30,7 @@ FlagInt = Union[int, re.RegexFlag]
 __all__ = [
     "rsplit",
     "lsplit",
-    "full_findall",
+    "real_findall",
     "real_findall",
     "pattern_inreg",
     "line_count",
@@ -52,7 +53,7 @@ def rsplit(
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str]]
+    pattern : PatternStr
         Pattern string.
     string : str
         String to be splitted.
@@ -92,7 +93,7 @@ def lsplit(
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str]]
+    pattern : PatternStr
         Pattern string.
     string : str
         String to be splitted.
@@ -121,21 +122,21 @@ def lsplit(
 
 
 @overload
-def full_findall(
-    pattern: PatternStr,
+def real_findall(
+    pattern: SmartPatternStr,
     string: str,
     flags: FlagInt = 0,
     linemode: Literal[False] = False,
 ) -> List["SpanNGroup"]: ...
 @overload
-def full_findall(
-    pattern: PatternStr,
+def real_findall(
+    pattern: SmartPatternStr,
     string: str,
     flags: FlagInt = 0,
     linemode: Literal[True] = True,
 ) -> List["LineSpanNGroup"]: ...
-def full_findall(
-    pattern: PatternStr, string: str, flags: FlagInt = 0, linemode: bool = False
+def real_findall(
+    pattern: SmartPatternStr, string: str, flags=0, linemode=False
 ) -> List[Union[SpanNGroup, LineSpanNGroup]]:
     """
     Finds all non-overlapping matches in the string. Differences to
@@ -143,7 +144,7 @@ def full_findall(
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str]]
+    pattern : Union[str, Pattern[str], SmartPattern]
         Regex pattern.
     string : str
         String to be searched.
@@ -167,9 +168,9 @@ def full_findall(
     nline: int = 1
     total_pos: int = 0
     inline_pos: int = 0
-    searched = re.search(pattern, string, flags=flags)
+    searched = smart_search(pattern, string, flags=flags)
     while searched:
-        span, group = searched.span(), searched.group()
+        span, group = searched
         if linemode:
             left = string[: span[0]]
             lc_left = line_count(left) - 1
@@ -202,14 +203,8 @@ def full_findall(
             string = string[1:]
         else:
             string = string[span[1] :]
-        searched = re.search(pattern, string, flags=flags)  # search again
+        searched = smart_search(pattern, string, flags=flags)  # search again
     return finds
-
-
-real_findall = deprecated(
-    "re_extensions.real_findall() is deprecated and will be removed in a"
-    "future version - use re_extensions.full_findall() instead"
-)(full_findall)
 
 
 class SmartPattern:
@@ -252,7 +247,7 @@ class SmartPattern:
 
 
 def smart_search(
-    pattern: Union[PatternStr, SmartPattern], string: str, flags: FlagInt = 0
+    pattern: SmartPatternStr, string: str, flags: FlagInt = 0
 ) -> Union[SpanNGroup, None]:
     """
     Finds the first match in the string. Differences to `re.search()` that
@@ -261,7 +256,7 @@ def smart_search(
 
     Parameters
     ----------
-    pattern : Union[Union[str, Pattern[str]], SmartPattern]
+    pattern : Union[str, Pattern[str], SmartPattern]
         Regex pattern.
     string : str
         String to be searched.
@@ -274,22 +269,22 @@ def smart_search(
         SpanNGroup or None.
 
     """
-    if isinstance(pattern, str):
-        p, f = pattern, flags
-    elif isinstance(pattern, re.Pattern):
-        p, f = pattern.pattern, pattern.flags | flags
-    else:
-        p, f = pattern.pattern, pattern.flags | flags
-    if (not isinstance(pattern, SmartPattern)) or (pattern.mark_ignore not in p):
-        if searched := re.search(p, string, flags=f):
+    sp, sf = None, None
+    if isinstance(pattern, re.Pattern):
+        pattern, flags = pattern.pattern, pattern.flags | flags
+    elif isinstance(pattern, SmartPattern):
+        sp, sf = pattern, flags
+        pattern, flags = pattern.pattern, pattern.flags | flags
+    if sp is None or (sp.mark_ignore not in pattern):
+        if searched := re.search(pattern, string, flags=flags):
             return searched.span(), searched.group()
         return None
-    to_search = p.partition(pattern.mark_ignore)[0]
+    to_search = pattern.partition(sp.mark_ignore)[0]
     pos_now: int = 0
-    while string and (searched := re.search(to_search, string, flags=f)):
+    while string and (searched := re.search(to_search, string, flags=flags)):
         pos_now += searched.start()
         string = string[searched.start() :]
-        if matched := smart_match(pattern, string, flags=flags):
+        if matched := smart_match(sp, string, flags=sf):
             span, group = matched
             return (pos_now, pos_now + span[1]), group
         pos_now += 1
@@ -298,7 +293,7 @@ def smart_search(
 
 
 def smart_match(
-    pattern: Union[PatternStr, SmartPattern], string: str, flags: FlagInt = 0
+    pattern: SmartPatternStr, string: str, flags: FlagInt = 0
 ) -> Union[SpanNGroup, None]:
     """
     Match the pattern. Differences to `re.match()` that it can ignore
@@ -306,7 +301,7 @@ def smart_match(
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str]]
+    pattern : Union[str, Pattern[str], SmartPattern]
         Regex pattern.
     string : str
         String to be searched.
@@ -319,30 +314,67 @@ def smart_match(
         SpanNGroup or None.
 
     """
-    if isinstance(pattern, str):
-        p, f = pattern, flags
-    elif isinstance(pattern, re.Pattern):
-        p, f = pattern.pattern, pattern.flags | flags
-    else:
-        p, f = pattern.pattern, pattern.flags | flags
-    if (not isinstance(pattern, SmartPattern)) or (pattern.mark_ignore not in p):
-        if searched := re.search(p, string, flags=f):
+    sp = None
+    if isinstance(pattern, re.Pattern):
+        pattern, flags = pattern.pattern, pattern.flags | flags
+    elif isinstance(pattern, SmartPattern):
+        sp = pattern
+        pattern, flags = pattern.pattern, pattern.flags | flags
+    if sp is None or (sp.mark_ignore not in pattern):
+        if searched := re.search(pattern, string, flags=flags):
             return searched.span(), searched.group()
         return None
-    splited = p.split(pattern.mark_ignore)
-    pos_now, temp, recorded_group, left = 0, "", "", pattern.ignore[::2]
+    splited = pattern.split(sp.mark_ignore)
+    pos_now, temp, recorded_group, left = 0, "", "", sp.ignore[::2]
     for s in splited[:-1]:
         temp += s
-        if not (matched := re.match(temp, string, flags=f)):
+        if not (matched := re.match(temp, string, flags=flags)):
             return None
         if matched.end() < len(string) and string[matched.end()] in left:
             pos_now += (n := find_right_bracket(string, matched.end()))
             recorded_group += string[:n]
             string = string[n:]
             temp = ""
-    if matched := re.match(temp + splited[-1], string, flags=f):
+    if matched := re.match(temp + splited[-1], string, flags=flags):
         return (0, pos_now + matched.end()), recorded_group + matched.group()
     return None
+
+
+def smart_sub(
+    pattern: SmartPatternStr, repl: "ReprStr", string: str, flags: FlagInt = 0
+) -> str:
+    """
+    Finds all non-overlapping matches of `pattern`, and replace them with
+    `repl`. Differences to `re.sub()` that it can ignore certain patterns
+    (such as content within commas) while searching.
+
+    Parameters
+    ----------
+    pattern : Union[str, Pattern[str], SmartPattern]
+        Regex pattern.
+    repl : ReprStr
+        Speficies the string to replace the patterns. If Callable, should
+        be a function that receives the Match object, and gives back
+        the replacement string to be used.
+    string : str
+        String to be searched.
+    flags : FlagInt, optional
+        Regex flag, by default 0.
+
+    Returns
+    -------
+    str
+        New string.
+
+    """
+    sp = None
+    if isinstance(pattern, re.Pattern):
+        pattern, flags = pattern.pattern, pattern.flags | flags
+    elif isinstance(pattern, SmartPattern):
+        sp = pattern
+        pattern, flags = pattern.pattern, pattern.flags | flags
+    if sp is None or (sp.mark_ignore not in pattern):
+        return re.sub(pattern, repl, string, flags=flags)
 
 
 def find_right_bracket(string: str, start: int) -> int:
