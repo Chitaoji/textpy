@@ -469,7 +469,7 @@ class PyText(ABC, Generic[P]):
     ) -> "Pattern[str]":
         flags: int = 0
         if isinstance(pattern, re.Pattern):
-            pattern, flags = str(pattern.pattern), pattern.flags
+            pattern, flags = pattern.pattern, pattern.flags
         if not regex:
             pattern = pattern_inreg(pattern)
         if not case_sensitive:
