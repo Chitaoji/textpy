@@ -112,7 +112,7 @@ class FindTextResult:
 
     def __repr__(self) -> str:
         string: str = ""
-        for res in self.res:
+        for res in sorted(self.res):
             t, p, n, _line = res.to_tuple()
             string += f"\n{t.relpath}" + f":{n}" * display_params.line_numbers + ": "
             new = Smart.sub(p, partial(self._repr, res), " " * t.spaces + _line)
