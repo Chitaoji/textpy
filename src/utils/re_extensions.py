@@ -254,9 +254,9 @@ class SmartMatch:
     Parameters
     ----------
     span : Tuple[int, int]
-        Match span.
+        The indices of the start and end of the substring matched by `group`.
     group : str
-        Match group.
+        Group of the match.
 
     """
 
@@ -268,19 +268,22 @@ class SmartMatch:
         return f"<SmartMatch object; span={self.__span}, match={self.__group!r}>"
 
     def span(self) -> Tuple[int, int]:
-        """Match span."""
+        """
+        The indices of the start and end of the substring matched by `group`.
+
+        """
         return self.__span
 
     def group(self) -> str:
-        """Match group."""
+        """Group of the match."""
         return self.__group
 
     def start(self) -> int:
-        """Match start."""
+        """The indice of the start of the substring matched by `group`."""
         return self.__span[0]
 
     def end(self) -> int:
-        """Match end."""
+        """The indice of the end of the substring matched by `group`."""
         return self.__span[1]
 
 
