@@ -52,7 +52,7 @@ def rsplit(
 
     Parameters
     ----------
-    pattern : PatternStr
+    pattern : Union[str, Pattern[str]]
         Pattern string.
     string : str
         String to be splitted.
@@ -92,7 +92,7 @@ def lsplit(
 
     Parameters
     ----------
-    pattern : PatternStr
+    pattern : Union[str, Pattern[str]]
         Pattern string.
     string : str
         String to be splitted.
@@ -129,7 +129,10 @@ def full_findall(
 ) -> List["SpanNGroup"]: ...
 @overload
 def full_findall(
-    pattern: PatternStr, string: str, flags: FlagInt = 0, linemode: Literal[True] = True
+    pattern: PatternStr,
+    string: str,
+    flags: FlagInt = 0,
+    linemode: Literal[True] = True,
 ) -> List["LineSpanNGroup"]: ...
 def full_findall(
     pattern: PatternStr, string: str, flags: FlagInt = 0, linemode: bool = False
@@ -140,7 +143,7 @@ def full_findall(
 
     Parameters
     ----------
-    pattern : PatternStr
+    pattern : Union[str, Pattern[str]]
         Regex pattern.
     string : str
         String to be searched.
@@ -258,7 +261,7 @@ def smart_search(
 
     Parameters
     ----------
-    pattern : Union[PatternStr, SmartPattern]
+    pattern : Union[Union[str, Pattern[str]], SmartPattern]
         Regex pattern.
     string : str
         String to be searched.
@@ -303,7 +306,7 @@ def smart_match(
 
     Parameters
     ----------
-    pattern : PatternStr
+    pattern : Union[str, Pattern[str]]
         Regex pattern.
     string : str
         String to be searched.
