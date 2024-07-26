@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
     from .abc import PyText
     from .text import PyFile
-    from .utils.re_extensions import PatternStr, ReprStr
+    from .utils.re_extensions import PatternStr, ReplStr
 
 
 __all__ = ["display_params"]
@@ -264,7 +264,7 @@ class FileEditor:
         self.pattern: "PatternStr" = ""
         self.based_on = based_on
         self.is_based_on = False
-        self.__repl: "ReprStr" = ""
+        self.__repl: "ReplStr" = ""
         self.__count: int = 0
 
     def read(self) -> str:
@@ -311,7 +311,7 @@ class FileEditor:
             return self.read() == text
         return True
 
-    def replace(self, pattern: "PatternStr", repl: "ReprStr") -> int:
+    def replace(self, pattern: "PatternStr", repl: "ReplStr") -> int:
         """
         Replace patterns with replacement.
 

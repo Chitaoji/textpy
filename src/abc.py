@@ -10,21 +10,22 @@ import re
 from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Generic, List, Optional, Union, cast, overload
+from typing import TYPE_CHECKING, Dict, Generic, List, Optional, Union, overload
 
 import pandas as pd
 from typing_extensions import ParamSpec, Self
 
 from .interaction import NULL, FileEditor, FindTextResult, Replacer, TextFinding
-from .utils.re_extensions import full_findall, pattern_inreg
+from .utils.re_extensions import SmartPattern, pattern_inreg, real_findall
 
 if TYPE_CHECKING:
     from re import Pattern
 
-    from .utils.re_extensions import PatternStr, ReprStr
+    from .utils.re_extensions import AnyPatternStr, ReplStr
 
 
 __all__ = ["PyText", "Docstring"]
+
 
 P = ParamSpec("P")
 
@@ -272,17 +273,17 @@ class PyText(ABC, Generic[P]):
 
     @overload
     def findall(
-        self, pattern: "PatternStr", /, *_: P.args, **kwargs: P.kwargs
+        self, pattern: "AnyPatternStr", /, *_: P.args, **kwargs: P.kwargs
     ) -> FindTextResult: ...
     def findall(
-        self, pattern, /, styler=True, based_on=None, **kwargs
+        self, pattern, /, styler=True, based_on: Replacer = None, **kwargs
     ) -> FindTextResult:
         """
         Finds all non-overlapping matches of `pattern`.
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str]]
+        pattern : Union[str, Pattern[str], Any]
             String pattern.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
@@ -309,14 +310,14 @@ class PyText(ABC, Generic[P]):
         if based_on and self.is_file():
             latest = self
             if based_on:
-                based_on = cast(Replacer, based_on).to_replacer()
+                based_on = based_on.to_replacer()
                 for e in based_on.editors:
                     if e.pyfile == self and not e.is_based_on:
                         latest = self.__class__(e.new_text, mask=self)
                         break
             res.join(latest.findall(pattern, styler=False))
         elif not self.children:
-            for nline, _, group in full_findall(
+            for nline, _, group in real_findall(
                 ".*" + pattern.pattern + ".*",
                 self.text,
                 linemode=True,
@@ -337,15 +338,22 @@ class PyText(ABC, Generic[P]):
     @overload
     def replace(
         self,
-        pattern: "PatternStr",
-        repl: "ReprStr",
+        pattern: "AnyPatternStr",
+        repl: "ReplStr",
         overwrite: bool = True,
         /,
         *_: P.args,
         **kwargs: P.kwargs,
     ) -> "Replacer": ...
     def replace(
-        self, pattern, repl, /, overwrite=True, styler=True, based_on=None, **kwargs
+        self,
+        pattern,
+        repl,
+        /,
+        overwrite=True,
+        styler=True,
+        based_on: Replacer = None,
+        **kwargs,
     ) -> "Replacer":
         """
         Finds all non-overlapping matches of `pattern`, and replace them with
@@ -355,7 +363,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str]]
+        pattern : Union[str, Pattern[str], Any]
             String pattern.
         repl : ReprStr
             Speficies the string to replace the patterns. If Callable, should
@@ -389,7 +397,7 @@ class PyText(ABC, Generic[P]):
         if self.path.suffix == ".py":
             old = None
             if based_on:
-                based_on = cast(Replacer, based_on).to_replacer()
+                based_on = based_on.to_replacer()
                 for e in based_on.editors:
                     if e.pyfile == self and not e.is_based_on:
                         old = e
@@ -410,13 +418,13 @@ class PyText(ABC, Generic[P]):
                     )
                 )
         if styler:
-            return cast("Replacer", replacer.to_styler())
+            return replacer.to_styler()
         return replacer
 
     @overload
     def delete(
         self,
-        pattern: "PatternStr",
+        pattern: "AnyPatternStr",
         overwrite: bool = True,
         /,
         *_: P.args,
@@ -430,7 +438,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str]]
+        pattern : Union[str, Pattern[str], Any]
             String pattern.
         overwrite : bool, optional
             Determines whether to overwrite the original files. If False, the
@@ -461,15 +469,20 @@ class PyText(ABC, Generic[P]):
 
     @staticmethod
     def __pattern_trans(
-        pattern: "PatternStr",
+        pattern: "AnyPatternStr",
         whole_word: bool = False,
         dotall: bool = False,
         case_sensitive: bool = True,
         regex: bool = True,
-    ) -> "Pattern[str]":
-        flags: int = 0
+    ) -> Union["Pattern[str]", SmartPattern]:
+        flags, sp = 0, None
         if isinstance(pattern, re.Pattern):
             pattern, flags = pattern.pattern, pattern.flags
+        elif isinstance(pattern, SmartPattern):
+            sp = pattern
+            pattern, flags = pattern.pattern, pattern.flags
+        elif not isinstance(pattern, str):
+            raise TypeError(f"argument 'pattern' can not be {type(pattern)}")
         if not regex:
             pattern = pattern_inreg(pattern)
         if not case_sensitive:
@@ -479,6 +492,10 @@ class PyText(ABC, Generic[P]):
         if dotall:
             flags = flags | re.DOTALL
         pattern = re.compile(pattern, flags=flags)
+        if sp:
+            pattern = SmartPattern(
+                pattern, ignore=sp.ignore, mark_ignore=sp.mark_ignore
+            )
         return pattern
 
     def jumpto(self, target: str) -> "PyText":
