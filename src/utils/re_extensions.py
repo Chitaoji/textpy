@@ -35,11 +35,15 @@ __all__ = [
     "line_count",
     "line_count_iter",
     "word_wrap",
+    "SmartPattern",
+    "smart_search",
+    "smart_match",
+    "find_right_bracket",
 ]
 
 
 def rsplit(
-    pattern: "PatternStr", string: str, maxsplit: int = 0, flags: FlagInt = 0
+    pattern: PatternStr, string: str, maxsplit: int = 0, flags: FlagInt = 0
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
@@ -79,7 +83,7 @@ def rsplit(
 
 
 def lsplit(
-    pattern: "PatternStr", string: str, maxsplit: int = 0, flags: FlagInt = 0
+    pattern: PatternStr, string: str, maxsplit: int = 0, flags: FlagInt = 0
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
@@ -118,21 +122,18 @@ def lsplit(
 
 @overload
 def full_findall(
-    pattern: "PatternStr",
+    pattern: PatternStr,
     string: str,
     flags: FlagInt = 0,
     linemode: Literal[False] = False,
 ) -> List["SpanNGroup"]: ...
 @overload
 def full_findall(
-    pattern: "PatternStr",
-    string: str,
-    flags: FlagInt = 0,
-    linemode: Literal[True] = True,
+    pattern: PatternStr, string: str, flags: FlagInt = 0, linemode: Literal[True] = True
 ) -> List["LineSpanNGroup"]: ...
 def full_findall(
-    pattern: "PatternStr", string: str, flags: FlagInt = 0, linemode: bool = False
-) -> List[Union["SpanNGroup", "LineSpanNGroup"]]:
+    pattern: PatternStr, string: str, flags: FlagInt = 0, linemode: bool = False
+) -> List[Union[SpanNGroup, LineSpanNGroup]]:
     """
     Finds all non-overlapping matches in the string. Differences to
     `re.findall()` that it also returns the spans of patterns.
@@ -208,14 +209,12 @@ real_findall = deprecated(
 )(full_findall)
 
 
-def smart_search(
-    pattern: "PatternStr", string: str, flags: FlagInt = 0, ignore: str = "()[]{}"
-) -> SpanNGroup:
+class SmartPattern:
     """
-    Finds the first match in the string. Differences to `re.search()` that
-    it can ignore certain patterns (like the content enclosed in a pair of
-    brackets) while searching. Use "{}" to represent where the ignored
-    pattern should be.
+    Similar to `re.Pattern` but it tells the matcher to ignore certain
+    patterns (such as content within commas) while matching or searching.
+    By default "{}" is used to mark where the pattern should be ignored, or
+    you can customize it by specifying `mark_ignore=`.
 
     Examples
     --------
@@ -228,27 +227,158 @@ def smart_search(
 
     Parameters
     ----------
+    ignore : ignore, optional
+        Patterns to ignore while searching, by default "()[]{}".
+    mark_ignore : str, optional
+        Marks where the pattern should be ignored, by default "{}".
+
+    """
+
+    def __init__(
+        self,
+        pattern: PatternStr,
+        flags: FlagInt = 0,
+        ignore: str = "()[]{}",
+        mark_ignore: str = "{}",
+    ) -> None:
+        if isinstance(pattern, re.Pattern):
+            pattern, flags = pattern.pattern, pattern.flags | flags
+        self.pattern: str = pattern
+        self.flags: int = flags
+        self.ignore, self.mark_ignore = ignore, mark_ignore
+
+
+def smart_search(
+    pattern: Union[PatternStr, SmartPattern], string: str, flags: FlagInt = 0
+) -> Union[SpanNGroup, None]:
+    """
+    Finds the first match in the string. Differences to `re.search()` that
+    it can ignore certain patterns (such as content within commas) while
+    searching.
+
+    Parameters
+    ----------
+    pattern : Union[PatternStr, SmartPattern]
+        Regex pattern.
+    string : str
+        String to be searched.
+    flags : FlagInt, optional
+        Regex flag, by default 0.
+
+    Returns
+    -------
+    Union[SpanNGroup, None]
+        SpanNGroup or None.
+
+    """
+    if isinstance(pattern, str):
+        p, f = pattern, flags
+    elif isinstance(pattern, re.Pattern):
+        p, f = pattern.pattern, pattern.flags | flags
+    else:
+        p, f = pattern.pattern, pattern.flags | flags
+    if (not isinstance(pattern, SmartPattern)) or (pattern.mark_ignore not in p):
+        if searched := re.search(p, string, flags=f):
+            return searched.span(), searched.group()
+        return None
+    to_search = p.partition(pattern.mark_ignore)[0]
+    pos_now: int = 0
+    while string and (searched := re.search(to_search, string, flags=f)):
+        pos_now += searched.start()
+        string = string[searched.start() :]
+        if matched := smart_match(pattern, string, flags=flags):
+            span, group = matched
+            return (pos_now, pos_now + span[1]), group
+        pos_now += 1
+        string = string[1:]
+    return None
+
+
+def smart_match(
+    pattern: Union[PatternStr, SmartPattern], string: str, flags: FlagInt = 0
+) -> Union[SpanNGroup, None]:
+    """
+    Match the pattern. Differences to `re.match()` that it can ignore
+    certain patterns (such as content within commas) while searching.
+
+    Parameters
+    ----------
     pattern : PatternStr
         Regex pattern.
     string : str
         String to be searched.
     flags : FlagInt, optional
         Regex flag, by default 0.
-    ignore : ignore, optional
-        Patterns to ignore while searching, by default "()[]{}".
 
     Returns
     -------
-    SpanNGroup
-        The span and the group of the matched pattern.
+    Union[SpanNGroup, None]
+        SpanNGroup or None.
 
     """
-    patterns = pattern.split("{}")
-    for pattern in patterns[:-1]:
-        searched = re.search(pattern, string, flags=flags)
+    if isinstance(pattern, str):
+        p, f = pattern, flags
+    elif isinstance(pattern, re.Pattern):
+        p, f = pattern.pattern, pattern.flags | flags
+    else:
+        p, f = pattern.pattern, pattern.flags | flags
+    if (not isinstance(pattern, SmartPattern)) or (pattern.mark_ignore not in p):
+        if searched := re.search(p, string, flags=f):
+            return searched.span(), searched.group()
+        return None
+    splited = p.split(pattern.mark_ignore)
+    pos_now, temp, recorded_group, left = 0, "", "", pattern.ignore[::2]
+    for s in splited[:-1]:
+        temp += s
+        if not (matched := re.match(temp, string, flags=f)):
+            return None
+        if matched.end() < len(string) and string[matched.end()] in left:
+            pos_now += (n := find_right_bracket(string, matched.end()))
+            recorded_group += string[:n]
+            string = string[n:]
+            temp = ""
+    if matched := re.match(temp + splited[-1], string, flags=f):
+        return (0, pos_now + matched.end()), recorded_group + matched.group()
+    return None
 
 
-def pattern_inreg(pattern: "PatternStrVar") -> "PatternStrVar":
+def find_right_bracket(string: str, start: int) -> int:
+    """
+    Find the right bracket paired with the specified left bracket.
+
+    Parameters
+    ----------
+    string : str
+        String.
+    start : int
+        Position of the left bracket.
+
+    Returns
+    -------
+    int
+        Position of the matched right bracket + 1.
+
+    """
+    if (left := string[start]) == "(":
+        right = ")"
+    elif left == "[":
+        right = "]"
+    elif left == "{":
+        right = "}"
+    else:
+        raise ValueError(f"string[{start}] is not a left bracket")
+    cnt: int = 1
+    for pos_now in range(start + 1, len(string)):
+        if (now := string[pos_now]) == left:
+            cnt += 1
+        elif now == right:
+            cnt -= 1
+        if cnt == 0:
+            return pos_now + 1
+    raise ValueError("can't find a matched right bracket")
+
+
+def pattern_inreg(pattern: PatternStrVar) -> PatternStrVar:
     """
     Invalidates the regular expressions in `pattern`.
 
