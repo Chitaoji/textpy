@@ -199,7 +199,7 @@ class PyFunc(PyText):
     def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         self.text, n, _ = counted_strip(path_or_text)
         self.start_line += n
-        self.name = re.search("def .*?\\(", self.text).group()[4:-1]
+        self.name = re.search("def .*?\\(", self.text).group()[4:-1] + "( )"
 
     @cached_property
     def doc(self) -> "Docstring":

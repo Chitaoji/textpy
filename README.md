@@ -80,11 +80,11 @@ If you are using a Jupyter notebook in VScode, you can run a cell like this:
       <td id="T_19b39_row0_col1" class="data row0 col1" >class <a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a>:</td>
     </tr>
     <tr>
-      <td id="T_19b39_row1_col0" class="data row1 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>print_my_book</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>24</a></td>
+      <td id="T_19b39_row1_col0" class="data row1 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>print_my_book( )</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>24</a></td>
       <td id="T_19b39_row1_col1" class="data row1 col1" >def print_my_book(book: <a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a>) -> None:</td>
     </tr>
     <tr>
-      <td id="T_19b39_row2_col0" class="data row2 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>print_my_book</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>30</a></td>
+      <td id="T_19b39_row2_col0" class="data row2 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>print_my_book( )</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>30</a></td>
       <td id="T_19b39_row2_col1" class="data row2 col1" >    book : <a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a></td>
     </tr>
   </tbody>
@@ -179,8 +179,7 @@ This project falls under the BSD 3-Clause License.
 ### v0.1.24
 * New method `PyText.is_file()` and `PyText.is_dir()` to find out whether the instance represents a file / directory.
 * Defined the comparison ordering methods `__eq__()`, `__gt__()`, and `__ge__()` for `PyText`. They compares two `PyText` object via their absolute paths.
-*  New utility function `utils.re_extensions.smart_search()`.
-* Renamed utility function `utils.re_extensions.real_findall()` to `full_findall()`.
+* New utility function `utils.re_extensions.smart_search()` and `utils.re_extensions.smart_match()`.
 
 ### v0.1.23
 * New utility function `utils.re_extensions.word_wrap()`.
