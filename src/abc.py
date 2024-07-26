@@ -498,10 +498,14 @@ class PyText(ABC, Generic[P]):
     def __pattern_expand(
         pattern: Union["Pattern[str]", SmartPattern]
     ) -> Union["Pattern[str]", SmartPattern]:
+        if pattern.flags & re.DOTALL:
+            new_pattern = "[^\n]*" + pattern.pattern + "[^\n]*"
+        else:
+            new_pattern = ".*" + pattern.pattern + ".*"
         if isinstance(pattern, re.Pattern):
-            return re.compile(".*" + pattern.pattern + ".*", flags=pattern.flags)
+            return re.compile(new_pattern, flags=pattern.flags)
         return SmartPattern(
-            ".*" + pattern.pattern + ".*",
+            new_pattern,
             flags=pattern.flags,
             ignore=pattern.ignore,
             mark_ignore=pattern.mark_ignore,
