@@ -318,10 +318,7 @@ class PyText(ABC, Generic[P]):
             res.join(latest.findall(pattern, styler=False))
         elif not self.children:
             for nline, _, group in real_findall(
-                ".*" + pattern.pattern + ".*",
-                self.text,
-                linemode=True,
-                flags=pattern.flags,
+                self.__pattern_expand(pattern), self.text, linemode=True
             ):
                 if group:
                     res.append(
@@ -475,28 +472,40 @@ class PyText(ABC, Generic[P]):
         case_sensitive: bool = True,
         regex: bool = True,
     ) -> Union["Pattern[str]", SmartPattern]:
-        flags, sp = 0, None
         if isinstance(pattern, re.Pattern):
-            pattern, flags = pattern.pattern, pattern.flags
+            p, f = pattern.pattern, pattern.flags
         elif isinstance(pattern, SmartPattern):
-            sp = pattern
-            pattern, flags = pattern.pattern, pattern.flags
-        elif not isinstance(pattern, str):
-            raise TypeError(f"argument 'pattern' can not be {type(pattern)}")
+            p, f = pattern.pattern, pattern.flags
+        elif isinstance(pattern, str):
+            p, f = pattern, 0
+        else:
+            raise TypeError(f"argument 'pattern' can not be {type(p)}")
         if not regex:
-            pattern = pattern_inreg(pattern)
+            p = pattern_inreg(p)
         if not case_sensitive:
-            flags = flags | re.I
+            f = f | re.I
         if whole_word:
-            pattern = "\\b" + pattern + "\\b"
+            p = "\\b" + p + "\\b"
         if dotall:
-            flags = flags | re.DOTALL
-        pattern = re.compile(pattern, flags=flags)
-        if sp:
-            pattern = SmartPattern(
-                pattern, ignore=sp.ignore, mark_ignore=sp.mark_ignore
+            f = f | re.DOTALL
+        if isinstance(pattern, SmartPattern):
+            return SmartPattern(
+                p, flags=f, ignore=pattern.ignore, mark_ignore=pattern.mark_ignore
             )
-        return pattern
+        return re.compile(p, flags=f)
+
+    @staticmethod
+    def __pattern_expand(
+        pattern: Union["Pattern[str]", SmartPattern]
+    ) -> Union["Pattern[str]", SmartPattern]:
+        if isinstance(pattern, re.Pattern):
+            return re.compile(".*" + pattern.pattern + ".*", flags=pattern.flags)
+        return SmartPattern(
+            ".*" + pattern.pattern + ".*",
+            flags=pattern.flags,
+            ignore=pattern.ignore,
+            mark_ignore=pattern.mark_ignore,
+        )
 
     def jumpto(self, target: str) -> "PyText":
         """
