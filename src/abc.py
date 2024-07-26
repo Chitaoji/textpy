@@ -282,7 +282,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : PatternStr
+        pattern : Union[str, Pattern[str]]
             String pattern.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
@@ -355,7 +355,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : PatternStr
+        pattern : Union[str, Pattern[str]]
             String pattern.
         repl : ReprStr
             Speficies the string to replace the patterns. If Callable, should
@@ -430,7 +430,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : PatternStr
+        pattern : Union[str, Pattern[str]]
             String pattern.
         overwrite : bool, optional
             Determines whether to overwrite the original files. If False, the
