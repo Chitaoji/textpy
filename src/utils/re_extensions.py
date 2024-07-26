@@ -3,7 +3,6 @@
 import re
 from typing import (
     TYPE_CHECKING,
-    Any,
     Callable,
     Iterable,
     List,
@@ -287,6 +286,9 @@ class SmartMatch:
 
 class Smart:
     """Smart searching, matching, and replacing."""
+
+    Pattern = SmartPattern
+    Match = SmartMatch
 
     @staticmethod
     def search(
