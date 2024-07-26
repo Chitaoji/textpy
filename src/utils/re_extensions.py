@@ -22,7 +22,6 @@ SpanNGroup = Tuple[Tuple[int, int], str]
 LineSpanNGroup = Tuple[int, Tuple[int, int], str]
 PatternStr = Union[str, "Pattern[str]"]
 SmartPatternStr = Union[str, "Pattern[str]", "SmartPattern"]
-AnyPatternStr = Union[str, "Pattern[str]", Any]
 PatternStrVar = TypeVar("PatternStrVar", str, "Pattern[str]")
 ReplStr = Union[str, Callable[["Match[str]"], str]]
 FlagInt = Union[int, re.RegexFlag]

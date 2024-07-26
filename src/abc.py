@@ -10,7 +10,7 @@ import re
 from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Generic, List, Optional, Union, overload
+from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Union, overload
 
 import pandas as pd
 from typing_extensions import ParamSpec, Self
@@ -21,7 +21,7 @@ from .utils.re_extensions import SmartPattern, pattern_inreg, real_findall
 if TYPE_CHECKING:
     from re import Pattern
 
-    from .utils.re_extensions import AnyPatternStr, ReplStr
+    from .utils.re_extensions import PatternStr, ReplStr
 
 
 __all__ = ["PyText", "Docstring"]
@@ -273,7 +273,7 @@ class PyText(ABC, Generic[P]):
 
     @overload
     def findall(
-        self, pattern: "AnyPatternStr", /, *_: P.args, **kwargs: P.kwargs
+        self, pattern: "PatternStr", /, *_: P.args, **kwargs: P.kwargs
     ) -> FindTextResult: ...
     def findall(
         self, pattern, /, styler=True, based_on: Replacer = None, **kwargs
@@ -283,7 +283,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str], Any]
+        pattern : Union[str, Pattern[str]]
             String pattern.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
@@ -335,7 +335,7 @@ class PyText(ABC, Generic[P]):
     @overload
     def replace(
         self,
-        pattern: "AnyPatternStr",
+        pattern: "PatternStr",
         repl: "ReplStr",
         overwrite: bool = True,
         /,
@@ -349,7 +349,7 @@ class PyText(ABC, Generic[P]):
         /,
         overwrite=True,
         styler=True,
-        based_on: Replacer = None,
+        based_on: Optional[Replacer] = None,
         **kwargs,
     ) -> "Replacer":
         """
@@ -360,7 +360,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str], Any]
+        pattern : Union[str, Pattern[str]]
             String pattern.
         repl : ReprStr
             Speficies the string to replace the patterns. If Callable, should
@@ -421,7 +421,7 @@ class PyText(ABC, Generic[P]):
     @overload
     def delete(
         self,
-        pattern: "AnyPatternStr",
+        pattern: "PatternStr",
         overwrite: bool = True,
         /,
         *_: P.args,
@@ -435,7 +435,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str], Any]
+        pattern : Union[str, Pattern[str]]
             String pattern.
         overwrite : bool, optional
             Determines whether to overwrite the original files. If False, the
@@ -466,7 +466,7 @@ class PyText(ABC, Generic[P]):
 
     @staticmethod
     def __pattern_trans(
-        pattern: "AnyPatternStr",
+        pattern: Any,
         whole_word: bool = False,
         dotall: bool = False,
         case_sensitive: bool = True,
