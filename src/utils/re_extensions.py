@@ -277,6 +277,10 @@ class SmartMatch:
         """Group of the match."""
         return self.__group
 
+    def groups(self) -> Tuple[str, ...]:
+        """Subgroups of the match."""
+        return (self.__group,)
+
     def start(self) -> int:
         """The indice of the start of the substring matched by `group`."""
         return self.__span[0]
