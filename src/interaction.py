@@ -26,6 +26,7 @@ from typing import (
 import pandas as pd
 from typing_extensions import Self
 
+from .utils.re_extensions import Smart
 from .utils.validator import SimpleValidator
 
 if TYPE_CHECKING:
@@ -114,7 +115,7 @@ class FindTextResult:
         for res in self.res:
             t, p, n, _line = res.to_tuple()
             string += f"\n{t.relpath}" + f":{n}" * display_params.line_numbers + ": "
-            new = re.sub(p, partial(self._repr, res), " " * t.spaces + _line)
+            new = Smart.sub(p, partial(self._repr, res), " " * t.spaces + _line)
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
 
@@ -190,7 +191,7 @@ class FindTextResult:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
-            df.iloc[i, 1] = re.sub(p, partial(self.styl, res), _line)
+            df.iloc[i, 1] = Smart.sub(p, partial(self.styl, res), _line)
         return (
             df.style.hide(axis=0)
             .set_properties(**{"text-align": "left"})
@@ -330,7 +331,7 @@ class FileEditor:
         """
         self.__count = 0
         self.__repl = repl
-        self.new_text = re.sub(
+        self.new_text = Smart.sub(
             pattern,
             self.counted_repl,
             self.based_on.new_text if self.based_on else self.pyfile.text,

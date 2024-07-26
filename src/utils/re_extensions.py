@@ -164,14 +164,12 @@ def real_findall(
         pattern instead.
 
     """
-    mod = Smart if isinstance(pattern, SmartPattern) else re
-
     finds: List[SpanNGroup] = []
     nline: int = 1
     total_pos: int = 0
     inline_pos: int = 0
 
-    while searched := mod.search(pattern, string, flags=flags):
+    while searched := Smart.search(pattern, string, flags=flags):
         span, group = searched.span(), searched.group()
         if linemode:
             left = string[: span[0]]
@@ -357,7 +355,7 @@ class Smart:
 
         """
         if isinstance(pattern, (str, re.Pattern)):
-            return re.search(pattern, string, flags=flags)
+            return re.match(pattern, string, flags=flags)
         p, f = pattern.pattern, pattern.flags | flags
         if pattern.mark_ignore not in p:
             return re.match(p, string, flags=f)
@@ -406,18 +404,19 @@ class Smart:
             New string.
 
         """
-        sp = None
-        if isinstance(pattern, re.Pattern):
-            pattern, flags = pattern.pattern, pattern.flags | flags
-        elif isinstance(pattern, SmartPattern):
-            sp = pattern
-            pattern, flags = pattern.pattern, pattern.flags | flags
-        if sp is None or (sp.mark_ignore not in pattern):
+        if isinstance(pattern, (str, re.Pattern)):
             return re.sub(pattern, repl, string, flags=flags)
+        new_string = ""
+        while string and (searched := Smart.search(pattern, string, flags=flags)):
+            new_string += string[: searched.start()]
+            new_string += repl if isinstance(repl, str) else repl(searched)
+            string = string[searched.end() :]
+        return new_string + string
 
 
 smart_search = Smart.search
 smart_match = Smart.match
+smart_sub = Smart.sub
 
 
 def find_right_bracket(string: str, start: int) -> int:
