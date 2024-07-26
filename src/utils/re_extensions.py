@@ -39,6 +39,7 @@ __all__ = [
     "Smart",
     "smart_search",
     "smart_match",
+    "smart_sub",
     "find_right_bracket",
 ]
 
@@ -357,6 +358,7 @@ class Smart:
         if isinstance(pattern, (str, re.Pattern)):
             return re.match(pattern, string, flags=flags)
         p, f = pattern.pattern, pattern.flags | flags
+        crossline = (f & re.DOTALL) > 0
         if pattern.mark_ignore not in p:
             return re.match(p, string, flags=f)
         splited = p.split(pattern.mark_ignore)
@@ -366,7 +368,10 @@ class Smart:
             if not (matched := re.match(temp, string, flags=f)):
                 return None
             if matched.end() < len(string) and string[matched.end()] in left:
-                pos_now += (n := find_right_bracket(string, matched.end()))
+                n = find_right_bracket(string, matched.end(), crossline=crossline)
+                if n < 0:
+                    return None
+                pos_now += n
                 recorded_group += string[:n]
                 string = string[n:]
                 temp = ""
@@ -419,7 +424,7 @@ smart_match = Smart.match
 smart_sub = Smart.sub
 
 
-def find_right_bracket(string: str, start: int) -> int:
+def find_right_bracket(string: str, start: int, crossline: bool = False) -> int:
     """
     Find the right bracket paired with the specified left bracket.
 
@@ -429,11 +434,14 @@ def find_right_bracket(string: str, start: int) -> int:
         String.
     start : int
         Position of the left bracket.
+    crossline : bool
+        Determines whether the matched substring can include "\\n".
 
     Returns
     -------
     int
-        Position of the matched right bracket + 1.
+        Position of the matched right bracket + 1. If not found,
+        -1 will be returned.
 
     """
     if (left := string[start]) == "(":
@@ -450,9 +458,11 @@ def find_right_bracket(string: str, start: int) -> int:
             cnt += 1
         elif now == right:
             cnt -= 1
+        elif now == "\n" and not crossline:
+            break
         if cnt == 0:
             return pos_now + 1
-    raise ValueError("can't find a matched right bracket")
+    return -1
 
 
 def pattern_inreg(pattern: PatternStrVar) -> PatternStrVar:
