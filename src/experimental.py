@@ -52,14 +52,13 @@ def __type_hint_generics(module: "PyText") -> Replacer:
         ("type", "Type"),
     ]
     for p in pairs:
-        args = __type_hint_generics_pair(*p)
-        while r := module.replace(*args, based_on=replacer):
+        while r := module.replace(*__type_hint_generics_0(*p), based_on=replacer):
             replacer.join(r)
     return replacer
 
 
-def __type_hint_generics_pair(replaced: str, to_replace: str) -> Tuple[str, "ReprStr"]:
+def __type_hint_generics_0(replaced: str, to_replace: str) -> Tuple[str, "ReprStr"]:
     return (
-        f"(->|:)[^=\n]*?\\W{replaced}[\\[\\]),:]",
+        f"(?:(->|:)[^=\n]*?\\W|\n\\s*){replaced}[\\[\\]),:]",
         lambda m: m.group()[: -1 - len(replaced)] + to_replace + m.group()[-1],
     )
