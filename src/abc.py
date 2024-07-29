@@ -328,9 +328,7 @@ class PyText(ABC, Generic[P]):
             res.join(self.header.findall(pattern, styler=False, based_on=based_on))
             for c in self.children:
                 res.join(c.findall(pattern, styler=False, based_on=based_on))
-        if styler and pd.__version__ >= "1.4.0":
-            return res.to_styler()
-        return res
+        return res.to_styler() if styler else res
 
     @overload
     def replace(
@@ -414,9 +412,7 @@ class PyText(ABC, Generic[P]):
                         **kwargs,
                     )
                 )
-        if styler:
-            return replacer.to_styler()
-        return replacer
+        return replacer.to_styler() if styler else replacer
 
     @overload
     def delete(

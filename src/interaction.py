@@ -179,7 +179,7 @@ class FindTextResult:
             A `Styler` or an instance of self.
 
         """
-        if not display_params.enable_styler:
+        if not display_params.enable_styler or pd.__version__ < "1.4.0":
             return self
         df = pd.DataFrame("", index=range(len(self.res)), columns=["source", "match"])
         for i, res in enumerate(sorted(self.res)):
@@ -471,7 +471,7 @@ class Replacer:
             A `Styler` or an instance of self.
 
         """
-        if not display_params.enable_styler:
+        if not display_params.enable_styler or pd.__version__ < "1.4.0":
             return self
         styler = self.__find_text_result.to_styler()
         setattr(styler, "confirm", self.confirm)
