@@ -146,7 +146,7 @@ class PyText(ABC, Generic[P]):
 
         Returns
         -------
-        Dict[str, PyText]
+        List[PyText]
             List of the children nodes.
 
         """
