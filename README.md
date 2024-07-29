@@ -62,7 +62,7 @@ examples/myfile.py:7: 'class <MyBook>:'
 examples/myfile.py:24: 'def print_my_book(book: <MyBook>) -> None:'
 examples/myfile.py:30: '    book : <MyBook>'
 ```
-If you are using a Jupyter notebook in VScode, you can run a cell like this:
+If you are using a Jupyter notebook in VS Code, you can run a cell like this:
 ```py
 >>> myfile.findall("content")
 ```
