@@ -12,7 +12,7 @@ lazyr>=0.0.16
 pandas
 Jinja2
 ```
-NOTE: pandas>=1.4.0 is recommended. Lower versions of pandas are also available, but some properties of this package will be affected.
+NOTE: *pandas*>=1.4.0 is recommended. Lower versions of *pandas* are also available, but some properties of this package will be affected.
 
 ## Quick Start
 To demonstrate the usage of this module, we put a file named `myfile.py` under `./examples/` (you can find it in the repository, or create a new file of your own):
@@ -179,7 +179,11 @@ This project falls under the BSD 3-Clause License.
 ### v0.1.24
 * New method `PyText.is_file()` and `PyText.is_dir()` to find out whether the instance represents a file / directory.
 * Defined the comparison ordering methods `__eq__()`, `__gt__()`, and `__ge__()` for `PyText`. They compares two `PyText` object via their absolute paths.
-* New utility function `utils.re_extensions.smart_search()` and `utils.re_extensions.smart_match()`.
+* Updated `utils.re_extensions`: 
+  * new function `smart_search()`, `smart_match()`, and `smart_sub()`
+  * new function `find_right_bracket()`
+  * new utility class `SmartPattern` and `SmartMatch`
+* `Replacer.to_styler()` will no longer return a styler when *pandas* version < 1.4.0.
 
 ### v0.1.23
 * New utility function `utils.re_extensions.word_wrap()`.
