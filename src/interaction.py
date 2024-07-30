@@ -119,6 +119,9 @@ class FindTextResult:
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
 
+    def __bool__(self) -> bool:
+        return bool(self.res)
+
     def append(self, finding: TextFinding) -> None:
         """
         Append a new finding.
@@ -281,6 +284,9 @@ class FileEditor:
         self.is_based_on = False
         self.__repl: "ReplStr" = ""
         self.__count: int = 0
+
+    def __bool__(self) -> bool:
+        return self.__count > 0
 
     def read(self) -> str:
         """
