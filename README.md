@@ -181,9 +181,10 @@ This project falls under the BSD 3-Clause License.
 * New method `PyText.check_format()` for format checking.
 * Defined the comparison ordering methods `__eq__()`, `__gt__()`, and `__ge__()` for `PyText`. They compares two `PyText` object via their absolute paths.
 * Updated `utils.re_extensions`: 
-  * new function `smart_search()`, `smart_match()`, and `smart_sub()`
-  * new function `find_right_bracket()`
-  * new utility class `SmartPattern` and `SmartMatch`
+  * new regex operations `smart_search()`, `smart_match()`, and `smart_sub()`;
+  * new string operation `counted_strip()`;
+  * new utility classes `SmartPattern` and `SmartMatch`.
+  * new utility functions `find_right_bracket()` and `find_left_bracket()`;
 * `Replacer.to_styler()` will no longer return a styler when *pandas* version < 1.4.0.
 
 ### v0.1.23
@@ -192,7 +193,7 @@ This project falls under the BSD 3-Clause License.
 
 ### v0.1.22
 * `textpy()` is going to be deprecated to avoid conflicts with the package name `textpy`. Please use `module()` insead.
-* New method `PyText.replace()`, `PyText.delete()`.
+* New methods `PyText.replace()` and `PyText.delete()`.
 * New class `Replacer` as the return type of `PyText.replace()`, with public methods `.confirm()`, `.rollback()`, etc.
 * Added a dunder method `PyText.__truediv__()` as an alternative to `PyText.jumpto()`.
 * New subclass `PyContent` inheriting from `PyText`. A `PyContent` object stores a part of a file that is not storable by instances of other subclasses.
@@ -202,8 +203,8 @@ This project falls under the BSD 3-Clause License.
 
 ### v0.1.20
 * Fixed issues:
-  * Incorrectly displaying file paths in the output of `TextPy.findall(styler=False)`;
-  * Expired file links in the output of `TextPy.findall(styler=True, line_numbers=False)`.
+  * incorrectly displayed file paths in the output of `TextPy.findall(styler=False)`;
+  * expired file links in the output of `TextPy.findall(styler=True, line_numbers=False)`.
 
 ### v0.1.19
 * Various improvements.
@@ -234,8 +235,8 @@ This project falls under the BSD 3-Clause License.
 ### v0.1.5
 * Provided compatibility with *pandas* versions lower than 1.4.0.
 * Updated `textpy()` :
-  * `Path` objects are now acceptable as parameters.
-  * New optional parameter `home` to specify the home path.
+  * `Path` object is now acceptable as the positional argument;
+  * new optional parameter `home=` for specifying the home path.
 * More flexible presentation of output from `TextPy.findall()`.
 
 ### v0.1.4

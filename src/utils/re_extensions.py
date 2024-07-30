@@ -226,6 +226,11 @@ def find_right_bracket(string: str, start: int, crossline: bool = False) -> int:
         Position of the matched right bracket + 1. If not found,
         -1 will be returned.
 
+    Raises
+    ------
+    ValueError
+        `string[start]` is not a left bracket.
+
     """
     if (left := string[start]) == "(":
         right = ")"
@@ -245,6 +250,52 @@ def find_right_bracket(string: str, start: int, crossline: bool = False) -> int:
             break
         if cnt == 0:
             return pos_now + 1
+    return -1
+
+
+def find_left_bracket(string: str, start: int, crossline: bool = False) -> int:
+    """
+    Find the left bracket paired with the specified right bracket.
+
+    Parameters
+    ----------
+    string : str
+        String.
+    start : int
+        Position of the right bracket + 1.
+    crossline : bool
+        Determines whether the matched substring can include "\\n".
+
+    Returns
+    -------
+    int
+        Position of the matched left bracket. If not found, -1 will
+        be returned.
+
+    Raises
+    ------
+    ValueError
+        `string[start - 1]` is not a right bracket.
+
+    """
+    if (right := string[start - 1]) == ")":
+        left = "("
+    elif right == "]":
+        left = "["
+    elif right == "}":
+        left = "{"
+    else:
+        raise ValueError(f"string[{start-1}] is not a right bracket")
+    cnt: int = 1
+    for pos_now in range(start - 2, -1, -1):
+        if (now := string[pos_now]) == right:
+            cnt += 1
+        elif now == left:
+            cnt -= 1
+        elif now == "\n" and not crossline:
+            break
+        if cnt == 0:
+            return pos_now
     return -1
 
 
@@ -381,9 +432,9 @@ def counted_strip(string: str) -> Tuple[str, int, int]:
     return string.strip(), l, r
 
 
-# ==============================================
-#                    Smart
-# ==============================================
+# ==============================================================================
+#                                  Smart
+# ==============================================================================
 
 
 class SmartPattern:
