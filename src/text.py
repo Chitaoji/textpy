@@ -33,6 +33,8 @@ class PyDir(PyText):
         if not self.path.is_dir():
             raise NotADirectoryError(f"not a dicretory: '{self.path}'")
         self.name = self.path.stem
+        if self.check_format:
+            _ = self.children
 
     @cached_property
     def doc(self) -> "Docstring":
