@@ -6,12 +6,14 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
+import logging
 import re
 from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Union, overload
 
+import black
 from typing_extensions import ParamSpec, Self
 
 from .interaction import NULL, FileEditor, FindTextResult, Replacer, TextFinding
@@ -45,8 +47,6 @@ class PyText(ABC, Generic[P]):
         Specifies the home path if `path_or_text` is relative, by default None.
     encoding : str, optional
         Specifies encoding, by default None.
-    check_format : bool, optional
-        Whether to check the format of files, by default False.
 
     """
 
@@ -58,7 +58,6 @@ class PyText(ABC, Generic[P]):
         start_line: Optional[int] = None,
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
-        check_format: bool = False,
         mask: Optional[Self] = None,
     ) -> None:
         self.text: str = ""
@@ -76,11 +75,9 @@ class PyText(ABC, Generic[P]):
         if parent is None:
             self.home = as_path(Path(""), home=home)
             self.encoding = encoding
-            self.check_format = check_format
         else:
             self.home = parent.home
             self.encoding = parent.encoding
-            self.check_format = parent.check_format
 
         self._header: Optional[str] = None
         self.__pytext_post_init__(path_or_text)
@@ -275,6 +272,21 @@ class PyText(ABC, Generic[P]):
     def is_dir(self) -> bool:
         """Returns whether self is an instance of `PyDir`."""
         return self.__class__.__name__ == "PyDir"
+
+    def check_format(self) -> None:
+        """
+        Checks the format of files. Logs warning if a file does not comply
+        with Black formatter's default rules.
+
+        """
+        if self.is_dir():
+            for c in self.children:
+                c.check_format()
+        elif self.is_file() and black_format(self.text).strip() != self.text:
+            logging.warning(
+                "file does not comply with Black formatter's default rules: '%s'",
+                self.path,
+            )
 
     @overload
     def findall(
@@ -643,6 +655,11 @@ def as_path(
     if not path_or_text.is_absolute():
         path_or_text = home / path_or_text
     return path_or_text
+
+
+def black_format(string: str) -> str:
+    """Reformat a string using Black and return new contents."""
+    return black.format_str(string, mode=black.FileMode())
 
 
 # pylint: disable=unused-argument
