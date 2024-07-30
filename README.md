@@ -178,6 +178,7 @@ This project falls under the BSD 3-Clause License.
 ## History
 ### v0.1.24
 * New method `PyText.is_file()` and `PyText.is_dir()` to find out whether the instance represents a file / directory.
+* New optional paramter `check_format=` for `module()`.
 * Defined the comparison ordering methods `__eq__()`, `__gt__()`, and `__ge__()` for `PyText`. They compares two `PyText` object via their absolute paths.
 * Updated `utils.re_extensions`: 
   * new function `smart_search()`, `smart_match()`, and `smart_sub()`
