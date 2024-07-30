@@ -5,6 +5,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 `textpy` namespace - use that instead.
 
 """
+
 import re
 from functools import cached_property
 from typing import Dict

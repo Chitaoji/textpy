@@ -10,4 +10,5 @@ REQUIRES:
   - lazyr>=0.0.16
   - pandas
   - Jinja2
+  - black
 EXTRAS: {}

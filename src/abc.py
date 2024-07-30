@@ -6,33 +6,27 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
+import logging
 import re
 from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Callable,
-    Dict,
-    Generic,
-    List,
-    Optional,
-    Union,
-    cast,
-    overload,
-)
+from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Union, overload
 
-import pandas as pd
-from typing_extensions import ParamSpec
+import black
+from typing_extensions import ParamSpec, Self
 
-from .interaction import NULL, FindTextResult, PyEditor, Replacer, display_params
-from .utils.re_extensions import pattern_inreg, real_findall
+from .interaction import NULL, FileEditor, FindTextResult, Replacer, TextFinding
+from .utils.re_extensions import SmartPattern, pattern_inreg, real_findall
 
 if TYPE_CHECKING:
-    from re import Match, Pattern
+    from re import Pattern
+
+    from .utils.re_extensions import PatternStr, ReplStr
 
 
 __all__ = ["PyText", "Docstring"]
+
 
 P = ParamSpec("P")
 
@@ -59,14 +53,16 @@ class PyText(ABC, Generic[P]):
     def __init__(
         self,
         path_or_text: Union[Path, str],
+        *,
         parent: Optional["PyText"] = None,
         start_line: Optional[int] = None,
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
+        mask: Optional[Self] = None,
     ) -> None:
         self.text: str = ""
         self.name: str = ""
-        self.path: Path = Path(NULL + ".py")
+        self.path = Path(NULL + ".py")
 
         self.parent = parent
         self.spaces = 0
@@ -86,6 +82,12 @@ class PyText(ABC, Generic[P]):
         self._header: Optional[str] = None
         self.__pytext_post_init__(path_or_text)
 
+        if mask:
+            self.path = mask.path
+            self.name = mask.name
+            self.parent = mask.parent
+            self.home = mask.home
+
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}({self.absname!r})"
 
@@ -103,6 +105,15 @@ class PyText(ABC, Generic[P]):
             File path, module path or file text.
 
         """
+
+    def __eq__(self, __other: Self) -> bool:
+        return self.abspath == __other.abspath
+
+    def __gt__(self, __other: Self) -> bool:
+        return self.abspath > __other.abspath
+
+    def __ge__(self, __other: Self) -> bool:
+        return self.abspath >= __other.abspath
 
     @cached_property
     @abstractmethod
@@ -137,7 +148,7 @@ class PyText(ABC, Generic[P]):
 
         Returns
         -------
-        Dict[str, PyText]
+        List[PyText]
             List of the children nodes.
 
         """
@@ -254,15 +265,36 @@ class PyText(ABC, Generic[P]):
         except ValueError:
             return self.abspath
 
+    def is_file(self) -> bool:
+        """Returns whether self is an instance of `PyFile`."""
+        return self.__class__.__name__ == "PyFile"
+
+    def is_dir(self) -> bool:
+        """Returns whether self is an instance of `PyDir`."""
+        return self.__class__.__name__ == "PyDir"
+
+    def check_format(self) -> None:
+        """
+        Checks the format of files. Logs warning if a file does not comply
+        with Black formatter's default rules.
+
+        """
+        if self.is_dir():
+            for c in self.children:
+                c.check_format()
+        elif self.is_file() and black_format(self.text).strip() != self.text:
+            logging.warning(
+                "file does not comply with Black formatter's default rules: '%s'",
+                self.path,
+            )
+
     @overload
     def findall(
-        self,
-        pattern: Union[str, "Pattern[str]"],
-        /,
-        *_: P.args,
-        **kwargs: P.kwargs,
-    ) -> "FindTextResult": ...
-    def findall(self, pattern, /, styler=True, **kwargs) -> "FindTextResult":
+        self, pattern: "PatternStr", /, *_: P.args, **kwargs: P.kwargs
+    ) -> FindTextResult: ...
+    def findall(
+        self, pattern, /, styler=True, based_on: Replacer = None, **kwargs
+    ) -> FindTextResult:
         """
         Finds all non-overlapping matches of `pattern`.
 
@@ -272,6 +304,9 @@ class PyText(ABC, Generic[P]):
             String pattern.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
+        dotall : bool, optional
+            Whether the "." matches any character at all, including a newline,
+            by default False.
         case_sensitive : bool, optional
             Specifies case sensitivity, by default True.
         regex : bool, optional
@@ -288,36 +323,49 @@ class PyText(ABC, Generic[P]):
 
         """
         pattern = self.__pattern_trans(pattern, **kwargs)
-        res = FindTextResult(pattern)
-        if not self.children:
+        res = FindTextResult()
+        if based_on and self.is_file():
+            latest = self
+            if based_on:
+                based_on = based_on.getself()
+                for e in based_on.editors:
+                    if e.pyfile == self and not e.is_based_on:
+                        latest = self.__class__(e.new_text, mask=self)
+                        break
+            res.join(latest.findall(pattern, styler=False))
+        elif not self.children:
             for nline, _, group in real_findall(
-                ".*" + pattern.pattern + ".*",
-                self.text,
-                linemode=True,
-                flags=pattern.flags,
+                self.__pattern_expand(pattern), self.text, linemode=True
             ):
-                if group != "":
-                    res.append((self, self.start_line + nline - 1, group))
+                if group:
+                    res.append(
+                        TextFinding(self, pattern, self.start_line + nline - 1, group)
+                    )
         else:
-            res.join(self.header.findall(pattern, styler=False))
+            res.join(self.header.findall(pattern, styler=False, based_on=based_on))
             for c in self.children:
-                res.join(c.findall(pattern, styler=False))
-        if styler and display_params.enable_styler and pd.__version__ >= "1.4.0":
-            return res.to_styler()
-        return res
+                res.join(c.findall(pattern, styler=False, based_on=based_on))
+        return res.to_styler() if styler else res
 
     @overload
     def replace(
         self,
-        pattern: Union[str, "Pattern[str]"],
-        repl: Union[str, Callable[["Match[str]"], str]],
+        pattern: "PatternStr",
+        repl: "ReplStr",
         overwrite: bool = True,
         /,
         *_: P.args,
         **kwargs: P.kwargs,
     ) -> "Replacer": ...
     def replace(
-        self, pattern, repl, /, overwrite=True, styler=True, **kwargs
+        self,
+        pattern,
+        repl,
+        /,
+        overwrite=True,
+        styler=True,
+        based_on: Optional[Replacer] = None,
+        **kwargs,
     ) -> "Replacer":
         """
         Finds all non-overlapping matches of `pattern`, and replace them with
@@ -329,7 +377,7 @@ class PyText(ABC, Generic[P]):
         ----------
         pattern : Union[str, Pattern[str]]
             String pattern.
-        repl : Union[str, Callable[[str], str]]
+        repl : ReprStr
             Speficies the string to replace the patterns. If Callable, should
             be a function that receives the Match object, and gives back
             the replacement string to be used.
@@ -338,6 +386,9 @@ class PyText(ABC, Generic[P]):
             replacement will take effect on copyed files, by default True.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
+        dotall : bool, optional
+            Whether the "." matches any character at all, including a newline,
+            by default False.
         case_sensitive : bool, optional
             Specifies case sensitivity, by default True.
         regex : bool, optional
@@ -354,32 +405,44 @@ class PyText(ABC, Generic[P]):
 
         """
         pattern = self.__pattern_trans(pattern, **kwargs)
-        replacer = Replacer(pattern)
+        replacer = Replacer()
         if self.path.suffix == ".py":
-            editor = PyEditor(self, overwrite=overwrite)
+            old = None
+            if based_on:
+                based_on = based_on.getself()
+                for e in based_on.editors:
+                    if e.pyfile == self and not e.is_based_on:
+                        old = e
+                        break
+            editor = FileEditor(self, overwrite=overwrite, based_on=old)
             if editor.replace(pattern, repl) > 0:
                 replacer.append(editor)
         else:
             for c in self.children:
                 replacer.join(
                     c.replace(
-                        pattern, repl, overwrite=overwrite, styler=False, **kwargs
+                        pattern,
+                        repl,
+                        overwrite=overwrite,
+                        styler=False,
+                        based_on=based_on,
+                        **kwargs,
                     )
                 )
-        if styler and display_params.enable_styler:
-            return cast("Replacer", replacer.to_styler())
-        return replacer
+        return replacer.to_styler() if styler else replacer
 
     @overload
     def delete(
         self,
-        pattern: Union[str, "Pattern[str]"],
+        pattern: "PatternStr",
         overwrite: bool = True,
         /,
         *_: P.args,
         **kwargs: P.kwargs,
     ) -> "Replacer": ...
-    def delete(self, pattern, /, overwrite=True, styler=True, **kwargs) -> "Replacer":
+    def delete(
+        self, pattern, /, overwrite=True, styler=True, based_on=None, **kwargs
+    ) -> "Replacer":
         """
         An alternative to `.replace(pattern, "", *args, **kwargs)`
 
@@ -392,6 +455,9 @@ class PyText(ABC, Generic[P]):
             replacement will take effect on copyed files, by default True.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
+        dotall : bool, optional
+            Whether the "." matches any character at all, including a newline,
+            by default False.
         case_sensitive : bool, optional
             Specifies case sensitivity, by default True.
         regex : bool, optional
@@ -407,26 +473,56 @@ class PyText(ABC, Generic[P]):
             Text replacer.
 
         """
-        return self.replace(pattern, "", overwrite, styler=styler, **kwargs)
+        return self.replace(
+            pattern, "", overwrite, styler=styler, based_on=based_on, **kwargs
+        )
 
     @staticmethod
     def __pattern_trans(
-        pattern: Union[str, "Pattern[str]"],
+        pattern: Any,
         whole_word: bool = False,
+        dotall: bool = False,
         case_sensitive: bool = True,
         regex: bool = True,
-    ) -> "Pattern[str]":
-        flags: int = 0
+    ) -> Union["Pattern[str]", SmartPattern]:
         if isinstance(pattern, re.Pattern):
-            pattern, flags = str(pattern.pattern), pattern.flags
+            p, f = pattern.pattern, pattern.flags
+        elif isinstance(pattern, SmartPattern):
+            p, f = pattern.pattern, pattern.flags
+        elif isinstance(pattern, str):
+            p, f = pattern, 0
+        else:
+            raise TypeError(f"argument 'pattern' can not be {type(p)}")
         if not regex:
-            pattern = pattern_inreg(pattern)
+            p = pattern_inreg(p)
         if not case_sensitive:
-            flags = flags | re.I
+            f = f | re.I
         if whole_word:
-            pattern = "\\b" + pattern + "\\b"
-        pattern = re.compile(pattern, flags=flags)
-        return pattern
+            p = "\\b" + p + "\\b"
+        if dotall:
+            f = f | re.DOTALL
+        if isinstance(pattern, SmartPattern):
+            return SmartPattern(
+                p, flags=f, ignore=pattern.ignore, mark_ignore=pattern.mark_ignore
+            )
+        return re.compile(p, flags=f)
+
+    @staticmethod
+    def __pattern_expand(
+        pattern: Union["Pattern[str]", SmartPattern]
+    ) -> Union["Pattern[str]", SmartPattern]:
+        if pattern.flags & re.DOTALL:
+            new_pattern = "[^\n]*" + pattern.pattern + "[^\n]*"
+        else:
+            new_pattern = ".*" + pattern.pattern + ".*"
+        if isinstance(pattern, re.Pattern):
+            return re.compile(new_pattern, flags=pattern.flags)
+        return SmartPattern(
+            new_pattern,
+            flags=pattern.flags,
+            ignore=pattern.ignore,
+            mark_ignore=pattern.mark_ignore,
+        )
 
     def jumpto(self, target: str) -> "PyText":
         """
@@ -561,10 +657,17 @@ def as_path(
     return path_or_text
 
 
+def black_format(string: str) -> str:
+    """Reformat a string using Black and return new contents."""
+    return black.format_str(string, mode=black.FileMode())
+
+
 # pylint: disable=unused-argument
 def _ignore(
     whole_word: bool = False,
+    dotall: bool = False,
     case_sensitive: bool = True,
     regex: bool = True,
     styler: bool = True,
+    based_on: Optional[Replacer] = None,
 ) -> None: ...

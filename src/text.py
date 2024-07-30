@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, List, Union
 from .abc import PyText, as_path
 from .doc import NumpyFormatDocstring
 from .interaction import NULL
-from .utils.re_extensions import line_count_iter, rsplit
+from .utils.re_extensions import counted_strip, line_count, line_count_iter, rsplit
 
 if TYPE_CHECKING:
     from .abc import Docstring
@@ -62,12 +62,13 @@ class PyFile(PyText):
     def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         if isinstance(path_or_text, Path):
             self.path = as_path(path_or_text, home=self.home)
-            self.text = self.path.read_text(encoding=self.encoding).strip()
+            self.text, n, _ = counted_strip(self.path.read_text(encoding=self.encoding))
         else:
-            self.text = path_or_text.strip()  # in this situation, once argument
-            # 'path_or_text' is str, it will be regarded as text content even if can
-            # represent an existing path
+            self.text, n, _ = counted_strip(path_or_text)  # in this situation, once
+            # argument 'path_or_text' is str, it will be regarded as text content even
+            # if can represent an existing path
 
+        self.start_line += n
         self.name = self.path.stem
 
     @cached_property
@@ -97,18 +98,55 @@ class PyFile(PyText):
         else:
             self._header = ""
             text = self.text
-        header_lines = len(re.findall("\n", self._header))
 
-        for i, x in enumerate(line_count_iter(rsplit("\n\n\n+[^\\s]", text))):
-            _lines, _str = x
-            _str = "\n" + _str.strip()
-            start_line = int(header_lines + _lines + 3 * (i > 0))
-            if re.match("(?:\n@.*)*\ndef ", _str):
-                children.append(PyFunc(_str, parent=self, start_line=start_line))
-            elif re.match("(?:\n@.*)*\nclass ", _str):
-                children.append(PyClass(_str, parent=self, start_line=start_line))
+        header_lines = line_count(self._header)
+        stored, dec, s = "", "", ""
+        for n, s in line_count_iter(rsplit("\n[^\\s)\\]}]", text)):
+            start_line = header_lines + n
+            if re.match("\ndef ", s):
+                if stored:
+                    children.append(
+                        PyContent(
+                            stored,
+                            parent=self,
+                            start_line=start_line - line_count(stored + dec),
+                        )
+                    )
+                    stored = ""
+                children.append(
+                    PyFunc(
+                        dec + s, parent=self, start_line=start_line - line_count(dec)
+                    )
+                )
+                dec = ""
+            elif re.match("\nclass ", s):
+                if stored:
+                    children.append(
+                        PyContent(
+                            stored,
+                            parent=self,
+                            start_line=start_line - line_count(stored + dec),
+                        )
+                    )
+                    stored = ""
+                children.append(
+                    PyClass(
+                        dec + s, parent=self, start_line=start_line - line_count(dec)
+                    )
+                )
+                dec = ""
+            elif re.match("\n@", s):
+                dec += s
             else:
-                children.append(PyContent(_str, parent=self, start_line=start_line))
+                stored += s
+        if stored:
+            children.append(
+                PyContent(
+                    stored,
+                    parent=self,
+                    start_line=start_line - line_count(stored) + line_count(s) - 1,
+                )
+            )
         return children
 
 
@@ -116,7 +154,8 @@ class PyClass(PyText):
     """Stores the code and docstring of a class."""
 
     def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
-        self.text = path_or_text.strip()
+        self.text, n, _ = counted_strip(path_or_text)
+        self.start_line += n
         self.name = re.search("class .*?[(:]", self.text).group()[6:-1]
 
     @cached_property
@@ -149,7 +188,7 @@ class PyClass(PyText):
                 self._header = _str.replace("\n", "\n    ")
             else:
                 children.append(
-                    PyMethod(_str, parent=self, start_line=self.start_line + i)
+                    PyMethod(_str, parent=self, start_line=self.start_line + i - 1)
                 )
             _cnt += 1
         return children
@@ -159,8 +198,9 @@ class PyFunc(PyText):
     """Stores the code and docstring of a function."""
 
     def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
-        self.text = path_or_text.strip()
-        self.name = re.search("def .*?\\(", self.text).group()[4:-1]
+        self.text, n, _ = counted_strip(path_or_text)
+        self.start_line += n
+        self.name = re.search("def .*?\\(", self.text).group()[4:-1] + "()"
 
     @cached_property
     def doc(self) -> "Docstring":
@@ -193,12 +233,13 @@ class PyContent(PyText):
     """
 
     def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
-        self.text = path_or_text.strip()
+        self.text, n, _ = counted_strip(path_or_text)
+        self.start_line += n
         self.name = NULL
 
     @cached_property
     def doc(self) -> "Docstring":
-        return NumpyFormatDocstring(self.text, parent=self)
+        return NumpyFormatDocstring("", parent=self)
 
     @cached_property
     def header(self) -> PyText:

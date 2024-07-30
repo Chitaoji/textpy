@@ -1,8 +1,9 @@
-"""Extensions to the `re` package."""
+"""Extensions for the `re` package."""
 
 import re
 from typing import (
     TYPE_CHECKING,
+    Callable,
     Iterable,
     List,
     Literal,
@@ -13,27 +14,38 @@ from typing import (
 )
 
 if TYPE_CHECKING:
-    from re import Pattern
+    from re import Match, Pattern
+
+
 SpanNGroup = Tuple[Tuple[int, int], str]
 LineSpanNGroup = Tuple[int, Tuple[int, int], str]
-StrPattern = TypeVar("StrPattern", str, "Pattern[str]")
+PatternStr = Union[str, "Pattern[str]"]
+SmartPatternStr = Union[str, "Pattern[str]", "SmartPattern"]
+PatternStrVar = TypeVar("PatternStrVar", str, "Pattern[str]")
+ReplStr = Union[str, Callable[["Match[str]"], str]]
+FlagInt = Union[int, re.RegexFlag]
 
 __all__ = [
     "rsplit",
     "lsplit",
     "real_findall",
+    "real_findall",
     "pattern_inreg",
     "line_count",
     "line_count_iter",
     "word_wrap",
+    "SmartPattern",
+    "SmartMatch",
+    "Smart",
+    "smart_search",
+    "smart_match",
+    "smart_sub",
+    "find_right_bracket",
 ]
 
 
 def rsplit(
-    pattern: Union[str, "Pattern[str]"],
-    string: str,
-    maxsplit: int = 0,
-    flags: Union[int, re.RegexFlag] = 0,
+    pattern: PatternStr, string: str, maxsplit: int = 0, flags: FlagInt = 0
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
@@ -42,14 +54,14 @@ def rsplit(
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str]]
+    pattern : PatternStr
         Pattern string.
     string : str
         String to be splitted.
     maxsplit : int, optional
         Max number of splits, if specified to be 0, there will be no
         more limits, by default 0.
-    flags : Union[int, re.RegexFlag], optional
+    flags : FlagInt, optional
         Regex flag, by default 0.
 
     Returns
@@ -62,10 +74,9 @@ def rsplit(
     searched = re.search(pattern, string, flags=flags)
     left: str = ""
     while searched:
-        span = searched.span()
-        splits.append(left + string[: span[0]])
+        splits.append(left + string[: searched.start()])
         left = searched.group()
-        string = string[span[1] :]
+        string = string[searched.end() :]
         if len(splits) >= maxsplit > 0:
             break
         searched = re.search(pattern, string, flags=flags)
@@ -74,10 +85,7 @@ def rsplit(
 
 
 def lsplit(
-    pattern: Union[str, "Pattern[str]"],
-    string: str,
-    maxsplit: int = 0,
-    flags: Union[int, re.RegexFlag] = 0,
+    pattern: PatternStr, string: str, maxsplit: int = 0, flags: FlagInt = 0
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
@@ -86,14 +94,14 @@ def lsplit(
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str]]
+    pattern : PatternStr
         Pattern string.
     string : str
         String to be splitted.
     maxsplit : int, optional
         Max number of splits, if specified to be 0, there will be no
         more limits, by default 0.
-    flags : Union[int, re.RegexFlag], optional
+    flags : FlagInt, optional
         Regex flag, by default 0.
 
     Returns
@@ -105,9 +113,8 @@ def lsplit(
     splits: List[str] = []
     searched = re.search(pattern, string, flags=flags)
     while searched:
-        span = searched.span()
-        splits.append(string[: span[1]])
-        string = string[span[1] :]
+        splits.append(string[: searched.end()])
+        string = string[searched.end() :]
         if len(splits) >= maxsplit > 0:
             break
         searched = re.search(pattern, string, flags=flags)
@@ -117,39 +124,32 @@ def lsplit(
 
 @overload
 def real_findall(
-    pattern: Union[str, "Pattern[str]"],
+    pattern: SmartPatternStr,
     string: str,
-    flags: Union[int, re.RegexFlag] = 0,
+    flags: FlagInt = 0,
     linemode: Literal[False] = False,
-) -> List[SpanNGroup]: ...
-
-
+) -> List["SpanNGroup"]: ...
 @overload
 def real_findall(
-    pattern: Union[str, "Pattern[str]"],
+    pattern: SmartPatternStr,
     string: str,
-    flags: Union[int, re.RegexFlag] = 0,
+    flags: FlagInt = 0,
     linemode: Literal[True] = True,
-) -> List[LineSpanNGroup]: ...
-
-
+) -> List["LineSpanNGroup"]: ...
 def real_findall(
-    pattern: Union[str, "Pattern[str]"],
-    string: str,
-    flags: Union[int, re.RegexFlag] = 0,
-    linemode: bool = False,
+    pattern: SmartPatternStr, string: str, flags=0, linemode=False
 ) -> List[Union[SpanNGroup, LineSpanNGroup]]:
     """
     Finds all non-overlapping matches in the string. Differences to
-    `re.findall` that it also returns the spans of patterns.
+    `re.findall()` that it also returns the spans of patterns.
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str]]
+    pattern : Union[str, Pattern[str], SmartPattern]
         Regex pattern.
     string : str
         String to be searched.
-    flags : Union[int, re.RegexFlag], optional
+    flags : FlagInt, optional
         Regex flag, by default 0.
     linemode : bool, optional
         Determines whether to match the pattern on each line of the
@@ -169,8 +169,8 @@ def real_findall(
     nline: int = 1
     total_pos: int = 0
     inline_pos: int = 0
-    searched = re.search(pattern, string, flags=flags)
-    while searched:
+
+    while searched := Smart.search(pattern, string, flags=flags):
         span, group = searched.span(), searched.group()
         if linemode:
             left = string[: span[0]]
@@ -204,22 +204,113 @@ def real_findall(
             string = string[1:]
         else:
             string = string[span[1] :]
-        searched = re.search(pattern, string, flags=flags)  # search again
     return finds
 
 
-def pattern_inreg(pattern: StrPattern) -> StrPattern:
+def find_right_bracket(string: str, start: int, crossline: bool = False) -> int:
+    """
+    Find the right bracket paired with the specified left bracket.
+
+    Parameters
+    ----------
+    string : str
+        String.
+    start : int
+        Position of the left bracket.
+    crossline : bool
+        Determines whether the matched substring can include "\\n".
+
+    Returns
+    -------
+    int
+        Position of the matched right bracket + 1. If not found,
+        -1 will be returned.
+
+    Raises
+    ------
+    ValueError
+        `string[start]` is not a left bracket.
+
+    """
+    if (left := string[start]) == "(":
+        right = ")"
+    elif left == "[":
+        right = "]"
+    elif left == "{":
+        right = "}"
+    else:
+        raise ValueError(f"string[{start}] is not a left bracket")
+    cnt: int = 1
+    for pos_now in range(start + 1, len(string)):
+        if (now := string[pos_now]) == left:
+            cnt += 1
+        elif now == right:
+            cnt -= 1
+        elif now == "\n" and not crossline:
+            break
+        if cnt == 0:
+            return pos_now + 1
+    return -1
+
+
+def find_left_bracket(string: str, start: int, crossline: bool = False) -> int:
+    """
+    Find the left bracket paired with the specified right bracket.
+
+    Parameters
+    ----------
+    string : str
+        String.
+    start : int
+        Position of the right bracket + 1.
+    crossline : bool
+        Determines whether the matched substring can include "\\n".
+
+    Returns
+    -------
+    int
+        Position of the matched left bracket. If not found, -1 will
+        be returned.
+
+    Raises
+    ------
+    ValueError
+        `string[start - 1]` is not a right bracket.
+
+    """
+    if (right := string[start - 1]) == ")":
+        left = "("
+    elif right == "]":
+        left = "["
+    elif right == "}":
+        left = "{"
+    else:
+        raise ValueError(f"string[{start-1}] is not a right bracket")
+    cnt: int = 1
+    for pos_now in range(start - 2, -1, -1):
+        if (now := string[pos_now]) == right:
+            cnt += 1
+        elif now == left:
+            cnt -= 1
+        elif now == "\n" and not crossline:
+            break
+        if cnt == 0:
+            return pos_now
+    return -1
+
+
+def pattern_inreg(pattern: PatternStrVar) -> PatternStrVar:
     """
     Invalidates the regular expressions in `pattern`.
 
     Parameters
     ----------
-    pattern : StrPattern
+    pattern : PatternStrVar
         Pattern to be invalidated.
 
     Returns
     -------
-    StrPattern
+    PatternStrVar
         A new pattern.
 
     """
@@ -236,12 +327,13 @@ def pattern_inreg(pattern: StrPattern) -> StrPattern:
 
 def line_count(string: str) -> int:
     """
-    Counts the number of lines in the string.
+    Counts the number of lines in the string, which equals to (number
+    of "\\n") + 1.
 
     Parameters
     ----------
     string : str
-        A string.
+        String.
 
     Returns
     -------
@@ -315,3 +407,252 @@ def __maxsplit(string: str, maximum: int = 1):
         elif (j := string.find(" ", 1 + maximum)) > 0:
             head, tail = string[:j], string[1 + j :]
     return head.rstrip(), tail.strip()
+
+
+def counted_strip(string: str) -> Tuple[str, int, int]:
+    """
+    Return a copy of the string with leading and trailing whitespace
+    removed, together with the number of removed leading whitespaces
+    and the number of removed leading whitespaces.
+
+    Parameters
+    ----------
+    string : str
+        String.
+
+    Returns
+    -------
+    Tuple[str, int, int]
+        The new string, the number of removed leading whitespace, and
+        the number of removed trailing whitespace.
+
+    """
+    l = len(re.match("\n*", string).group())
+    r = len(re.search("\n*$", string).group())
+    return string.strip(), l, r
+
+
+# ==============================================================================
+#                                  Smart
+# ==============================================================================
+
+
+class SmartPattern:
+    """
+    Similar to `re.Pattern` but it tells the matcher to ignore certain
+    patterns (such as content within commas) while matching or searching.
+    By default "{}" is used to mark where the pattern should be ignored, or
+    you can customize it by specifying `mark_ignore=`.
+
+    Examples
+    --------
+    * When ignore="()", pattern "a{}b" can match the string "ab" or "a(c)b",
+    but not "a(b)c".
+    * When ignore="()[]", pattern "a{}b" can match the string "ab", "a(c)b",
+    "a[c]b", or "a(c)[c]b", but not "a(b)[b]c".
+    * Similarly, when ignore="()[]{}", pattern "a{}b" can match the string
+    "a(c)[c]{c}b", but not "a(b)[b]{b}c".
+
+    Parameters
+    ----------
+    ignore : ignore, optional
+        Patterns to ignore while searching, by default "()[]{}".
+    mark_ignore : str, optional
+        Marks where the pattern should be ignored, by default "{}".
+
+    """
+
+    def __init__(
+        self,
+        pattern: PatternStr,
+        flags: FlagInt = 0,
+        ignore: str = "()[]{}",
+        mark_ignore: str = "{}",
+    ) -> None:
+        if isinstance(pattern, re.Pattern):
+            pattern, flags = pattern.pattern, pattern.flags | flags
+        self.pattern: str = pattern
+        self.flags: int = flags
+        self.ignore, self.mark_ignore = ignore, mark_ignore
+
+
+class SmartMatch:
+    """
+    Acts like `re.Match`.
+
+    Parameters
+    ----------
+    span : Tuple[int, int]
+        The indices of the start and end of the substring matched by `group`.
+    group : str
+        Group of the match.
+
+    """
+
+    def __init__(self, span: Tuple[int, int], group: str) -> None:
+        self.__span = span
+        self.__group = group
+
+    def __repr__(self) -> str:
+        return f"<SmartMatch object; span={self.__span}, match={self.__group!r}>"
+
+    def span(self) -> Tuple[int, int]:
+        """
+        The indices of the start and end of the substring matched by `group`.
+
+        """
+        return self.__span
+
+    def group(self) -> str:
+        """Group of the match."""
+        return self.__group
+
+    def groups(self) -> Tuple[str, ...]:
+        """Subgroups of the match."""
+        return (self.__group,)
+
+    def start(self) -> int:
+        """The indice of the start of the substring matched by `group`."""
+        return self.__span[0]
+
+    def end(self) -> int:
+        """The indice of the end of the substring matched by `group`."""
+        return self.__span[1]
+
+
+class Smart:
+    """Smart searching, matching, and replacing."""
+
+    Pattern = SmartPattern
+    Match = SmartMatch
+
+    @staticmethod
+    def search(
+        pattern: SmartPatternStr, string: str, flags: FlagInt = 0
+    ) -> Union["Match[str]", SmartMatch]:
+        """
+        Finds the first match in the string. Differences to `re.search()` that
+        it can ignore certain patterns (such as content within commas) while
+        searching.
+
+        Parameters
+        ----------
+        pattern : Union[str, Pattern[str], SmartPattern]
+            Regex pattern.
+        string : str
+            String to be searched.
+        flags : FlagInt, optional
+            Regex flag, by default 0.
+
+        Returns
+        -------
+        Union[Match[str], SmartMatch]
+            Match result.
+
+        """
+        if isinstance(pattern, (str, re.Pattern)):
+            return re.search(pattern, string, flags=flags)
+        p, f = pattern.pattern, pattern.flags | flags
+        if pattern.mark_ignore not in p:
+            return re.search(p, string, flags=f)
+        to_search = p.partition(pattern.mark_ignore)[0]
+        pos_now: int = 0
+        while string and (searched := re.search(to_search, string, flags=f)):
+            pos_now += searched.start()
+            string = string[searched.start() :]
+            if matched := Smart.match(pattern, string, flags=flags):
+                return SmartMatch((pos_now, pos_now + matched.end()), matched.group())
+            pos_now += 1
+            string = string[1:]
+        return None
+
+    @staticmethod
+    def match(
+        pattern: SmartPatternStr, string: str, flags: FlagInt = 0
+    ) -> Union["Match[str]", SmartMatch]:
+        """
+        Match the pattern. Differences to `re.match()` that it can ignore
+        certain patterns (such as content within commas) while searching.
+
+        Parameters
+        ----------
+        pattern : Union[str, Pattern[str], SmartPattern]
+            Regex pattern.
+        string : str
+            String to be searched.
+        flags : FlagInt, optional
+            Regex flag, by default 0.
+
+        Returns
+        -------
+        Union[Match[str], SmartMatch]
+            Match result.
+
+        """
+        if isinstance(pattern, (str, re.Pattern)):
+            return re.match(pattern, string, flags=flags)
+        p, f = pattern.pattern, pattern.flags | flags
+        crossline = (f & re.DOTALL) > 0
+        if pattern.mark_ignore not in p:
+            return re.match(p, string, flags=f)
+        splited = p.split(pattern.mark_ignore)
+        pos_now, temp, recorded_group, left = 0, "", "", pattern.ignore[::2]
+        for s in splited[:-1]:
+            temp += s
+            if not (matched := re.match(temp, string, flags=f)):
+                return None
+            if matched.end() < len(string) and string[matched.end()] in left:
+                n = find_right_bracket(string, matched.end(), crossline=crossline)
+                if n < 0:
+                    return None
+                pos_now += n
+                recorded_group += string[:n]
+                string = string[n:]
+                temp = ""
+        if matched := re.match(temp + splited[-1], string, flags=f):
+            return SmartMatch(
+                (0, pos_now + matched.end()), recorded_group + matched.group()
+            )
+        return None
+
+    @staticmethod
+    def sub(
+        pattern: SmartPatternStr, repl: "ReplStr", string: str, flags: FlagInt = 0
+    ) -> str:
+        """
+        Finds all non-overlapping matches of `pattern`, and replace them with
+        `repl`. Differences to `re.sub()` that it can ignore certain patterns
+        (such as content within commas) while searching.
+
+        Parameters
+        ----------
+        pattern : Union[str, Pattern[str], SmartPattern]
+            Regex pattern.
+        repl : ReplStr
+            Speficies the string to replace the patterns. If Callable, should
+            be a function that receives the Match object, and gives back
+            the replacement string to be used.
+        string : str
+            String to be searched.
+        flags : FlagInt, optional
+            Regex flag, by default 0.
+
+        Returns
+        -------
+        str
+            New string.
+
+        """
+        if isinstance(pattern, (str, re.Pattern)):
+            return re.sub(pattern, repl, string, flags=flags)
+        new_string = ""
+        while string and (searched := Smart.search(pattern, string, flags=flags)):
+            new_string += string[: searched.start()]
+            new_string += repl if isinstance(repl, str) else repl(searched)
+            string = string[searched.end() :]
+        return new_string + string
+
+
+smart_search = Smart.search
+smart_match = Smart.match
+smart_sub = Smart.sub

@@ -7,19 +7,19 @@ To use the full functionality of this file, you must:
 $ pip install pyyaml
 $ pip install twine
 $ pip install wheel
+$ pip install textpy
 ```
 """
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os
 import re
-import sys
 from pathlib import Path
-from shutil import rmtree
-from typing import Any, Dict, Final, List, Optional, Union
+from typing import Any, Dict, Final, List, Optional, Tuple
 
 import yaml
 from setuptools import Command, find_packages, setup
+from textpy.utils.re_extensions import rsplit, word_wrap
 
 here = Path(__file__).parent
 
@@ -35,10 +35,12 @@ REQUIRES_PYTHON: Final[str] = yml["REQUIRES_PYTHON"]
 REQUIRES: Final[List[str]] = yml["REQUIRES"]
 EXTRAS: Final[Dict] = yml["EXTRAS"]
 PACKAGE_DIR = "src"
+LICENSE = re.match(".*", (here / "LICENSE").read_text()).group()
 
 # Import the README and use it as the long-description.
+readme_path = here / "README.md"
 try:
-    long_description = "\n" + (here / "README.md").read_text()
+    long_description = "\n" + readme_path.read_text()
 except FileNotFoundError:
     long_description = SUMMARY
 
@@ -74,135 +76,51 @@ class UploadCommand(Command):
 
     def run(self):
         """Run commands."""
-        try:
-            self.status("Removing previous builds…")
-            rmtree(os.path.join(here, "dist"))
-        except OSError:
-            pass
-
-        self.status("Building Source and Wheel (universal) distribution…")
-        os.system(f"{sys.executable} setup.py sdist bdist_wheel --universal")
-
-        self.status("Uploading the package to PyPI via Twine…")
-        os.system("twine upload dist/*")
-
-        self.status("Pushing git tags…")
-        os.system(f"git tag v{about['__version__']}")
-        os.system("git push --tags")
-
-        sys.exit()
+        raise NotImplementedError
 
 
-def rsplit(
-    pattern: Union[str, re.Pattern],
-    string: str,
-    maxsplit: int = 0,
-    flags: Union[int, re.RegexFlag] = 0,
-) -> List[str]:
-    """
-    Split the string by the occurrences of the pattern. Differences to
-    `re.split()` that all groups in the pattern are also returned, each
-    connected with the substring on its right.
+def _readme2doc(
+    readme: str,
+    name: str = NAME,
+    requires: List[str] = REQUIRES,
+    homepage: str = HOMEPAGE,
+    pkg_license: str = LICENSE,
+) -> Tuple[str, str]:
+    doc, rd = "", ""
+    for i, s in enumerate(rsplit("\n## ", readme)):
+        head = re.search(" .*\n", s).group()[1:-1]
+        if i == 0:
+            s = re.sub("^\n# .*", f"\n# {name}", s)
+        elif head == "Requirements":
+            s = re.sub(
+                "```txt.*```",
+                "```txt\n" + "\n".join(requires) + "\n```",
+                s,
+                flags=re.DOTALL,
+            )
+        elif head == "Installation":
+            s = re.sub(
+                "```sh.*```", f"```sh\n$ pip install {name}\n```", s, flags=re.DOTALL
+            )
+        elif head == "See Also":
+            pypipage = f"https://pypi.org/project/{name}/"
+            s = re.sub(
+                "### PyPI project\n.*",
+                f"### PyPI project\n* {pypipage}",
+                re.sub(
+                    "### Github repository\n.*",
+                    f"### Github repository\n* {homepage}",
+                    s,
+                ),
+            )
+        elif head == "License":
+            s = f"\n## License\nThis project falls under the {pkg_license}.\n"
 
-    Parameters
-    ----------
-    pattern : Union[str, re.Pattern]
-        Pattern string.
-    string : str
-        String to be splitted.
-    maxsplit : int, optional
-        Max number of splits, if specified to be 0, there will be no
-        more limits, by default 0.
-    flags : Union[int, re.RegexFlag], optional
-        Regex flag, by default 0.
-
-    Returns
-    -------
-    List[str]
-        List of substrings.
-
-    """
-    splits: List[str] = []
-    searched = re.search(pattern, string, flags=flags)
-    left: str = ""
-    while searched:
-        span = searched.span()
-        splits.append(left + string[: span[0]])
-        left = searched.group()
-        string = string[span[1] :]
-        if len(splits) >= maxsplit > 0:
-            break
-        searched = re.search(pattern, string, flags=flags)
-    splits.append(left + string)
-    return splits
-
-
-def __maxsplit(string: str, maximum: int = 1):
-    head, tail = string, ""
-    if len(string) > maximum:
-        if (i := string.rfind(" ", None, 1 + maximum)) > 0 and (
-            l := string[:i]
-        ).strip():
-            head, tail = l, string[1 + i :]
-        elif (j := string.find(" ", 1 + maximum)) > 0:
-            head, tail = string[:j], string[1 + j :]
-    return head.rstrip(), tail.strip()
-
-
-def word_wrap(string: str, maximum: int = 100) -> str:
-    """
-    Takes a string as input and wraps the text into multiple lines,
-    ensuring that each line has a maximum length of characters.
-
-    Parameters
-    ----------
-    string : str
-        The input text that needs to be word-wrapped.
-    maximum : int, optional
-        Specifies the maximum length of each line in the word-wrapped
-        string, by default 100.
-
-    Returns
-    -------
-        A string with the input string wrapped to a maximum line length
-        of 100 characters.
-
-    """
-    if maximum < 1:
-        raise ValueError(f"expected maximum > 0, got {maximum} instead")
-    lines: List[str] = []
-    for x in string.splitlines():
-        while True:
-            l, x = __maxsplit(x, maximum=maximum)
-            lines.append(l)
-            if not x:
-                break
-    return "\n".join(lines)
-
-
-def readme2doc(readme: str) -> str:
-    """
-    Takes a readme string as input and returns a modified version of the
-    readme string without certain sections.
-
-    Parameters
-    ----------
-    readme : str
-        A string containing the content of a README file.
-
-    Returns
-    -------
-    str
-        A modified version of the readme string.
-
-    """
-    doc = ""
-    for i in rsplit("\n## ", readme):
-        head = re.search(" .*\n", i).group()[1:-1]
+        rd += s
         if head not in {"Installation", "Requirements", "History"}:
-            doc += i
+            doc += s
     doc = re.sub("<!--html-->.*<!--/html-->", "", doc, flags=re.DOTALL)
-    return word_wrap(doc) + "\n\n"
+    return word_wrap(doc, maximum=88) + "\n\n", rd
 
 
 class ReadmeFormatError(Exception):
@@ -214,7 +132,9 @@ if __name__ == "__main__":
     try:
         init_path = here / PACKAGE_DIR / "__init__.py"
         module_file = init_path.read_text()
-        new_doc = readme2doc(long_description)  # pylint: disable=invalid-name
+        new_doc, long_description = _readme2doc(
+            long_description
+        )  # pylint: disable=invalid-name
         if "'''" in new_doc and '"""' in new_doc:
             raise ReadmeFormatError("Both \"\"\" and ''' are found in the README")
         if '"""' in new_doc:
@@ -225,6 +145,7 @@ if __name__ == "__main__":
             "^\"\"\".*\"\"\"|^'''.*'''|^", new_doc, module_file, flags=re.DOTALL
         )
         init_path.write_text(module_file)
+        readme_path.write_text(long_description.strip())
     except FileNotFoundError:
         pass
 
@@ -240,9 +161,10 @@ if __name__ == "__main__":
         python_requires=REQUIRES_PYTHON,
         url=HOMEPAGE,
         packages=[
-            x.replace(PACKAGE_DIR, NAME) for x in find_packages(exclude=["examples"])
+            x.replace(PACKAGE_DIR, NAME.replace("-", "_"))
+            for x in find_packages(exclude=["examples"])
         ],
-        package_dir={NAME: PACKAGE_DIR},
+        package_dir={NAME.replace("-", "_"): PACKAGE_DIR},
         install_requires=REQUIRES,
         extras_require=EXTRAS,
         include_package_data=True,
@@ -260,7 +182,5 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3.12",
         ],
         # $ setup.py publish support.
-        cmdclass={
-            "upload": UploadCommand,
-        },
+        cmdclass={"upload": UploadCommand},
     )
