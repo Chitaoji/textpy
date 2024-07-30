@@ -168,7 +168,7 @@ lazyr.register("pandas", verbose=VERBOSE)
 lazyr.register("black", verbose=VERBOSE)
 
 # pylint: disable=wrong-import-position
-from . import abc, core, doc, experimental, interaction, text, utils
+from . import abc, core, doc, interaction, text, utils
 from .__version__ import __version__
 from .abc import *
 from .core import *
@@ -176,7 +176,7 @@ from .doc import *
 from .interaction import *
 from .text import *
 
-__all__ = ["experimental", "utils"]
+__all__ = ["utils"]
 __all__.extend(abc.__all__)
 __all__.extend(core.__all__)
 __all__.extend(interaction.__all__)
