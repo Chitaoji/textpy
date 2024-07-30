@@ -3,13 +3,15 @@ Experimental properties of textpy: back_to_py38(), etc.
 
 """
 
+import re
 from typing import TYPE_CHECKING, List, Tuple
 
 from .interaction import Replacer, display_params
+from .utils.re_extensions import SmartPattern
 
 if TYPE_CHECKING:
     from .abc import PyText
-    from .utils.re_extensions import PatternStr, ReprStr
+    from .utils.re_extensions import ReplStr
 
 __all__ = ["back_to_py38"]
 
@@ -25,24 +27,28 @@ def back_to_py38(module: "PyText") -> Replacer:
         PyText object.
 
     """
-    features_to_rollback = [__type_hint_generics]
+    features_to_rollback = [__union_types, __type_hint_generics]
     styler, display_params.enable_styler = display_params.enable_styler, False
     replacer = Replacer()
     for f in features_to_rollback:
-        replacer.join(f(module))
+        replacer = f(module, replacer)
     display_params.enable_styler = styler
     return replacer.to_styler()
 
 
-def __union_types(module: "PyText") -> Replacer:
+def __union_types(module: "PyText", replacer: Replacer) -> Replacer:
     """See PEP 604."""
-    replacer = Replacer()
+    new_replacer = module.replace(
+        SmartPattern('[^:=>\\[\\]()"\\{\\}\n,|]*{}\\s*\\|[^:=>\\[\\]()\\{\\}"\n,]*{}'),
+        lambda x: "Union[" + re.sub("\\s*\\|\\s*", ", ", x.group()).strip() + "]",
+        based_on=replacer,
+    )
+    replacer.join(new_replacer)
     return replacer
 
 
-def __type_hint_generics(module: "PyText") -> Replacer:
+def __type_hint_generics(module: "PyText", replacer: Replacer) -> Replacer:
     """See PEP 585."""
-    replacer = Replacer()
     pairs: List[Tuple[str, str]] = [
         ("list", "List"),
         ("tuple", "Tuple"),
@@ -57,8 +63,8 @@ def __type_hint_generics(module: "PyText") -> Replacer:
     return replacer
 
 
-def __type_hint_generics_0(replaced: str, to_replace: str) -> Tuple[str, "ReprStr"]:
+def __type_hint_generics_0(replaced: str, to_replace: str) -> Tuple[str, "ReplStr"]:
     return (
-        f"(?:(->|:)[^=\n]*?\\W|\n\\s*){replaced}[\\[\\]),:]",
+        f"((->|:)[^=\n]*?\\W|\n\\s*){replaced}[\\[\\]),:]",
         lambda m: m.group()[: -1 - len(replaced)] + to_replace + m.group()[-1],
     )
