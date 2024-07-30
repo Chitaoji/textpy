@@ -11,6 +11,7 @@ $ pip install textpy
 lazyr>=0.0.16
 pandas
 Jinja2
+black
 ```
 NOTE: *pandas*>=1.4.0 is recommended. Lower versions of *pandas* are also available, but some properties of this package will be affected.
 
