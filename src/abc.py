@@ -310,7 +310,7 @@ class PyText(ABC, Generic[P]):
         if based_on and self.is_file():
             latest = self
             if based_on:
-                based_on = based_on.to_replacer()
+                based_on = based_on.getself()
                 for e in based_on.editors:
                     if e.pyfile == self and not e.is_based_on:
                         latest = self.__class__(e.new_text, mask=self)
@@ -392,7 +392,7 @@ class PyText(ABC, Generic[P]):
         if self.path.suffix == ".py":
             old = None
             if based_on:
-                based_on = based_on.to_replacer()
+                based_on = based_on.getself()
                 for e in based_on.editors:
                     if e.pyfile == self and not e.is_based_on:
                         old = e

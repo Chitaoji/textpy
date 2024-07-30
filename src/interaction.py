@@ -192,11 +192,25 @@ class FindTextResult:
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
             df.iloc[i, 1] = Smart.sub(p, partial(self.styl, res), _line)
-        return (
+        styler = (
             df.style.hide(axis=0)
             .set_properties(**{"text-align": "left"})
             .set_table_styles([{"selector": "th", "props": [("text-align", "center")]}])
         )
+        setattr(styler, "getself", lambda: self)
+        return styler
+
+    def getself(self) -> Self:
+        """
+        Returns self.
+
+        Returns
+        -------
+        Self
+            An instance of self.
+
+        """
+        return self
 
     @staticmethod
     def __default_repr(_: TextFinding, m: "Match[str]", /) -> str:
@@ -476,10 +490,10 @@ class Replacer:
         styler = self.__find_text_result.to_styler()
         setattr(styler, "confirm", self.confirm)
         setattr(styler, "rollback", self.rollback)
-        setattr(styler, "to_replacer", lambda: self)
+        setattr(styler, "getself", lambda: self)
         return styler
 
-    def to_replacer(self) -> Self:
+    def getself(self) -> Self:
         """
         Returns self.
 
