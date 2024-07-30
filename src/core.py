@@ -25,6 +25,7 @@ def module(
     path_or_text: Union[Path, str],
     home: Optional[Union[Path, str]] = None,
     encoding: Optional[str] = None,
+    check_format: bool = False,
     *,
     _: Callable[P, None] = _ignore,
 ) -> "PyText[P]":
@@ -42,6 +43,8 @@ def module(
         default None.
     encoding : str, optional
         Specifies encoding, by default None.
+    check_format : bool, optional
+        Whether to check the format of files, by default False.
 
     Returns
     -------
@@ -66,9 +69,13 @@ def module(
     """
     path_or_text = as_path(path_or_text, home=home)
     if isinstance(path_or_text, str) or path_or_text.is_file():
-        return PyFile(path_or_text, home=home, encoding=encoding)
+        return PyFile(
+            path_or_text, home=home, encoding=encoding, check_format=check_format
+        )
     if path_or_text.is_dir():
-        return PyDir(path_or_text, home=home, encoding=encoding)
+        return PyDir(
+            path_or_text, home=home, encoding=encoding, check_format=check_format
+        )
     raise FileExistsError(f"file not exists: '{path_or_text}'")
 
 

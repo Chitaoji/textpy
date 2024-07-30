@@ -165,6 +165,7 @@ import lazyr
 VERBOSE = 0
 
 lazyr.register("pandas", verbose=VERBOSE)
+lazyr.register("black", verbose=VERBOSE)
 
 # pylint: disable=wrong-import-position
 from . import abc, core, doc, experimental, interaction, text, utils

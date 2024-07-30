@@ -12,7 +12,6 @@ from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Union, overload
 
-import pandas as pd
 from typing_extensions import ParamSpec, Self
 
 from .interaction import NULL, FileEditor, FindTextResult, Replacer, TextFinding
@@ -46,21 +45,25 @@ class PyText(ABC, Generic[P]):
         Specifies the home path if `path_or_text` is relative, by default None.
     encoding : str, optional
         Specifies encoding, by default None.
+    check_format : bool, optional
+        Whether to check the format of files, by default False.
 
     """
 
     def __init__(
         self,
         path_or_text: Union[Path, str],
+        *,
         parent: Optional["PyText"] = None,
         start_line: Optional[int] = None,
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
+        check_format: bool = False,
         mask: Optional[Self] = None,
     ) -> None:
         self.text: str = ""
         self.name: str = ""
-        self.path: Path = Path(NULL + ".py")
+        self.path = Path(NULL + ".py")
 
         self.parent = parent
         self.spaces = 0
@@ -73,9 +76,11 @@ class PyText(ABC, Generic[P]):
         if parent is None:
             self.home = as_path(Path(""), home=home)
             self.encoding = encoding
+            self.check_format = check_format
         else:
             self.home = parent.home
             self.encoding = parent.encoding
+            self.check_format = parent.check_format
 
         self._header: Optional[str] = None
         self.__pytext_post_init__(path_or_text)

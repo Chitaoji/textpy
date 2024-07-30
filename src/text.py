@@ -6,10 +6,13 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
+import logging
 import re
 from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Union
+
+import black
 
 from .abc import PyText, as_path
 from .doc import NumpyFormatDocstring
@@ -67,6 +70,12 @@ class PyFile(PyText):
             self.text, n, _ = counted_strip(path_or_text)  # in this situation, once
             # argument 'path_or_text' is str, it will be regarded as text content even
             # if can represent an existing path
+        if self.check_format:
+            if black_format(self.text).strip() != self.text:
+                logging.warning(
+                    "file does not comply with Black formatter's default rules: '%s'",
+                    self.path,
+                )
         self.start_line += n
         self.name = self.path.stem
 
@@ -147,6 +156,11 @@ class PyFile(PyText):
                 )
             )
         return children
+
+
+def black_format(string: str) -> str:
+    """Reformat a string using Black and return new contents."""
+    return black.format_str(string, mode=black.FileMode())
 
 
 class PyClass(PyText):
