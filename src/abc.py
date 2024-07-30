@@ -570,13 +570,13 @@ class PyText(ABC, Generic[P]):
             List of `PyText` instances.
 
         """
-        track: List["PyText"] = []
+        tracks: List["PyText"] = []
         obj: Optional["PyText"] = self
         while obj is not None:
-            track.append(obj)
+            tracks.append(obj)
             obj = obj.parent
-        track.reverse()
-        return track
+        tracks.reverse()
+        return tracks
 
 
 class Docstring(ABC):
