@@ -30,21 +30,23 @@ def module(
     _: Callable[P, None] = _ignore,
 ) -> "PyText[P]":
     """
-    Statically analyzes a python file or a python module. Each python
-    file is recommended to be formatted with `PEP-8`, otherwise the
-    analyzing output could be surprising.
+    Statically analyzes a python file or a python module. Each python file
+    is recommended to be formatted with `PEP-8`, otherwise the analyzing
+    result could be surprising.
 
     Parameters
     ----------
     path_or_text : Union[Path, str]
         File path, module path or file text.
     home : Union[Path, str], optional
-        Specifies the home path when `path_or_text` is relative, by
-        default None.
+        Specifies the home path when `path_or_text` is relative, by default
+        None.
     encoding : str, optional
         Specifies encoding, by default None.
     check_format : bool, optional
-        Whether to check the format of files, by default False.
+        Whether to check the format of files. If set to true, raises warning
+        when the text of a file does not comply with Black formatter's default
+        rules. By default False.
 
     Returns
     -------
