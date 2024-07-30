@@ -386,7 +386,7 @@ class Replacer:
         """
         self.editors.append(editor)
 
-    def join(self, other: Self) -> Self:
+    def join(self, other: Self) -> None:
         """
         Joins the other instance of self.__class__.
 
