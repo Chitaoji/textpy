@@ -77,16 +77,16 @@ If you are using a Jupyter notebook in VS Code, you can run a cell like this:
   </thead>
   <tbody>
     <tr>
-      <td id="T_19b39_row0_col0" class="data row0 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>MyBook</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>7</a></td>
-      <td id="T_19b39_row0_col1" class="data row0 col1" >class <a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a>:</td>
+      <td id="T_19b39_row0_col0" class="data row0 col0" ><a href='examples/myfile.py#L7' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py#L7' style='text-decoration:none;color:inherit'>MyBook</a>:<a href='examples/myfile.py#L7' style='text-decoration:none;color:inherit'>7</a></td>
+      <td id="T_19b39_row0_col1" class="data row0 col1" >class <a href='examples/myfile.py#L7' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a>:</td>
     </tr>
     <tr>
-      <td id="T_19b39_row1_col0" class="data row1 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>print_my_book()</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>24</a></td>
-      <td id="T_19b39_row1_col1" class="data row1 col1" >def print_my_book(book: <a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a>) -> None:</td>
+      <td id="T_19b39_row1_col0" class="data row1 col0" ><a href='examples/myfile.py#L24' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py#L24' style='text-decoration:none;color:inherit'>print_my_book()</a>:<a href='examples/myfile.py#L24' style='text-decoration:none;color:inherit'>24</a></td>
+      <td id="T_19b39_row1_col1" class="data row1 col1" >def print_my_book(book: <a href='examples/myfile.py#L24' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a>) -> None:</td>
     </tr>
     <tr>
-      <td id="T_19b39_row2_col0" class="data row2 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>print_my_book()</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>30</a></td>
-      <td id="T_19b39_row2_col1" class="data row2 col1" >    book : <a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a></td>
+      <td id="T_19b39_row2_col0" class="data row2 col0" ><a href='examples/myfile.py#L30' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py#L30' style='text-decoration:none;color:inherit'>print_my_book()</a>:<a href='examples/myfile.py#L30' style='text-decoration:none;color:inherit'>30</a></td>
+      <td id="T_19b39_row2_col1" class="data row2 col1" >    book : <a href='examples/myfile.py#L30' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a></td>
     </tr>
   </tbody>
 </table>
@@ -193,7 +193,7 @@ This project falls under the BSD 3-Clause License.
 * Various improvements.
 
 ### v0.1.22
-* `textpy()` is going to be deprecated to avoid conflicts with the package name `textpy`. Please use `module()` insead.
+* The module-level function `textpy()` is going to be deprecated to avoid conflicts with the package name `textpy`. Please use `module()` insead.
 * New methods `PyText.replace()` and `PyText.delete()`.
 * New class `Replacer` as the return type of `PyText.replace()`, with public methods `.confirm()`, `.rollback()`, etc.
 * Added a dunder method `PyText.__truediv__()` as an alternative to `PyText.jumpto()`.
