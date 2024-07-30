@@ -207,6 +207,185 @@ def real_findall(
     return finds
 
 
+def find_right_bracket(string: str, start: int, crossline: bool = False) -> int:
+    """
+    Find the right bracket paired with the specified left bracket.
+
+    Parameters
+    ----------
+    string : str
+        String.
+    start : int
+        Position of the left bracket.
+    crossline : bool
+        Determines whether the matched substring can include "\\n".
+
+    Returns
+    -------
+    int
+        Position of the matched right bracket + 1. If not found,
+        -1 will be returned.
+
+    """
+    if (left := string[start]) == "(":
+        right = ")"
+    elif left == "[":
+        right = "]"
+    elif left == "{":
+        right = "}"
+    else:
+        raise ValueError(f"string[{start}] is not a left bracket")
+    cnt: int = 1
+    for pos_now in range(start + 1, len(string)):
+        if (now := string[pos_now]) == left:
+            cnt += 1
+        elif now == right:
+            cnt -= 1
+        elif now == "\n" and not crossline:
+            break
+        if cnt == 0:
+            return pos_now + 1
+    return -1
+
+
+def pattern_inreg(pattern: PatternStrVar) -> PatternStrVar:
+    """
+    Invalidates the regular expressions in `pattern`.
+
+    Parameters
+    ----------
+    pattern : PatternStrVar
+        Pattern to be invalidated.
+
+    Returns
+    -------
+    PatternStrVar
+        A new pattern.
+
+    """
+    flags: int = -1
+    if isinstance(pattern, re.Pattern):
+        pattern, flags = str(pattern.pattern), pattern.flags
+    pattern = re.sub(
+        "[$^.\\[\\]*+-?!{},|:#><=\\\\]", lambda x: "\\" + x.group(), pattern
+    )
+    if flags == -1:
+        return pattern
+    return re.compile(pattern, flags=flags)
+
+
+def line_count(string: str) -> int:
+    """
+    Counts the number of lines in the string, which equals to (number
+    of "\\n") + 1.
+
+    Parameters
+    ----------
+    string : str
+        String.
+
+    Returns
+    -------
+    int
+        Total number of lines.
+
+    """
+    return 1 + len(re.findall("\n", string))
+
+
+def line_count_iter(iterstr: Iterable[str]) -> Iterable[Tuple[int, str]]:
+    """
+    Counts the number of lines in each string, and returns the cumsumed
+    values.
+
+    Parameters
+    ----------
+    iter : Iterable[str]
+        An iterable of strings.
+
+    Yields
+    ------
+    Tuple[int, str]
+        Each time, yields the cumsumed number of lines til now together
+        with a string found in `iter`, until `iter` is traversed.
+
+    """
+    cnt: int = 1
+    for s in iterstr:
+        yield cnt, s
+        cnt += len(re.findall("\n", s))
+
+
+def word_wrap(string: str, maximum: int = 80) -> str:
+    """
+    Takes a string as input and wraps the text into multiple lines,
+    ensuring that each line has a maximum length of characters.
+
+    Parameters
+    ----------
+    string : str
+        The input text that needs to be word-wrapped.
+    maximum : int, optional
+        Specifies the maximum length of each line in the word-wrapped
+        string, by default 80.
+
+    Returns
+    -------
+        Wrapped string.
+
+    """
+    if maximum < 1:
+        raise ValueError(f"expected maximum > 0, got {maximum} instead")
+    lines: List[str] = []
+    for x in string.splitlines():
+        while True:
+            l, x = __maxsplit(x, maximum=maximum)
+            lines.append(l)
+            if not x:
+                break
+    return "\n".join(lines)
+
+
+def __maxsplit(string: str, maximum: int = 1):
+    head, tail = string, ""
+    if len(string) > maximum:
+        if (i := string.rfind(" ", None, 1 + maximum)) > 0 and (
+            l := string[:i]
+        ).strip():
+            head, tail = l, string[1 + i :]
+        elif (j := string.find(" ", 1 + maximum)) > 0:
+            head, tail = string[:j], string[1 + j :]
+    return head.rstrip(), tail.strip()
+
+
+def counted_strip(string: str) -> Tuple[str, int, int]:
+    """
+    Return a copy of the string with leading and trailing whitespace
+    removed, together with the number of removed leading whitespaces
+    and the number of removed leading whitespaces.
+
+    Parameters
+    ----------
+    string : str
+        String.
+
+    Returns
+    -------
+    Tuple[str, int, int]
+        The new string, the number of removed leading whitespace, and
+        the number of removed trailing whitespace.
+
+    """
+    l = len(re.match("\n*", string).group())
+    r = len(re.search("\n*$", string).group())
+    return string.strip(), l, r
+
+
+# ==============================================
+#                    Smart
+# ==============================================
+
+
 class SmartPattern:
     """
     Similar to `re.Pattern` but it tells the matcher to ignore certain
@@ -426,177 +605,3 @@ class Smart:
 smart_search = Smart.search
 smart_match = Smart.match
 smart_sub = Smart.sub
-
-
-def find_right_bracket(string: str, start: int, crossline: bool = False) -> int:
-    """
-    Find the right bracket paired with the specified left bracket.
-
-    Parameters
-    ----------
-    string : str
-        String.
-    start : int
-        Position of the left bracket.
-    crossline : bool
-        Determines whether the matched substring can include "\\n".
-
-    Returns
-    -------
-    int
-        Position of the matched right bracket + 1. If not found,
-        -1 will be returned.
-
-    """
-    if (left := string[start]) == "(":
-        right = ")"
-    elif left == "[":
-        right = "]"
-    elif left == "{":
-        right = "}"
-    else:
-        raise ValueError(f"string[{start}] is not a left bracket")
-    cnt: int = 1
-    for pos_now in range(start + 1, len(string)):
-        if (now := string[pos_now]) == left:
-            cnt += 1
-        elif now == right:
-            cnt -= 1
-        elif now == "\n" and not crossline:
-            break
-        if cnt == 0:
-            return pos_now + 1
-    return -1
-
-
-def pattern_inreg(pattern: PatternStrVar) -> PatternStrVar:
-    """
-    Invalidates the regular expressions in `pattern`.
-
-    Parameters
-    ----------
-    pattern : PatternStrVar
-        Pattern to be invalidated.
-
-    Returns
-    -------
-    PatternStrVar
-        A new pattern.
-
-    """
-    flags: int = -1
-    if isinstance(pattern, re.Pattern):
-        pattern, flags = str(pattern.pattern), pattern.flags
-    pattern = re.sub(
-        "[$^.\\[\\]*+-?!{},|:#><=\\\\]", lambda x: "\\" + x.group(), pattern
-    )
-    if flags == -1:
-        return pattern
-    return re.compile(pattern, flags=flags)
-
-
-def line_count(string: str) -> int:
-    """
-    Counts the number of lines in the string, which equals to (number
-    of "\\n") + 1.
-
-    Parameters
-    ----------
-    string : str
-        String.
-
-    Returns
-    -------
-    int
-        Total number of lines.
-
-    """
-    return 1 + len(re.findall("\n", string))
-
-
-def line_count_iter(iterstr: Iterable[str]) -> Iterable[Tuple[int, str]]:
-    """
-    Counts the number of lines in each string, and returns the cumsumed
-    values.
-
-    Parameters
-    ----------
-    iter : Iterable[str]
-        An iterable of strings.
-
-    Yields
-    ------
-    Tuple[int, str]
-        Each time, yields the cumsumed number of lines til now together
-        with a string found in `iter`, until `iter` is traversed.
-
-    """
-    cnt: int = 1
-    for s in iterstr:
-        yield cnt, s
-        cnt += len(re.findall("\n", s))
-
-
-def word_wrap(string: str, maximum: int = 80) -> str:
-    """
-    Takes a string as input and wraps the text into multiple lines,
-    ensuring that each line has a maximum length of characters.
-
-    Parameters
-    ----------
-    string : str
-        The input text that needs to be word-wrapped.
-    maximum : int, optional
-        Specifies the maximum length of each line in the word-wrapped
-        string, by default 80.
-
-    Returns
-    -------
-        Wrapped string.
-
-    """
-    if maximum < 1:
-        raise ValueError(f"expected maximum > 0, got {maximum} instead")
-    lines: List[str] = []
-    for x in string.splitlines():
-        while True:
-            l, x = __maxsplit(x, maximum=maximum)
-            lines.append(l)
-            if not x:
-                break
-    return "\n".join(lines)
-
-
-def __maxsplit(string: str, maximum: int = 1):
-    head, tail = string, ""
-    if len(string) > maximum:
-        if (i := string.rfind(" ", None, 1 + maximum)) > 0 and (
-            l := string[:i]
-        ).strip():
-            head, tail = l, string[1 + i :]
-        elif (j := string.find(" ", 1 + maximum)) > 0:
-            head, tail = string[:j], string[1 + j :]
-    return head.rstrip(), tail.strip()
-
-
-def counted_strip(string: str) -> Tuple[str, int, int]:
-    """
-    Return a copy of the string with leading and trailing whitespace
-    removed, together with the number of removed leading whitespaces
-    and the number of removed leading whitespaces.
-
-    Parameters
-    ----------
-    string : str
-        String.
-
-    Returns
-    -------
-    Tuple[str, int, int]
-        The new string, the number of removed leading whitespace, and
-        the number of removed trailing whitespace.
-
-    """
-    l = len(re.match("\n*", string).group())
-    r = len(re.search("\n*$", string).group())
-    return string.strip(), l, r
