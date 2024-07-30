@@ -161,9 +161,10 @@ if __name__ == "__main__":
         python_requires=REQUIRES_PYTHON,
         url=HOMEPAGE,
         packages=[
-            x.replace(PACKAGE_DIR, NAME) for x in find_packages(exclude=["examples"])
+            x.replace(PACKAGE_DIR, NAME.replace("-", "_"))
+            for x in find_packages(exclude=["examples"])
         ],
-        package_dir={NAME: PACKAGE_DIR},
+        package_dir={NAME.replace("-", "_"): PACKAGE_DIR},
         install_requires=REQUIRES,
         extras_require=EXTRAS,
         include_package_data=True,
