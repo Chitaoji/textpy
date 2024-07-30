@@ -20,16 +20,17 @@ if TYPE_CHECKING:
 SpanNGroup = Tuple[Tuple[int, int], str]
 LineSpanNGroup = Tuple[int, Tuple[int, int], str]
 PatternStr = Union[str, "Pattern[str]"]
-SmartPatternStr = Union[str, "Pattern[str]", "SmartPattern"]
 PatternStrVar = TypeVar("PatternStrVar", str, "Pattern[str]")
 ReplStr = Union[str, Callable[["Match[str]"], str]]
 FlagInt = Union[int, re.RegexFlag]
+SmartPatternStr = Union[str, "Pattern[str]", "SmartPattern"]
 
 __all__ = [
     "rsplit",
     "lsplit",
     "real_findall",
-    "real_findall",
+    "find_right_bracket",
+    "find_left_bracket",
     "pattern_inreg",
     "line_count",
     "line_count_iter",
@@ -40,7 +41,7 @@ __all__ = [
     "smart_search",
     "smart_match",
     "smart_sub",
-    "find_right_bracket",
+    "smart_split",
 ]
 
 
@@ -652,7 +653,49 @@ class Smart:
             string = string[searched.end() :]
         return new_string + string
 
+    @staticmethod
+    def split(
+        pattern: SmartPatternStr, string: str, maxsplit: int = 0, flags: FlagInt = 0
+    ) -> List[str]:
+        """
+        Split the source string by the occurrences of `pattern`, returning a
+        list containing the resulting substrings. Differences to `re.split()`
+        that it can ignore certain patterns (such as content within commas)
+        while searching.
+
+        Parameters
+        ----------
+        pattern : Union[str, Pattern[str], SmartPattern]
+            Regex pattern.
+        string : str
+            String to be searched.
+        maxsplit : int, optional
+            Max number of splits; if set to 0, there will be no limits; if
+            < 0, the string will not be splitted. By default 0.
+        flags : FlagInt, optional
+            Regex flag, by default 0.
+
+        Returns
+        -------
+        List[str]
+            List containing the resulting substrings.
+
+        """
+        if isinstance(pattern, (str, re.Pattern)):
+            return re.split(pattern, string, maxsplit=maxsplit, flags=flags)
+        if maxsplit < 0:
+            return [string]
+        splits: List[str] = []
+        while string and (searched := Smart.search(pattern, string, flags=flags)):
+            splits.append(string[: searched.start()])
+            string = string[searched.end() :]
+            if (maxsplit := maxsplit - 1) == 0:
+                break
+        splits.append(string)
+        return splits
+
 
 smart_search = Smart.search
 smart_match = Smart.match
 smart_sub = Smart.sub
+smart_split = Smart.split
