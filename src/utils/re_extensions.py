@@ -15,14 +15,14 @@ from typing import (
 )
 
 if TYPE_CHECKING:
-    from re import Match, Pattern
+    from re import Match, Pattern, RegexFlag
 
-S = TypeVar("S", str, bytes)
+AnyStr = TypeVar("AnyStr", str, bytes)
 SpanNGroup = Tuple[Tuple[int, int], str]
 LineSpanNGroup = Tuple[int, Tuple[int, int], str]
 PatternType = Union[str, "Pattern[str]", "SmartPattern[str]"]
 ReplType = Union[str, Callable[["Match[str]"], str]]
-FlagType = Union[int, re.RegexFlag]
+FlagType = Union[int, "RegexFlag"]
 
 
 __all__ = [
@@ -62,7 +62,7 @@ def rsplit(
         Max number of splits, if specified to be 0, there will be no
         more limits, by default 0.
     flags : FlagType, optional
-        Regex flag, by default 0.
+        Regex flags, by default 0.
 
     Returns
     -------
@@ -110,7 +110,7 @@ def lsplit(
         Max number of splits, if specified to be 0, there will be no
         more limits, by default 0.
     flags : FlagType, optional
-        Regex flag, by default 0.
+        Regex flags, by default 0.
 
     Returns
     -------
@@ -168,7 +168,7 @@ def real_findall(
     string : str
         String to be searched.
     flags : FlagType, optional
-        Regex flag, by default 0.
+        Regex flags, by default 0.
     linemode : bool, optional
         Determines whether to match the pattern on each line of the
         string, by default False.
@@ -447,7 +447,7 @@ def counted_strip(string: str) -> Tuple[str, int, int]:
 # ==============================================================================
 
 
-class SmartPattern(Generic[S]):
+class SmartPattern(Generic[AnyStr]):
     """
     Similar to `re.Pattern` but it tells the matcher to ignore certain
     patterns (such as content within commas) while matching or searching.
@@ -474,7 +474,7 @@ class SmartPattern(Generic[S]):
 
     def __init__(
         self,
-        pattern: Union[S, "Pattern[S]"],
+        pattern: Union[AnyStr, "Pattern[AnyStr]"],
         flags: FlagType = 0,
         ignore: str = "()[]{}",
         mark_ignore: str = "{}",
@@ -545,7 +545,7 @@ def smart_search(
     string : str
         String to be searched.
     flags : FlagType, optional
-        Regex flag, by default 0.
+        Regex flags, by default 0.
 
     Returns
     -------
@@ -584,7 +584,7 @@ def smart_match(
     string : str
         String to be searched.
     flags : FlagType, optional
-        Regex flag, by default 0.
+        Regex flags, by default 0.
 
     Returns
     -------
@@ -638,7 +638,7 @@ def smart_sub(
     string : str
         String to be searched.
     flags : FlagType, optional
-        Regex flag, by default 0.
+        Regex flags, by default 0.
 
     Returns
     -------
@@ -675,7 +675,7 @@ def smart_split(
         Max number of splits; if set to 0, there will be no limits; if
         < 0, the string will not be splitted. By default 0.
     flags : FlagType, optional
-        Regex flag, by default 0.
+        Regex flags, by default 0.
 
     Returns
     -------
