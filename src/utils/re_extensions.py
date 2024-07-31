@@ -17,6 +17,8 @@ from typing import (
 if TYPE_CHECKING:
     from re import Match, Pattern, RegexFlag
 
+    from hintwith import hintwith
+
 AnyStr = TypeVar("AnyStr", str, bytes)
 PatternType = Union[str, "Pattern[str]", "SmartPattern[str]"]
 ReplType = Union[str, Callable[["Match[str]"], str]]
@@ -40,6 +42,7 @@ __all__ = [
     "smart_sub",
     "smart_split",
     "smart_findall",
+    "Smart",
 ]
 
 
@@ -755,3 +758,50 @@ def real_findall(pattern: PatternType, string: str, flags=0, linemode=False):
         else:
             string = string[span[1] :]
     return finds
+
+
+class Smart:
+    """Namespace for smart operations."""
+
+    Pattern = SmartPattern
+    Match = SmartMatch
+
+    if TYPE_CHECKING:
+        # pylint: disable=missing-function-docstring
+        @staticmethod
+        @hintwith(smart_search, True)
+        def search(): ...
+        @staticmethod
+        @hintwith(smart_match, True)
+        def match(): ...
+        @staticmethod
+        @hintwith(smart_sub, True)
+        def sub(): ...
+        @staticmethod
+        @hintwith(smart_split, True)
+        def split(): ...
+        @staticmethod
+        @hintwith(rsplit, True)
+        def rsplit(): ...
+        @staticmethod
+        @hintwith(lsplit, True)
+        def lsplit(): ...
+        @staticmethod
+        @hintwith(smart_findall, True)
+        def findall(): ...
+        @staticmethod
+        @hintwith(real_findall, True)
+        def real_findall(): ...
+
+        # pylint: enable=missing-function-docstring
+
+    else:
+
+        search = smart_search
+        match = smart_match
+        sub = smart_sub
+        split = smart_split
+        rsplit = rsplit
+        lsplit = lsplit
+        findall = smart_findall
+        real_findall = real_findall

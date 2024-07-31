@@ -179,9 +179,10 @@ This project falls under the BSD 3-Clause License.
 ## History
 ### v0.1.25
 * Updated `utils.re_extensions`: 
-  * `real_findall()` now returns match objects directly instead of spans and groups;
+  * `real_findall()` now returns match objects instead of spans and groups;
   * `SmartPattern` supports [] to indicate a Unicode (str) or bytes pattern (like what `re.Pattern` does);
   * new regex operations `smart_split()` and `smart_findall()`;
+  * created a namespace `Smart` for all the smart operations;
   * bugfixes for `rsplit()`, `lsplit()`, and `smart_sub()`.
 
 ### v0.1.24
