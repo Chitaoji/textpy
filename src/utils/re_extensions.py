@@ -85,9 +85,9 @@ def rsplit(
                 has_empty = True
             splits.append(left + string[: searched.start()])
             string = string[searched.end() :]
+        left = searched.group()
         if (maxsplit := maxsplit - 1) == 0:
             break
-        left = searched.group()
     splits.append(left + string)
     return splits
 
