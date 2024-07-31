@@ -45,91 +45,6 @@ __all__ = [
 ]
 
 
-@overload
-def real_findall(
-    pattern: PatternType,
-    string: str,
-    flags: FlagType = 0,
-    linemode: Literal[False] = False,
-) -> List["SpanNGroup"]: ...
-@overload
-def real_findall(
-    pattern: PatternType,
-    string: str,
-    flags: FlagType = 0,
-    linemode: Literal[True] = True,
-) -> List["LineSpanNGroup"]: ...
-def real_findall(
-    pattern: PatternType, string: str, flags=0, linemode=False
-) -> List[Union[SpanNGroup, LineSpanNGroup]]:
-    """
-    Finds all non-overlapping matches in the string. Differences to
-    `re.findall()` that it also returns the spans of patterns.
-
-    Parameters
-    ----------
-    pattern : Union[str, Pattern[str], SmartPattern[str]]
-        Regex pattern.
-    string : str
-        String to be searched.
-    flags : FlagType, optional
-        Regex flags, by default 0.
-    linemode : bool, optional
-        Determines whether to match the pattern on each line of the
-        string, by default False.
-
-    Returns
-    -------
-    List[Union[SpanNGroup, LineSpanNGroup]]
-        List of finding result. If `linemode` is False, each list
-        element consists of the span and the group of the pattern. If
-        `linemode` is True, each list element consists of the line
-        number, the span (within the line), and the group of the
-        pattern instead.
-
-    """
-    finds: List[SpanNGroup] = []
-    nline: int = 1
-    total_pos: int = 0
-    inline_pos: int = 0
-
-    while searched := smart_search(pattern, string, flags=flags):
-        span, group = searched.span(), searched.group()
-        if linemode:
-            left = string[: span[0]]
-            lc_left = line_count(left) - 1
-            nline += lc_left
-            if lc_left > 0:
-                inline_pos = 0
-            lastline_pos = len(left) - 1 - left.rfind("\n")
-            finds.append(
-                (
-                    nline,
-                    (
-                        inline_pos + lastline_pos,
-                        inline_pos + lastline_pos + span[1] - span[0],
-                    ),
-                    group,
-                )
-            )
-            nline += line_count(group) - 1
-            if "\n" in group:
-                inline_pos = len(group) - 1 - group.rfind("\n")
-            else:
-                inline_pos += max(lastline_pos + span[1] - span[0], 1)
-        else:
-            finds.append(((span[0] + total_pos, span[1] + total_pos), group))
-            total_pos += max(span[1], 1)
-        if len(string) == 0:
-            break
-        if span[1] == 0:
-            nline += 1 if string[0] == "\n" else 0
-            string = string[1:]
-        else:
-            string = string[span[1] :]
-    return finds
-
-
 def find_right_bracket(string: str, start: int, crossline: bool = False) -> int:
     """
     Find the right bracket paired with the specified left bracket.
@@ -348,7 +263,7 @@ def counted_strip(string: str) -> Tuple[str, int, int]:
 
 
 # ==============================================================================
-#                                  Smart
+#                             Smart Operations
 # ==============================================================================
 
 
@@ -765,3 +680,88 @@ def lsplit(
     # breaked or not searched
     splits.append(stored + string)
     return splits
+
+
+@overload
+def real_findall(
+    pattern: PatternType,
+    string: str,
+    flags: FlagType = 0,
+    linemode: Literal[False] = False,
+) -> List["SpanNGroup"]: ...
+@overload
+def real_findall(
+    pattern: PatternType,
+    string: str,
+    flags: FlagType = 0,
+    linemode: Literal[True] = True,
+) -> List["LineSpanNGroup"]: ...
+def real_findall(
+    pattern: PatternType, string: str, flags=0, linemode=False
+) -> List[Union[SpanNGroup, LineSpanNGroup]]:
+    """
+    Finds all non-overlapping matches in the string. Differences to
+    `re.findall()` that it also returns the spans of patterns.
+
+    Parameters
+    ----------
+    pattern : Union[str, Pattern[str], SmartPattern[str]]
+        Regex pattern.
+    string : str
+        String to be searched.
+    flags : FlagType, optional
+        Regex flags, by default 0.
+    linemode : bool, optional
+        Determines whether to match the pattern on each line of the
+        string, by default False.
+
+    Returns
+    -------
+    List[Union[SpanNGroup, LineSpanNGroup]]
+        List of finding result. If `linemode` is False, each list
+        element consists of the span and the group of the pattern. If
+        `linemode` is True, each list element consists of the line
+        number, the span (within the line), and the group of the
+        pattern instead.
+
+    """
+    finds: List[SpanNGroup] = []
+    nline: int = 1
+    total_pos: int = 0
+    inline_pos: int = 0
+
+    while searched := smart_search(pattern, string, flags=flags):
+        span, group = searched.span(), searched.group()
+        if linemode:
+            left = string[: span[0]]
+            lc_left = line_count(left) - 1
+            nline += lc_left
+            if lc_left > 0:
+                inline_pos = 0
+            lastline_pos = len(left) - 1 - left.rfind("\n")
+            finds.append(
+                (
+                    nline,
+                    (
+                        inline_pos + lastline_pos,
+                        inline_pos + lastline_pos + span[1] - span[0],
+                    ),
+                    group,
+                )
+            )
+            nline += line_count(group) - 1
+            if "\n" in group:
+                inline_pos = len(group) - 1 - group.rfind("\n")
+            else:
+                inline_pos += max(lastline_pos + span[1] - span[0], 1)
+        else:
+            finds.append(((span[0] + total_pos, span[1] + total_pos), group))
+            total_pos += max(span[1], 1)
+        if len(string) == 0:
+            break
+        if span[1] == 0:
+            nline += 1 if string[0] == "\n" else 0
+            string = string[1:]
+        else:
+            string = string[span[1] :]
+    return finds
