@@ -550,7 +550,7 @@ def smart_findall(pattern: PatternType, string: str, flags: FlagType = 0) -> Lis
     finds: List[str] = []
     while searched := smart_search(pattern, string, flags=flags):
         finds.append(searched.group())
-        if len(string) == 0:
+        if not string:
             break
         if searched.end() == 0:
             string = string[1:]
@@ -589,10 +589,16 @@ def smart_sub(
     if isinstance(pattern, (str, re.Pattern)):
         return re.sub(pattern, repl, string, flags=flags)
     new_string = ""
-    while string and (searched := smart_search(pattern, string, flags=flags)):
+    while searched := smart_search(pattern, string, flags=flags):
         new_string += string[: searched.start()]
         new_string += repl if isinstance(repl, str) else repl(searched)
-        string = string[searched.end() :]
+        if not string:
+            break
+        if searched.end() == 0:
+            new_string += string[0]
+            string = string[1:]
+        else:
+            string = string[searched.end() :]
     return new_string + string
 
 
