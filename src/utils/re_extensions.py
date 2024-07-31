@@ -4,10 +4,12 @@ import re
 from typing import (
     TYPE_CHECKING,
     Callable,
+    Generic,
     Iterable,
     List,
     Literal,
     Tuple,
+    TypeVar,
     Union,
     overload,
 )
@@ -15,10 +17,10 @@ from typing import (
 if TYPE_CHECKING:
     from re import Match, Pattern
 
-
+S = TypeVar("S", str, bytes)
 SpanNGroup = Tuple[Tuple[int, int], str]
 LineSpanNGroup = Tuple[int, Tuple[int, int], str]
-PatternType = Union[str, "Pattern[str]", "SmartPattern"]
+PatternType = Union[str, "Pattern[str]", "SmartPattern[str]"]
 ReplType = Union[str, Callable[["Match[str]"], str]]
 FlagType = Union[int, re.RegexFlag]
 
@@ -52,7 +54,7 @@ def rsplit(
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str], SmartPattern]
+    pattern : Union[str, Pattern[str], SmartPattern[str]]
         Pattern string.
     string : str
         String to be splitted.
@@ -100,7 +102,7 @@ def lsplit(
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str], SmartPattern]
+    pattern : Union[str, Pattern[str], SmartPattern[str]]
         Pattern string.
     string : str
         String to be splitted.
@@ -161,7 +163,7 @@ def real_findall(
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str], SmartPattern]
+    pattern : Union[str, Pattern[str], SmartPattern[str]]
         Regex pattern.
     string : str
         String to be searched.
@@ -445,7 +447,7 @@ def counted_strip(string: str) -> Tuple[str, int, int]:
 # ==============================================================================
 
 
-class SmartPattern:
+class SmartPattern(Generic[S]):
     """
     Similar to `re.Pattern` but it tells the matcher to ignore certain
     patterns (such as content within commas) while matching or searching.
@@ -472,15 +474,15 @@ class SmartPattern:
 
     def __init__(
         self,
-        pattern: Union[str, "Pattern[str]"],
+        pattern: Union[S, "Pattern[S]"],
         flags: FlagType = 0,
         ignore: str = "()[]{}",
         mark_ignore: str = "{}",
     ) -> None:
         if isinstance(pattern, re.Pattern):
             pattern, flags = pattern.pattern, pattern.flags | flags
-        self.pattern: str = pattern
-        self.flags: int = flags
+        self.pattern = pattern
+        self.flags = flags
         self.ignore, self.mark_ignore = ignore, mark_ignore
 
 
@@ -538,7 +540,7 @@ def smart_search(
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str], SmartPattern]
+    pattern : Union[str, Pattern[str], SmartPattern[str]]
         Regex pattern.
     string : str
         String to be searched.
@@ -577,7 +579,7 @@ def smart_match(
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str], SmartPattern]
+    pattern : Union[str, Pattern[str], SmartPattern[str]]
         Regex pattern.
     string : str
         String to be searched.
@@ -627,7 +629,7 @@ def smart_sub(
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str], SmartPattern]
+    pattern : Union[str, Pattern[str], SmartPattern[str]]
         Regex pattern.
     repl : ReplType
         Speficies the string to replace the patterns. If Callable, should
@@ -665,7 +667,7 @@ def smart_split(
 
     Parameters
     ----------
-    pattern : Union[str, Pattern[str], SmartPattern]
+    pattern : Union[str, Pattern[str], SmartPattern[str]]
         Regex pattern.
     string : str
         String to be searched.

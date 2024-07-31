@@ -300,7 +300,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str], SmartPattern]
+        pattern : Union[str, Pattern[str], SmartPattern[str]]
             String pattern.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
@@ -375,7 +375,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str], SmartPattern]
+        pattern : Union[str, Pattern[str], SmartPattern[str]]
             String pattern.
         repl : ReplType
             Speficies the string to replace the patterns. If Callable, should
@@ -448,7 +448,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str], SmartPattern]
+        pattern : Union[str, Pattern[str], SmartPattern[str]]
             String pattern.
         overwrite : bool, optional
             Determines whether to overwrite the original files. If False, the
@@ -484,7 +484,7 @@ class PyText(ABC, Generic[P]):
         dotall: bool = False,
         case_sensitive: bool = True,
         regex: bool = True,
-    ) -> Union["Pattern[str]", SmartPattern]:
+    ) -> Union["Pattern[str]", SmartPattern[str]]:
         if isinstance(pattern, re.Pattern):
             p, f = pattern.pattern, pattern.flags
         elif isinstance(pattern, SmartPattern):
@@ -509,8 +509,8 @@ class PyText(ABC, Generic[P]):
 
     @staticmethod
     def __pattern_expand(
-        pattern: Union["Pattern[str]", SmartPattern]
-    ) -> Union["Pattern[str]", SmartPattern]:
+        pattern: Union["Pattern[str]", SmartPattern[str]]
+    ) -> Union["Pattern[str]", SmartPattern[str]]:
         if pattern.flags & re.DOTALL:
             new_pattern = "[^\n]*" + pattern.pattern + "[^\n]*"
         else:
