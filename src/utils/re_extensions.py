@@ -45,7 +45,7 @@ __all__ = [
 
 
 def rsplit(
-    pattern: PatternStr, string: str, maxsplit: int = 0, flags: FlagInt = 0
+    pattern: SmartPatternStr, string: str, maxsplit: int = 0, flags: FlagInt = 0
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
@@ -54,7 +54,7 @@ def rsplit(
 
     Parameters
     ----------
-    pattern : PatternStr
+    pattern : Union[str, Pattern[str], SmartPattern]
         Pattern string.
     string : str
         String to be splitted.
@@ -93,7 +93,7 @@ def rsplit(
 
 
 def lsplit(
-    pattern: PatternStr, string: str, maxsplit: int = 0, flags: FlagInt = 0
+    pattern: SmartPatternStr, string: str, maxsplit: int = 0, flags: FlagInt = 0
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
@@ -102,7 +102,7 @@ def lsplit(
 
     Parameters
     ----------
-    pattern : PatternStr
+    pattern : Union[str, Pattern[str], SmartPattern]
         Pattern string.
     string : str
         String to be splitted.
@@ -317,14 +317,14 @@ def find_left_bracket(string: str, start: int, crossline: bool = False) -> int:
     return -1
 
 
-def pattern_inreg(pattern: PatternStrVar) -> PatternStrVar:
+def pattern_inreg(pattern: str) -> str:
     """
     Invalidates the regular expressions in `pattern`.
 
     Parameters
     ----------
-    pattern : PatternStrVar
-        Pattern to be invalidated.
+    pattern : str
+        Pattern to be invalidated; must be string.
 
     Returns
     -------
@@ -332,15 +332,7 @@ def pattern_inreg(pattern: PatternStrVar) -> PatternStrVar:
         A new pattern.
 
     """
-    flags: int = -1
-    if isinstance(pattern, re.Pattern):
-        pattern, flags = str(pattern.pattern), pattern.flags
-    pattern = re.sub(
-        "[$^.\\[\\]*+-?!{},|:#><=\\\\]", lambda x: "\\" + x.group(), pattern
-    )
-    if flags == -1:
-        return pattern
-    return re.compile(pattern, flags=flags)
+    return re.sub("[$^.\\[\\]*+-?!{},|:#><=\\\\]", lambda x: "\\" + x.group(), pattern)
 
 
 def line_count(string: str) -> int:
