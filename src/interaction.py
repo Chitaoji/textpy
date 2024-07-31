@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 
     from .abc import PyText
     from .text import PyFile
-    from .utils.re_extensions import PatternStr, ReplStr
+    from .utils.re_extensions import PatternType, ReplType
 
 
 __all__ = ["display_params"]
@@ -67,7 +67,7 @@ class TextFinding:
     """Finding of text."""
 
     obj: "PyText"
-    pattern: "PatternStr"
+    pattern: "PatternType"
     nline: int
     linestr: str
     order: int = 0
@@ -92,7 +92,7 @@ class TextFinding:
     def __ge__(self, __other: Self) -> bool:
         return self == __other or self > __other
 
-    def to_tuple(self) -> Tuple["PyText", "PatternStr", int, str]:
+    def to_tuple(self) -> Tuple["PyText", "PatternType", int, str]:
         """To tuple."""
         return self.obj, self.pattern, self.nline, self.linestr
 
@@ -279,10 +279,10 @@ class FileEditor:
         self.pyfile = pyfile
         self.overwrite = overwrite
         self.new_text = ""
-        self.pattern: "PatternStr" = ""
+        self.pattern: "PatternType" = ""
         self.based_on = based_on
         self.is_based_on = False
-        self.__repl: "ReplStr" = ""
+        self.__repl: "ReplType" = ""
         self.__count: int = 0
 
     def __bool__(self) -> bool:
@@ -332,7 +332,7 @@ class FileEditor:
             return self.read() == text
         return True
 
-    def replace(self, pattern: "PatternStr", repl: "ReplStr") -> int:
+    def replace(self, pattern: "PatternType", repl: "ReplType") -> int:
         """
         Replace patterns with replacement.
 

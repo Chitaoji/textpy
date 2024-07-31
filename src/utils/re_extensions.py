@@ -8,7 +8,6 @@ from typing import (
     List,
     Literal,
     Tuple,
-    TypeVar,
     Union,
     overload,
 )
@@ -19,11 +18,10 @@ if TYPE_CHECKING:
 
 SpanNGroup = Tuple[Tuple[int, int], str]
 LineSpanNGroup = Tuple[int, Tuple[int, int], str]
-PatternStr = Union[str, "Pattern[str]"]
-PatternStrVar = TypeVar("PatternStrVar", str, "Pattern[str]")
-ReplStr = Union[str, Callable[["Match[str]"], str]]
-FlagInt = Union[int, re.RegexFlag]
-SmartPatternStr = Union[str, "Pattern[str]", "SmartPattern"]
+PatternType = Union[str, "Pattern[str]"]
+ReplType = Union[str, Callable[["Match[str]"], str]]
+FlagType = Union[int, re.RegexFlag]
+SmartPatternType = Union[str, "Pattern[str]", "SmartPattern"]
 
 __all__ = [
     "rsplit",
@@ -45,7 +43,7 @@ __all__ = [
 
 
 def rsplit(
-    pattern: SmartPatternStr, string: str, maxsplit: int = 0, flags: FlagInt = 0
+    pattern: SmartPatternType, string: str, maxsplit: int = 0, flags: FlagType = 0
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
@@ -93,7 +91,7 @@ def rsplit(
 
 
 def lsplit(
-    pattern: SmartPatternStr, string: str, maxsplit: int = 0, flags: FlagInt = 0
+    pattern: SmartPatternType, string: str, maxsplit: int = 0, flags: FlagType = 0
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
@@ -142,20 +140,20 @@ def lsplit(
 
 @overload
 def real_findall(
-    pattern: SmartPatternStr,
+    pattern: SmartPatternType,
     string: str,
-    flags: FlagInt = 0,
+    flags: FlagType = 0,
     linemode: Literal[False] = False,
 ) -> List["SpanNGroup"]: ...
 @overload
 def real_findall(
-    pattern: SmartPatternStr,
+    pattern: SmartPatternType,
     string: str,
-    flags: FlagInt = 0,
+    flags: FlagType = 0,
     linemode: Literal[True] = True,
 ) -> List["LineSpanNGroup"]: ...
 def real_findall(
-    pattern: SmartPatternStr, string: str, flags=0, linemode=False
+    pattern: SmartPatternType, string: str, flags=0, linemode=False
 ) -> List[Union[SpanNGroup, LineSpanNGroup]]:
     """
     Finds all non-overlapping matches in the string. Differences to
@@ -474,8 +472,8 @@ class SmartPattern:
 
     def __init__(
         self,
-        pattern: PatternStr,
-        flags: FlagInt = 0,
+        pattern: PatternType,
+        flags: FlagType = 0,
         ignore: str = "()[]{}",
         mark_ignore: str = "{}",
     ) -> None:
@@ -531,7 +529,7 @@ class SmartMatch:
 
 
 def smart_search(
-    pattern: SmartPatternStr, string: str, flags: FlagInt = 0
+    pattern: SmartPatternType, string: str, flags: FlagType = 0
 ) -> Union["Match[str]", SmartMatch]:
     """
     Finds the first match in the string. Differences to `re.search()` that
@@ -571,7 +569,7 @@ def smart_search(
 
 
 def smart_match(
-    pattern: SmartPatternStr, string: str, flags: FlagInt = 0
+    pattern: SmartPatternType, string: str, flags: FlagType = 0
 ) -> Union["Match[str]", SmartMatch]:
     """
     Match the pattern. Differences to `re.match()` that it can ignore
@@ -620,7 +618,7 @@ def smart_match(
 
 
 def smart_sub(
-    pattern: SmartPatternStr, repl: "ReplStr", string: str, flags: FlagInt = 0
+    pattern: SmartPatternType, repl: "ReplType", string: str, flags: FlagType = 0
 ) -> str:
     """
     Finds all non-overlapping matches of `pattern`, and replace them with
@@ -657,7 +655,7 @@ def smart_sub(
 
 
 def smart_split(
-    pattern: SmartPatternStr, string: str, maxsplit: int = 0, flags: FlagInt = 0
+    pattern: SmartPatternType, string: str, maxsplit: int = 0, flags: FlagType = 0
 ) -> List[str]:
     """
     Split the source string by the occurrences of `pattern`, returning a

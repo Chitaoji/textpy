@@ -22,7 +22,7 @@ from .utils.re_extensions import SmartPattern, pattern_inreg, real_findall
 if TYPE_CHECKING:
     from re import Pattern
 
-    from .utils.re_extensions import PatternStr, ReplStr
+    from .utils.re_extensions import PatternType, ReplType
 
 
 __all__ = ["PyText", "Docstring"]
@@ -290,7 +290,7 @@ class PyText(ABC, Generic[P]):
 
     @overload
     def findall(
-        self, pattern: "PatternStr", /, *_: P.args, **kwargs: P.kwargs
+        self, pattern: "PatternType", /, *_: P.args, **kwargs: P.kwargs
     ) -> FindTextResult: ...
     def findall(
         self, pattern, /, styler=True, based_on: Replacer = None, **kwargs
@@ -350,8 +350,8 @@ class PyText(ABC, Generic[P]):
     @overload
     def replace(
         self,
-        pattern: "PatternStr",
-        repl: "ReplStr",
+        pattern: "PatternType",
+        repl: "ReplType",
         overwrite: bool = True,
         /,
         *_: P.args,
@@ -434,7 +434,7 @@ class PyText(ABC, Generic[P]):
     @overload
     def delete(
         self,
-        pattern: "PatternStr",
+        pattern: "PatternType",
         overwrite: bool = True,
         /,
         *_: P.args,
