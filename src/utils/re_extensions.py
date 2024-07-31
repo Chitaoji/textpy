@@ -70,16 +70,24 @@ def rsplit(
         List of substrings.
 
     """
+    if maxsplit < 0:
+        return [string]
     splits: List[str] = []
-    searched = re.search(pattern, string, flags=flags)
-    left: str = ""
-    while searched:
-        splits.append(left + string[: searched.start()])
-        left = searched.group()
-        string = string[searched.end() :]
-        if len(splits) >= maxsplit > 0:
+    has_empty, left = False, ""
+    while searched := smart_search(pattern, string, flags=flags):
+        if (empty := searched.end() == 0) and has_empty:
+            if not string:
+                break
+            splits.append(left + string[:1])
+            string = string[1:]
+        else:
+            if empty:
+                has_empty = True
+            splits.append(left + string[: searched.start()])
+            string = string[searched.end() :]
+        if (maxsplit := maxsplit - 1) == 0:
             break
-        searched = re.search(pattern, string, flags=flags)
+        left = searched.group()
     splits.append(left + string)
     return splits
 
@@ -110,14 +118,24 @@ def lsplit(
         List of substrings.
 
     """
+
+    if maxsplit < 0:
+        return [string]
     splits: List[str] = []
-    searched = re.search(pattern, string, flags=flags)
-    while searched:
-        splits.append(string[: searched.end()])
-        string = string[searched.end() :]
-        if len(splits) >= maxsplit > 0:
+    has_empty = False
+    while searched := smart_search(pattern, string, flags=flags):
+        if (empty := searched.end() == 0) and has_empty:
+            if not string:
+                break
+            splits.append(string[:1])
+            string = string[1:]
+        else:
+            if empty:
+                has_empty = True
+            splits.append(string[: searched.end()])
+            string = string[searched.end() :]
+        if (maxsplit := maxsplit - 1) == 0:
             break
-        searched = re.search(pattern, string, flags=flags)
     splits.append(string)
     return splits
 
