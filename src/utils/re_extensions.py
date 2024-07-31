@@ -37,7 +37,6 @@ __all__ = [
     "word_wrap",
     "SmartPattern",
     "SmartMatch",
-    "Smart",
     "smart_search",
     "smart_match",
     "smart_sub",
@@ -171,7 +170,7 @@ def real_findall(
     total_pos: int = 0
     inline_pos: int = 0
 
-    while searched := Smart.search(pattern, string, flags=flags):
+    while searched := smart_search(pattern, string, flags=flags):
         span, group = searched.span(), searched.group()
         if linemode:
             left = string[: span[0]]
@@ -521,181 +520,177 @@ class SmartMatch:
         return self.__span[1]
 
 
-class Smart:
-    """Smart searching, matching, and replacing."""
+def smart_search(
+    pattern: SmartPatternStr, string: str, flags: FlagInt = 0
+) -> Union["Match[str]", SmartMatch]:
+    """
+    Finds the first match in the string. Differences to `re.search()` that
+    it can ignore certain patterns (such as content within commas) while
+    searching.
 
-    Pattern = SmartPattern
-    Match = SmartMatch
+    Parameters
+    ----------
+    pattern : Union[str, Pattern[str], SmartPattern]
+        Regex pattern.
+    string : str
+        String to be searched.
+    flags : FlagInt, optional
+        Regex flag, by default 0.
 
-    @staticmethod
-    def search(
-        pattern: SmartPatternStr, string: str, flags: FlagInt = 0
-    ) -> Union["Match[str]", SmartMatch]:
-        """
-        Finds the first match in the string. Differences to `re.search()` that
-        it can ignore certain patterns (such as content within commas) while
-        searching.
+    Returns
+    -------
+    Union[Match[str], SmartMatch]
+        Match result.
 
-        Parameters
-        ----------
-        pattern : Union[str, Pattern[str], SmartPattern]
-            Regex pattern.
-        string : str
-            String to be searched.
-        flags : FlagInt, optional
-            Regex flag, by default 0.
+    """
+    if isinstance(pattern, (str, re.Pattern)):
+        return re.search(pattern, string, flags=flags)
+    p, f = pattern.pattern, pattern.flags | flags
+    if pattern.mark_ignore not in p:
+        return re.search(p, string, flags=f)
+    to_search = p.partition(pattern.mark_ignore)[0]
+    pos_now: int = 0
+    while string and (searched := re.search(to_search, string, flags=f)):
+        pos_now += searched.start()
+        string = string[searched.start() :]
+        if matched := smart_match(pattern, string, flags=flags):
+            return SmartMatch((pos_now, pos_now + matched.end()), matched.group())
+        pos_now += 1
+        string = string[1:]
+    return None
 
-        Returns
-        -------
-        Union[Match[str], SmartMatch]
-            Match result.
 
-        """
-        if isinstance(pattern, (str, re.Pattern)):
-            return re.search(pattern, string, flags=flags)
-        p, f = pattern.pattern, pattern.flags | flags
-        if pattern.mark_ignore not in p:
-            return re.search(p, string, flags=f)
-        to_search = p.partition(pattern.mark_ignore)[0]
-        pos_now: int = 0
-        while string and (searched := re.search(to_search, string, flags=f)):
-            pos_now += searched.start()
-            string = string[searched.start() :]
-            if matched := Smart.match(pattern, string, flags=flags):
-                return SmartMatch((pos_now, pos_now + matched.end()), matched.group())
-            pos_now += 1
-            string = string[1:]
-        return None
+def smart_match(
+    pattern: SmartPatternStr, string: str, flags: FlagInt = 0
+) -> Union["Match[str]", SmartMatch]:
+    """
+    Match the pattern. Differences to `re.match()` that it can ignore
+    certain patterns (such as content within commas) while searching.
 
-    @staticmethod
-    def match(
-        pattern: SmartPatternStr, string: str, flags: FlagInt = 0
-    ) -> Union["Match[str]", SmartMatch]:
-        """
-        Match the pattern. Differences to `re.match()` that it can ignore
-        certain patterns (such as content within commas) while searching.
+    Parameters
+    ----------
+    pattern : Union[str, Pattern[str], SmartPattern]
+        Regex pattern.
+    string : str
+        String to be searched.
+    flags : FlagInt, optional
+        Regex flag, by default 0.
 
-        Parameters
-        ----------
-        pattern : Union[str, Pattern[str], SmartPattern]
-            Regex pattern.
-        string : str
-            String to be searched.
-        flags : FlagInt, optional
-            Regex flag, by default 0.
+    Returns
+    -------
+    Union[Match[str], SmartMatch]
+        Match result.
 
-        Returns
-        -------
-        Union[Match[str], SmartMatch]
-            Match result.
-
-        """
-        if isinstance(pattern, (str, re.Pattern)):
-            return re.match(pattern, string, flags=flags)
-        p, f = pattern.pattern, pattern.flags | flags
-        crossline = (f & re.DOTALL) > 0
-        if pattern.mark_ignore not in p:
-            return re.match(p, string, flags=f)
-        splited = p.split(pattern.mark_ignore)
-        pos_now, temp, recorded_group, left = 0, "", "", pattern.ignore[::2]
-        for s in splited[:-1]:
-            temp += s
-            if not (matched := re.match(temp, string, flags=f)):
+    """
+    if isinstance(pattern, (str, re.Pattern)):
+        return re.match(pattern, string, flags=flags)
+    p, f = pattern.pattern, pattern.flags | flags
+    crossline = (f & re.DOTALL) > 0
+    if pattern.mark_ignore not in p:
+        return re.match(p, string, flags=f)
+    splited = p.split(pattern.mark_ignore)
+    pos_now, temp, recorded_group, left = 0, "", "", pattern.ignore[::2]
+    for s in splited[:-1]:
+        temp += s
+        if not (matched := re.match(temp, string, flags=f)):
+            return None
+        if matched.end() < len(string) and string[matched.end()] in left:
+            n = find_right_bracket(string, matched.end(), crossline=crossline)
+            if n < 0:
                 return None
-            if matched.end() < len(string) and string[matched.end()] in left:
-                n = find_right_bracket(string, matched.end(), crossline=crossline)
-                if n < 0:
-                    return None
-                pos_now += n
-                recorded_group += string[:n]
-                string = string[n:]
-                temp = ""
-        if matched := re.match(temp + splited[-1], string, flags=f):
-            return SmartMatch(
-                (0, pos_now + matched.end()), recorded_group + matched.group()
-            )
-        return None
+            pos_now += n
+            recorded_group += string[:n]
+            string = string[n:]
+            temp = ""
+    if matched := re.match(temp + splited[-1], string, flags=f):
+        return SmartMatch(
+            (0, pos_now + matched.end()), recorded_group + matched.group()
+        )
+    return None
 
-    @staticmethod
-    def sub(
-        pattern: SmartPatternStr, repl: "ReplStr", string: str, flags: FlagInt = 0
-    ) -> str:
-        """
-        Finds all non-overlapping matches of `pattern`, and replace them with
-        `repl`. Differences to `re.sub()` that it can ignore certain patterns
-        (such as content within commas) while searching.
 
-        Parameters
-        ----------
-        pattern : Union[str, Pattern[str], SmartPattern]
-            Regex pattern.
-        repl : ReplStr
-            Speficies the string to replace the patterns. If Callable, should
-            be a function that receives the Match object, and gives back
-            the replacement string to be used.
-        string : str
-            String to be searched.
-        flags : FlagInt, optional
-            Regex flag, by default 0.
+def smart_sub(
+    pattern: SmartPatternStr, repl: "ReplStr", string: str, flags: FlagInt = 0
+) -> str:
+    """
+    Finds all non-overlapping matches of `pattern`, and replace them with
+    `repl`. Differences to `re.sub()` that it can ignore certain patterns
+    (such as content within commas) while searching.
 
-        Returns
-        -------
-        str
-            New string.
+    Parameters
+    ----------
+    pattern : Union[str, Pattern[str], SmartPattern]
+        Regex pattern.
+    repl : ReplStr
+        Speficies the string to replace the patterns. If Callable, should
+        be a function that receives the Match object, and gives back
+        the replacement string to be used.
+    string : str
+        String to be searched.
+    flags : FlagInt, optional
+        Regex flag, by default 0.
 
-        """
-        if isinstance(pattern, (str, re.Pattern)):
-            return re.sub(pattern, repl, string, flags=flags)
-        new_string = ""
-        while string and (searched := Smart.search(pattern, string, flags=flags)):
-            new_string += string[: searched.start()]
-            new_string += repl if isinstance(repl, str) else repl(searched)
-            string = string[searched.end() :]
-        return new_string + string
+    Returns
+    -------
+    str
+        New string.
 
-    @staticmethod
-    def split(
-        pattern: SmartPatternStr, string: str, maxsplit: int = 0, flags: FlagInt = 0
-    ) -> List[str]:
-        """
-        Split the source string by the occurrences of `pattern`, returning a
-        list containing the resulting substrings. Differences to `re.split()`
-        that it can ignore certain patterns (such as content within commas)
-        while searching.
+    """
+    if isinstance(pattern, (str, re.Pattern)):
+        return re.sub(pattern, repl, string, flags=flags)
+    new_string = ""
+    while string and (searched := smart_search(pattern, string, flags=flags)):
+        new_string += string[: searched.start()]
+        new_string += repl if isinstance(repl, str) else repl(searched)
+        string = string[searched.end() :]
+    return new_string + string
 
-        Parameters
-        ----------
-        pattern : Union[str, Pattern[str], SmartPattern]
-            Regex pattern.
-        string : str
-            String to be searched.
-        maxsplit : int, optional
-            Max number of splits; if set to 0, there will be no limits; if
-            < 0, the string will not be splitted. By default 0.
-        flags : FlagInt, optional
-            Regex flag, by default 0.
 
-        Returns
-        -------
-        List[str]
-            List containing the resulting substrings.
+def smart_split(
+    pattern: SmartPatternStr, string: str, maxsplit: int = 0, flags: FlagInt = 0
+) -> List[str]:
+    """
+    Split the source string by the occurrences of `pattern`, returning a
+    list containing the resulting substrings. Differences to `re.split()`
+    that it can ignore certain patterns (such as content within commas)
+    while searching.
 
-        """
-        if isinstance(pattern, (str, re.Pattern)):
-            return re.split(pattern, string, maxsplit=maxsplit, flags=flags)
-        if maxsplit < 0:
-            return [string]
-        splits: List[str] = []
-        while string and (searched := Smart.search(pattern, string, flags=flags)):
+    Parameters
+    ----------
+    pattern : Union[str, Pattern[str], SmartPattern]
+        Regex pattern.
+    string : str
+        String to be searched.
+    maxsplit : int, optional
+        Max number of splits; if set to 0, there will be no limits; if
+        < 0, the string will not be splitted. By default 0.
+    flags : FlagInt, optional
+        Regex flag, by default 0.
+
+    Returns
+    -------
+    List[str]
+        List containing the resulting substrings.
+
+    """
+    if isinstance(pattern, (str, re.Pattern)):
+        return re.split(pattern, string, maxsplit=maxsplit, flags=flags)
+    if maxsplit < 0:
+        return [string]
+    splits: List[str] = []
+    has_empty = False
+    while searched := smart_search(pattern, string, flags=flags):
+        if has_empty and searched.end() == 0:
+            if not string:
+                break
+            splits.append(string[:1])
+            string = string[1:]
+        else:
+            # if not has_empty and searched.end() == 0:
+            has_empty = True
             splits.append(string[: searched.start()])
             string = string[searched.end() :]
-            if (maxsplit := maxsplit - 1) == 0:
-                break
-        splits.append(string)
-        return splits
-
-
-smart_search = Smart.search
-smart_match = Smart.match
-smart_sub = Smart.sub
-smart_split = Smart.split
+        if (maxsplit := maxsplit - 1) == 0:
+            break
+    splits.append(string)
+    return splits
