@@ -11,7 +11,7 @@ import re
 from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Union, overload
+from typing import TYPE_CHECKING, Dict, Generic, List, Optional, Union, overload
 
 import black
 from typing_extensions import ParamSpec, Self
@@ -300,7 +300,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str]]
+        pattern : Union[str, Pattern[str], SmartPattern]
             String pattern.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
@@ -375,9 +375,9 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str]]
+        pattern : Union[str, Pattern[str], SmartPattern]
             String pattern.
-        repl : ReprStr
+        repl : ReplType
             Speficies the string to replace the patterns. If Callable, should
             be a function that receives the Match object, and gives back
             the replacement string to be used.
@@ -448,7 +448,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str]]
+        pattern : Union[str, Pattern[str], SmartPattern]
             String pattern.
         overwrite : bool, optional
             Determines whether to overwrite the original files. If False, the
@@ -479,7 +479,7 @@ class PyText(ABC, Generic[P]):
 
     @staticmethod
     def __pattern_trans(
-        pattern: Any,
+        pattern: "PatternType",
         whole_word: bool = False,
         dotall: bool = False,
         case_sensitive: bool = True,

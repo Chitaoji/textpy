@@ -338,9 +338,9 @@ class FileEditor:
 
         Parameters
         ----------
-        pattern : PatternStr
+        pattern : PatternType
             String pattern.
-        repl : ReprStr
+        repl : ReplType
             Replacement.
 
         Returns
