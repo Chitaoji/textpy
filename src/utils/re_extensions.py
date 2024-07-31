@@ -41,103 +41,8 @@ __all__ = [
     "smart_match",
     "smart_sub",
     "smart_split",
+    "smart_findall",
 ]
-
-
-def rsplit(
-    pattern: PatternType, string: str, maxsplit: int = 0, flags: FlagType = 0
-) -> List[str]:
-    """
-    Split the string by the occurrences of the pattern. Differences to
-    `re.split()` that all groups in the pattern are also returned, each
-    connected with the substring on its right.
-
-    Parameters
-    ----------
-    pattern : Union[str, Pattern[str], SmartPattern[str]]
-        Pattern string.
-    string : str
-        String to be splitted.
-    maxsplit : int, optional
-        Max number of splits, if specified to be 0, there will be no
-        more limits, by default 0.
-    flags : FlagType, optional
-        Regex flags, by default 0.
-
-    Returns
-    -------
-    List[str]
-        List of substrings.
-
-    """
-    if maxsplit < 0:
-        return [string]
-    splits: List[str] = []
-    has_empty, left = False, ""
-    while searched := smart_search(pattern, string, flags=flags):
-        if (empty := searched.end() == 0) and has_empty:
-            if not string:
-                break
-            splits.append(left + string[:1])
-            string = string[1:]
-        else:
-            if empty:
-                has_empty = True
-            splits.append(left + string[: searched.start()])
-            string = string[searched.end() :]
-        left = searched.group()
-        if (maxsplit := maxsplit - 1) == 0:
-            break
-    splits.append(left + string)
-    return splits
-
-
-def lsplit(
-    pattern: PatternType, string: str, maxsplit: int = 0, flags: FlagType = 0
-) -> List[str]:
-    """
-    Split the string by the occurrences of the pattern. Differences to
-    `re.split()` that all groups in the pattern are also returned, each
-    connected with the substring on its left.
-
-    Parameters
-    ----------
-    pattern : Union[str, Pattern[str], SmartPattern[str]]
-        Pattern string.
-    string : str
-        String to be splitted.
-    maxsplit : int, optional
-        Max number of splits, if specified to be 0, there will be no
-        more limits, by default 0.
-    flags : FlagType, optional
-        Regex flags, by default 0.
-
-    Returns
-    -------
-    List[str]
-        List of substrings.
-
-    """
-
-    if maxsplit < 0:
-        return [string]
-    splits: List[str] = []
-    has_empty = False
-    while searched := smart_search(pattern, string, flags=flags):
-        if (empty := searched.end() == 0) and has_empty:
-            if not string:
-                break
-            splits.append(string[:1])
-            string = string[1:]
-        else:
-            if empty:
-                has_empty = True
-            splits.append(string[: searched.end()])
-            string = string[searched.end() :]
-        if (maxsplit := maxsplit - 1) == 0:
-            break
-    splits.append(string)
-    return splits
 
 
 @overload
@@ -619,6 +524,41 @@ def smart_match(
     return None
 
 
+def smart_findall(pattern: PatternType, string: str, flags: FlagType = 0) -> List[str]:
+    """
+    Returns a list of all non-overlapping matches in the string. Differences
+    to `re.findall()` that it can ignore certain patterns (such as content
+    within commas) while searching.
+
+    Parameters
+    ----------
+    pattern : Union[str, Pattern[str], SmartPattern[str]]
+        Regex pattern.
+    string : str
+        String to be searched.
+    flags : FlagType, optional
+        Regex flags, by default 0.
+
+    Returns
+    -------
+    List[str]
+        List of all non-overlapping matches.
+
+    """
+    if isinstance(pattern, (str, re.Pattern)):
+        return re.findall(pattern, string, flags=flags)
+    finds: List[str] = []
+    while searched := smart_search(pattern, string, flags=flags):
+        finds.append(searched.group())
+        if len(string) == 0:
+            break
+        if searched.end() == 0:
+            string = string[1:]
+        else:
+            string = string[searched.end() :]
+    return finds
+
+
 def smart_sub(
     pattern: PatternType, repl: "ReplType", string: str, flags: FlagType = 0
 ) -> str:
@@ -683,24 +623,139 @@ def smart_split(
         List containing the resulting substrings.
 
     """
-    if isinstance(pattern, (str, re.Pattern)):
-        return re.split(pattern, string, maxsplit=maxsplit, flags=flags)
     if maxsplit < 0:
         return [string]
-    splits: List[str] = []
-    has_empty = False
-    while searched := smart_search(pattern, string, flags=flags):
-        if (empty := searched.end() == 0) and has_empty:
-            if not string:
-                break
-            splits.append(string[:1])
+    if not (searched := smart_search(pattern, string, flags=flags)):
+        return [string]
+    splits = []
+    stored = string[: searched.start()]
+    while searched and string:
+        if searched.end() == 0:
+            splits.append(stored)
+            stored = string[0]
             string = string[1:]
         else:
-            if empty:
-                has_empty = True
-            splits.append(string[: searched.start()])
+            splits.append(stored + string[: searched.start()])
+            stored = ""
             string = string[searched.end() :]
         if (maxsplit := maxsplit - 1) == 0:
             break
-    splits.append(string)
+        searched = smart_search(pattern, string, flags=flags)
+    else:  # not searched or not string
+        if searched:  # not string but searched
+            splits.append(stored)
+            splits.append("")
+            return splits
+    # breaked or not searched
+    splits.append(stored + string)
+    return splits
+
+
+def rsplit(
+    pattern: PatternType, string: str, maxsplit: int = 0, flags: FlagType = 0
+) -> List[str]:
+    """
+    Split the string by the occurrences of the pattern. Differences to
+    `re.split()` that all groups in the pattern are also returned, each
+    connected with the substring on its right.
+
+    Parameters
+    ----------
+    pattern : Union[str, Pattern[str], SmartPattern[str]]
+        Pattern string.
+    string : str
+        String to be splitted.
+    maxsplit : int, optional
+        Max number of splits, if specified to be 0, there will be no
+        more limits, by default 0.
+    flags : FlagType, optional
+        Regex flags, by default 0.
+
+    Returns
+    -------
+    List[str]
+        List of substrings.
+
+    """
+    if maxsplit < 0:
+        return [string]
+    if not (searched := smart_search(pattern, string, flags=flags)):
+        return [string]
+    splits = [string[: searched.start()]]
+    stored = ""
+    while searched and string:
+        if searched.end() == 0:
+            splits[-1] += stored
+            stored = string[0]
+            string = string[1:]
+        else:
+            splits[-1] += stored + string[: searched.start()]
+            stored = ""
+            string = string[searched.end() :]
+        splits.append(searched.group())
+        if (maxsplit := maxsplit - 1) == 0:
+            break
+        searched = smart_search(pattern, string, flags=flags)
+    else:  # not searched or not string
+        if searched:  # not string but searched
+            splits[-1] += stored
+            splits.append("")
+            return splits
+    # breaked or not searched
+    splits[-1] += stored + string
+    return splits
+
+
+def lsplit(
+    pattern: PatternType, string: str, maxsplit: int = 0, flags: FlagType = 0
+) -> List[str]:
+    """
+    Split the string by the occurrences of the pattern. Differences to
+    `re.split()` that all groups in the pattern are also returned, each
+    connected with the substring on its left.
+
+    Parameters
+    ----------
+    pattern : Union[str, Pattern[str], SmartPattern[str]]
+        Pattern string.
+    string : str
+        String to be splitted.
+    maxsplit : int, optional
+        Max number of splits, if specified to be 0, there will be no
+        more limits, by default 0.
+    flags : FlagType, optional
+        Regex flags, by default 0.
+
+    Returns
+    -------
+    List[str]
+        List of substrings.
+
+    """
+
+    if maxsplit < 0:
+        return [string]
+    if not (searched := smart_search(pattern, string, flags=flags)):
+        return [string]
+    splits = []
+    stored = string[: searched.start()]
+    while searched and string:
+        if searched.end() == 0:
+            splits.append(stored)
+            stored = string[0]
+            string = string[1:]
+        else:
+            splits.append(stored + string[: searched.end()])
+            stored = ""
+            string = string[searched.end() :]
+        if (maxsplit := maxsplit - 1) == 0:
+            break
+        searched = smart_search(pattern, string, flags=flags)
+    else:  # not searched or not string
+        if searched:  # not string but searched
+            splits.append(stored)
+            splits.append("")
+            return splits
+    # breaked or not searched
+    splits.append(stored + string)
     return splits
