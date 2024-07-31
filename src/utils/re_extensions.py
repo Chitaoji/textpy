@@ -680,14 +680,14 @@ def smart_split(
     splits: List[str] = []
     has_empty = False
     while searched := smart_search(pattern, string, flags=flags):
-        if has_empty and searched.end() == 0:
+        if (empty := searched.end() == 0) and has_empty:
             if not string:
                 break
             splits.append(string[:1])
             string = string[1:]
         else:
-            # if not has_empty and searched.end() == 0:
-            has_empty = True
+            if empty:
+                has_empty = True
             splits.append(string[: searched.start()])
             string = string[searched.end() :]
         if (maxsplit := maxsplit - 1) == 0:
