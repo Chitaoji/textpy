@@ -18,8 +18,6 @@ if TYPE_CHECKING:
     from re import Match, Pattern, RegexFlag
 
 AnyStr = TypeVar("AnyStr", str, bytes)
-SpanNGroup = Tuple[Tuple[int, int], str]
-LineSpanNGroup = Tuple[int, Tuple[int, int], str]
 PatternType = Union[str, "Pattern[str]", "SmartPattern[str]"]
 ReplType = Union[str, Callable[["Match[str]"], str]]
 FlagType = Union[int, "RegexFlag"]
@@ -688,20 +686,18 @@ def real_findall(
     string: str,
     flags: FlagType = 0,
     linemode: Literal[False] = False,
-) -> List["SpanNGroup"]: ...
+) -> List[SmartMatch]: ...
 @overload
 def real_findall(
     pattern: PatternType,
     string: str,
     flags: FlagType = 0,
     linemode: Literal[True] = True,
-) -> List["LineSpanNGroup"]: ...
-def real_findall(
-    pattern: PatternType, string: str, flags=0, linemode=False
-) -> List[Union[SpanNGroup, LineSpanNGroup]]:
+) -> List[Tuple[int, SmartMatch]]: ...
+def real_findall(pattern: PatternType, string: str, flags=0, linemode=False):
     """
     Finds all non-overlapping matches in the string. Differences to
-    `re.findall()` that it also returns the spans of patterns.
+    `re.findall()` that it returns the match objects directly.
 
     Parameters
     ----------
@@ -717,18 +713,17 @@ def real_findall(
 
     Returns
     -------
-    List[Union[SpanNGroup, LineSpanNGroup]]
+    List[Union[SmartMatch, Tuple[int, SmartMatch]]]
         List of finding result. If `linemode` is False, each list
-        element consists of the span and the group of the pattern. If
-        `linemode` is True, each list element consists of the line
-        number, the span (within the line), and the group of the
-        pattern instead.
+        element is a match object; if `linemode` is True, each list
+        element is a tuple consisting of the line number where the
+        substring is matched and the match object.
 
     """
-    finds: List[SpanNGroup] = []
+    finds = []
     nline: int = 1
     total_pos: int = 0
-    inline_pos: int = 0
+    line_pos: int = 0
 
     while searched := smart_search(pattern, string, flags=flags):
         span, group = searched.span(), searched.group()
@@ -737,25 +732,20 @@ def real_findall(
             lc_left = line_count(left) - 1
             nline += lc_left
             if lc_left > 0:
-                inline_pos = 0
+                line_pos = 0
             lastline_pos = len(left) - 1 - left.rfind("\n")
-            finds.append(
-                (
-                    nline,
-                    (
-                        inline_pos + lastline_pos,
-                        inline_pos + lastline_pos + span[1] - span[0],
-                    ),
-                    group,
-                )
+            matched = SmartMatch(
+                (line_pos + lastline_pos, line_pos + lastline_pos + span[1] - span[0]),
+                group,
             )
+            finds.append((nline, matched))
             nline += line_count(group) - 1
             if "\n" in group:
-                inline_pos = len(group) - 1 - group.rfind("\n")
+                line_pos = len(group) - 1 - group.rfind("\n")
             else:
-                inline_pos += max(lastline_pos + span[1] - span[0], 1)
+                line_pos += max(lastline_pos + span[1] - span[0], 1)
         else:
-            finds.append(((span[0] + total_pos, span[1] + total_pos), group))
+            finds.append(SmartMatch((span[0] + total_pos, span[1] + total_pos), group))
             total_pos += max(span[1], 1)
         if len(string) == 0:
             break

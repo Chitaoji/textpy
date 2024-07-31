@@ -334,12 +334,12 @@ class PyText(ABC, Generic[P]):
                         break
             res.join(latest.findall(pattern, styler=False))
         elif not self.children:
-            for nline, _, group in real_findall(
+            for nline, matched in real_findall(
                 self.__pattern_expand(pattern), self.text, linemode=True
             ):
-                if group:
+                if g := matched.group():
                     res.append(
-                        TextFinding(self, pattern, self.start_line + nline - 1, group)
+                        TextFinding(self, pattern, self.start_line + nline - 1, g)
                     )
         else:
             res.join(self.header.findall(pattern, styler=False, based_on=based_on))
