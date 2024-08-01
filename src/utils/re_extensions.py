@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 
 AnyStr = TypeVar("AnyStr", str, bytes)
 PatternType = Union[str, "Pattern[str]", "SmartPattern[str]"]
+MatchType = Union["Match[str]", "SmartMatch[str]", None]
 ReplType = Union[str, Callable[["Match[str]"], str]]
 FlagType = Union[int, "RegexFlag"]
 
@@ -38,8 +39,8 @@ __all__ = [
     "SmartPattern",
     "SmartMatch",
     "smart_search",
-    "smart_fullsearch",
     "smart_match",
+    "smart_fullmatch",
     "smart_sub",
     "smart_subn",
     "smart_split",
@@ -353,9 +354,7 @@ class SmartMatch(Generic[AnyStr]):
         return self.__span[1]
 
 
-def smart_search(
-    pattern: PatternType, string: str, flags: FlagType = 0
-) -> Union["Match[str]", SmartMatch[str]]:
+def smart_search(pattern: PatternType, string: str, flags: FlagType = 0) -> MatchType:
     """
     Finds the first match in the string. Differences to `re.search()` that
     the pattern can be a `SmartPattern` object.
@@ -371,7 +370,7 @@ def smart_search(
 
     Returns
     -------
-    Union[Match[str], SmartMatch[str]]
+    Union[Match[str], SmartMatch[str], None]
         Match result.
 
     """
@@ -392,9 +391,7 @@ def smart_search(
     return None
 
 
-def smart_match(
-    pattern: PatternType, string: str, flags: FlagType = 0
-) -> Union["Match[str]", SmartMatch[str]]:
+def smart_match(pattern: PatternType, string: str, flags: FlagType = 0) -> MatchType:
     """
     Match the pattern. Differences to `re.match()` that the pattern can
     be a `SmartPattern` object.
@@ -410,7 +407,7 @@ def smart_match(
 
     Returns
     -------
-    Union[Match[str], SmartMatch[str]]
+    Union[Match[str], SmartMatch[str], None]
         Match result.
 
     """
@@ -443,7 +440,7 @@ def smart_match(
 
 def smart_fullmatch(
     pattern: PatternType, string: str, flags: FlagType = 0
-) -> Union["Match[str]", SmartMatch[str]]:
+) -> MatchType:
     """
     Match the pattern. Differences to `re.match()` that the pattern can
     be a `SmartPattern` object.
@@ -459,7 +456,7 @@ def smart_fullmatch(
 
     Returns
     -------
-    Union[Match[str], SmartMatch[str]]
+    Union[Match[str], SmartMatch[str], None]
         Match result.
 
     """
