@@ -40,6 +40,7 @@ __all__ = [
     "smart_search",
     "smart_match",
     "smart_sub",
+    "smart_subn",
     "smart_split",
     "smart_findall",
     "Smart",
@@ -557,26 +558,27 @@ def smart_subn(
 
     Returns
     -------
-    str
-        New string.
+    Tuple[str, int]
+        (new_string, number).
 
     """
     if isinstance(pattern, (str, re.Pattern)):
         return re.subn(pattern, repl, string, count=count, flags=flags)
     if count < 0:
-        return string
+        return (string, 0)
     new_string = ""
+    tmpcnt = count
     while searched := smart_search(pattern, string, flags=flags):
         new_string += string[: searched.start()]
         new_string += repl if isinstance(repl, str) else repl(searched)
-        if not string or (count := count - 1) == 0:
+        if (tmpcnt := tmpcnt - 1) == 0 or not string:
             break
         if searched.end() == 0:
             new_string += string[0]
             string = string[1:]
         else:
             string = string[searched.end() :]
-    return new_string + string
+    return (new_string + string, count - tmpcnt)
 
 
 def smart_split(
@@ -834,6 +836,9 @@ class Smart:
         @hintwith(smart_sub, True)
         def sub(): ...
         @staticmethod
+        @hintwith(smart_subn, True)
+        def subn(): ...
+        @staticmethod
         @hintwith(smart_split, True)
         def split(): ...
         @staticmethod
@@ -856,6 +861,7 @@ class Smart:
         search = smart_search
         match = smart_match
         sub = smart_sub
+        subn = smart_subn
         split = smart_split
         rsplit = rsplit
         lsplit = lsplit
