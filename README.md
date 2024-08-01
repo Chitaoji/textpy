@@ -179,11 +179,14 @@ This project falls under the BSD 3-Clause License.
 ## History
 ### v0.1.25
 * Updated `utils.re_extensions`: 
+  * **Important:** we've decided to extract `utils.re_extensions` into an independent package named `re_extensions`, so any future updates should be looked up in https://github.com/Chitaoji/re-extensions instead; `textpy` will stay in sync with it, however;
   * `real_findall()` now returns match objects instead of spans and groups;
+  * `smart_sub()` accepts a new optional parameter called `count=`;
   * `SmartPattern` supports [] to indicate a Unicode (str) or bytes pattern (like what `re.Pattern` does);
   * new regex operations `smart_split()` and `smart_findall()`;
   * created a namespace `Smart` for all the smart operations;
   * bugfixes for `rsplit()`, `lsplit()`, and `smart_sub()`.
+
 
 ### v0.1.24
 * New method `PyText.is_file()` and `PyText.is_dir()` to find out whether the instance represents a file / directory.
@@ -193,7 +196,7 @@ This project falls under the BSD 3-Clause License.
   * new regex operations `smart_search()`, `smart_match()`, and `smart_sub()`;
   * new string operation `counted_strip()`;
   * new utility classes `SmartPattern` and `SmartMatch`.
-  * new utility functions `find_right_bracket()` and `find_left_bracket()`;
+  * new utility functions `find_right_bracket()` and `find_left_bracket()`.
 * `Replacer.to_styler()` will no longer return a styler when *pandas* version < 1.4.0.
 
 ### v0.1.23

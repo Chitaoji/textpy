@@ -476,7 +476,11 @@ def smart_findall(pattern: PatternType, string: str, flags: FlagType = 0) -> Lis
 
 
 def smart_sub(
-    pattern: PatternType, repl: "ReplType", string: str, flags: FlagType = 0
+    pattern: PatternType,
+    repl: "ReplType",
+    string: str,
+    count: int = 0,
+    flags: FlagType = 0,
 ) -> str:
     """
     Finds all non-overlapping matches of `pattern`, and replace them with
@@ -493,6 +497,9 @@ def smart_sub(
         the replacement string to be used.
     string : str
         String to be searched.
+    count : int, optional
+        Max number of replacements; if set to 0, there will be no limits;
+        if < 0, the string will not be replaced; by default 0.
     flags : FlagType, optional
         Regex flags, by default 0.
 
@@ -503,12 +510,14 @@ def smart_sub(
 
     """
     if isinstance(pattern, (str, re.Pattern)):
-        return re.sub(pattern, repl, string, flags=flags)
+        return re.sub(pattern, repl, string, count=count, flags=flags)
+    if count < 0:
+        return string
     new_string = ""
     while searched := smart_search(pattern, string, flags=flags):
         new_string += string[: searched.start()]
         new_string += repl if isinstance(repl, str) else repl(searched)
-        if not string:
+        if not string or (count := count - 1) == 0:
             break
         if searched.end() == 0:
             new_string += string[0]
@@ -535,7 +544,7 @@ def smart_split(
         String to be searched.
     maxsplit : int, optional
         Max number of splits; if set to 0, there will be no limits; if
-        < 0, the string will not be splitted. By default 0.
+        < 0, the string will not be splitted; by default 0.
     flags : FlagType, optional
         Regex flags, by default 0.
 
@@ -545,9 +554,9 @@ def smart_split(
         List containing the resulting substrings.
 
     """
-    if maxsplit < 0:
-        return [string]
-    if not (searched := smart_search(pattern, string, flags=flags)):
+    if isinstance(pattern, (str, re.Pattern)):
+        return re.split(pattern, string, maxsplit=maxsplit, flags=flags)
+    if maxsplit < 0 or not (searched := smart_search(pattern, string, flags=flags)):
         return [string]
     splits = []
     stored = string[: searched.start()]
@@ -599,9 +608,7 @@ def rsplit(
         List of substrings.
 
     """
-    if maxsplit < 0:
-        return [string]
-    if not (searched := smart_search(pattern, string, flags=flags)):
+    if maxsplit < 0 or not (searched := smart_search(pattern, string, flags=flags)):
         return [string]
     splits = [string[: searched.start()]]
     stored = ""
@@ -655,9 +662,7 @@ def lsplit(
 
     """
 
-    if maxsplit < 0:
-        return [string]
-    if not (searched := smart_search(pattern, string, flags=flags)):
+    if maxsplit < 0 or not (searched := smart_search(pattern, string, flags=flags)):
         return [string]
     splits = []
     stored = string[: searched.start()]
