@@ -356,8 +356,7 @@ def smart_search(
 ) -> Union["Match[str]", SmartMatch]:
     """
     Finds the first match in the string. Differences to `re.search()` that
-    it can ignore certain patterns (such as content within commas) while
-    searching.
+    the pattern can be a `SmartPattern` object.
 
     Parameters
     ----------
@@ -395,8 +394,8 @@ def smart_match(
     pattern: PatternType, string: str, flags: FlagType = 0
 ) -> Union["Match[str]", SmartMatch]:
     """
-    Match the pattern. Differences to `re.match()` that it can ignore
-    certain patterns (such as content within commas) while searching.
+    Match the pattern. Differences to `re.match()` that the pattern can
+    be a `SmartPattern` object.
 
     Parameters
     ----------
@@ -443,8 +442,7 @@ def smart_match(
 def smart_findall(pattern: PatternType, string: str, flags: FlagType = 0) -> List[str]:
     """
     Returns a list of all non-overlapping matches in the string. Differences
-    to `re.findall()` that it can ignore certain patterns (such as content
-    within commas) while searching.
+    to `re.findall()` that the pattern can be a `SmartPattern` object.
 
     Parameters
     ----------
@@ -483,9 +481,9 @@ def smart_sub(
     flags: FlagType = 0,
 ) -> str:
     """
-    Finds all non-overlapping matches of `pattern`, and replace them with
-    `repl`. Differences to `re.sub()` that it can ignore certain patterns
-    (such as content within commas) while searching.
+    Return the string obtained by replacing the leftmost non-overlapping
+    occurrences of the pattern in string by the replacement repl. Differences
+    to `re.sub()` that the pattern can be a `SmartPattern` object.
 
     Parameters
     ----------
@@ -527,14 +525,67 @@ def smart_sub(
     return new_string + string
 
 
+def smart_subn(
+    pattern: PatternType,
+    repl: "ReplType",
+    string: str,
+    count: int = 0,
+    flags: FlagType = 0,
+) -> Tuple[str, int]:
+    """
+    Return a 2-tuple containing (new_string, number); new_string is the string
+    obtained by replacing the leftmost non-overlapping occurrences of the
+    pattern in string by the replacement repl; number is the number of
+    substitutions that were made. Differences to `re.subn()` that the pattern
+    can be a `SmartPattern` object.
+
+    Parameters
+    ----------
+    pattern : Union[str, Pattern[str], SmartPattern[str]]
+        Regex pattern.
+    repl : ReplType
+        Speficies the string to replace the patterns. If Callable, should
+        be a function that receives the Match object, and gives back
+        the replacement string to be used.
+    string : str
+        String to be searched.
+    count : int, optional
+        Max number of replacements; if set to 0, there will be no limits;
+        if < 0, the string will not be replaced; by default 0.
+    flags : FlagType, optional
+        Regex flags, by default 0.
+
+    Returns
+    -------
+    str
+        New string.
+
+    """
+    if isinstance(pattern, (str, re.Pattern)):
+        return re.subn(pattern, repl, string, count=count, flags=flags)
+    if count < 0:
+        return string
+    new_string = ""
+    while searched := smart_search(pattern, string, flags=flags):
+        new_string += string[: searched.start()]
+        new_string += repl if isinstance(repl, str) else repl(searched)
+        if not string or (count := count - 1) == 0:
+            break
+        if searched.end() == 0:
+            new_string += string[0]
+            string = string[1:]
+        else:
+            string = string[searched.end() :]
+    return new_string + string
+
+
 def smart_split(
     pattern: PatternType, string: str, maxsplit: int = 0, flags: FlagType = 0
 ) -> List[str]:
     """
-    Split the source string by the occurrences of `pattern`, returning a
+    Split the source string by the occurrences of the pattern, returning a
     list containing the resulting substrings. Differences to `re.split()`
-    that it can ignore certain patterns (such as content within commas)
-    while searching.
+    that the pattern can be a `SmartPattern` object.
 
     Parameters
     ----------
@@ -587,7 +638,7 @@ def rsplit(
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
-    `re.split()` that all groups in the pattern are also returned, each
+    `smart_split()` that all groups in the pattern are also returned, each
     connected with the substring on its right.
 
     Parameters
@@ -640,7 +691,7 @@ def lsplit(
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
-    `re.split()` that all groups in the pattern are also returned, each
+    `smart_split()` that all groups in the pattern are also returned, each
     connected with the substring on its left.
 
     Parameters
@@ -705,7 +756,7 @@ def real_findall(
 def real_findall(pattern: PatternType, string: str, flags=0, linemode=False):
     """
     Finds all non-overlapping matches in the string. Differences to
-    `re.findall()` that it returns the match objects directly.
+    `smart_findall()` that it returns the match objects directly.
 
     Parameters
     ----------
