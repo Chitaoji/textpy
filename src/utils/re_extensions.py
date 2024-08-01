@@ -38,6 +38,7 @@ __all__ = [
     "SmartPattern",
     "SmartMatch",
     "smart_search",
+    "smart_fullsearch",
     "smart_match",
     "smart_sub",
     "smart_subn",
@@ -440,6 +441,36 @@ def smart_match(
     return None
 
 
+def smart_fullmatch(
+    pattern: PatternType, string: str, flags: FlagType = 0
+) -> Union["Match[str]", SmartMatch[str]]:
+    """
+    Match the pattern. Differences to `re.match()` that the pattern can
+    be a `SmartPattern` object.
+
+    Parameters
+    ----------
+    pattern : Union[str, Pattern[str], SmartPattern[str]]
+        Regex pattern.
+    string : str
+        String to be searched.
+    flags : FlagType, optional
+        Regex flags, by default 0.
+
+    Returns
+    -------
+    Union[Match[str], SmartMatch[str]]
+        Match result.
+
+    """
+    if isinstance(pattern, (str, re.Pattern)):
+        return re.fullmatch(pattern, string, flags=flags)
+    if matched := smart_match(pattern, string, flags=flags):
+        if matched.end() == len(string):
+            return matched
+    return None
+
+
 def smart_findall(pattern: PatternType, string: str, flags: FlagType = 0) -> List[str]:
     """
     Returns a list of all non-overlapping matches in the string. Differences
@@ -467,10 +498,7 @@ def smart_findall(pattern: PatternType, string: str, flags: FlagType = 0) -> Lis
         finds.append(searched.group())
         if not string:
             break
-        if searched.end() == 0:
-            string = string[1:]
-        else:
-            string = string[searched.end() :]
+        string = string[1 if searched.end() == 0 else searched.end() :]
     return finds
 
 
@@ -833,6 +861,9 @@ class Smart:
         @hintwith(smart_match, True)
         def match(): ...
         @staticmethod
+        @hintwith(smart_fullmatch, True)
+        def fullmatch(): ...
+        @staticmethod
         @hintwith(smart_sub, True)
         def sub(): ...
         @staticmethod
@@ -860,6 +891,7 @@ class Smart:
 
         search = smart_search
         match = smart_match
+        fullmatch = smart_fullmatch
         sub = smart_sub
         subn = smart_subn
         split = smart_split
