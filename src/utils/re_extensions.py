@@ -308,7 +308,7 @@ class SmartPattern(Generic[AnyStr]):
         self.ignore, self.mark_ignore = ignore, mark_ignore
 
 
-class SmartMatch:
+class SmartMatch(Generic[AnyStr]):
     """
     Acts like `re.Match`.
 
@@ -321,7 +321,7 @@ class SmartMatch:
 
     """
 
-    def __init__(self, span: Tuple[int, int], group: str) -> None:
+    def __init__(self, span: Tuple[int, int], group: AnyStr) -> None:
         self.__span = span
         self.__group = group
 
@@ -335,11 +335,11 @@ class SmartMatch:
         """
         return self.__span
 
-    def group(self) -> str:
+    def group(self) -> AnyStr:
         """Group of the match."""
         return self.__group
 
-    def groups(self) -> Tuple[str, ...]:
+    def groups(self) -> Tuple[AnyStr, ...]:
         """Subgroups of the match."""
         return (self.__group,)
 
@@ -354,7 +354,7 @@ class SmartMatch:
 
 def smart_search(
     pattern: PatternType, string: str, flags: FlagType = 0
-) -> Union["Match[str]", SmartMatch]:
+) -> Union["Match[str]", SmartMatch[str]]:
     """
     Finds the first match in the string. Differences to `re.search()` that
     the pattern can be a `SmartPattern` object.
@@ -370,7 +370,7 @@ def smart_search(
 
     Returns
     -------
-    Union[Match[str], SmartMatch]
+    Union[Match[str], SmartMatch[str]]
         Match result.
 
     """
@@ -393,7 +393,7 @@ def smart_search(
 
 def smart_match(
     pattern: PatternType, string: str, flags: FlagType = 0
-) -> Union["Match[str]", SmartMatch]:
+) -> Union["Match[str]", SmartMatch[str]]:
     """
     Match the pattern. Differences to `re.match()` that the pattern can
     be a `SmartPattern` object.
@@ -409,7 +409,7 @@ def smart_match(
 
     Returns
     -------
-    Union[Match[str], SmartMatch]
+    Union[Match[str], SmartMatch[str]]
         Match result.
 
     """
@@ -747,14 +747,14 @@ def real_findall(
     string: str,
     flags: FlagType = 0,
     linemode: Literal[False] = False,
-) -> List[SmartMatch]: ...
+) -> List[SmartMatch[str]]: ...
 @overload
 def real_findall(
     pattern: PatternType,
     string: str,
     flags: FlagType = 0,
     linemode: Literal[True] = True,
-) -> List[Tuple[int, SmartMatch]]: ...
+) -> List[Tuple[int, SmartMatch[str]]]: ...
 def real_findall(pattern: PatternType, string: str, flags=0, linemode=False):
     """
     Finds all non-overlapping matches in the string. Differences to
@@ -774,7 +774,7 @@ def real_findall(pattern: PatternType, string: str, flags=0, linemode=False):
 
     Returns
     -------
-    List[Union[SmartMatch, Tuple[int, SmartMatch]]]
+    List[Union[SmartMatch[str], Tuple[int, SmartMatch[str]]]]
         List of finding result. If `linemode` is False, each list
         element is a match object; if `linemode` is True, each list
         element is a tuple consisting of the line number where the
