@@ -77,16 +77,16 @@ If you are using a Jupyter notebook in VS Code, you can run a cell like this:
   </thead>
   <tbody>
     <tr>
-      <td id="T_19b39_row0_col0" class="data row0 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>MyBook</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>7</a></td>
-      <td id="T_19b39_row0_col1" class="data row0 col1" >class <a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a>:</td>
+      <td id="T_19b39_row0_col0" class="data row0 col0" ><a href='examples/myfile.py#L7' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py#L7' style='text-decoration:none;color:inherit'>MyBook</a>:<a href='examples/myfile.py#L7' style='text-decoration:none;color:inherit'>7</a></td>
+      <td id="T_19b39_row0_col1" class="data row0 col1" >class <a href='examples/myfile.py#L7' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a>:</td>
     </tr>
     <tr>
-      <td id="T_19b39_row1_col0" class="data row1 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>print_my_book()</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>24</a></td>
-      <td id="T_19b39_row1_col1" class="data row1 col1" >def print_my_book(book: <a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a>) -> None:</td>
+      <td id="T_19b39_row1_col0" class="data row1 col0" ><a href='examples/myfile.py#L24' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py#L24' style='text-decoration:none;color:inherit'>print_my_book()</a>:<a href='examples/myfile.py#L24' style='text-decoration:none;color:inherit'>24</a></td>
+      <td id="T_19b39_row1_col1" class="data row1 col1" >def print_my_book(book: <a href='examples/myfile.py#L24' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a>) -> None:</td>
     </tr>
     <tr>
-      <td id="T_19b39_row2_col0" class="data row2 col0" ><a href='examples/myfile.py' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>print_my_book()</a>:<a href='examples/myfile.py' style='text-decoration:none;color:inherit'>30</a></td>
-      <td id="T_19b39_row2_col1" class="data row2 col1" >    book : <a href='examples/myfile.py' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a></td>
+      <td id="T_19b39_row2_col0" class="data row2 col0" ><a href='examples/myfile.py#L30' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py#L30' style='text-decoration:none;color:inherit'>print_my_book()</a>:<a href='examples/myfile.py#L30' style='text-decoration:none;color:inherit'>30</a></td>
+      <td id="T_19b39_row2_col1" class="data row2 col1" >    book : <a href='examples/myfile.py#L30' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a></td>
     </tr>
   </tbody>
 </table>
@@ -177,23 +177,34 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.25
+* Updated `utils.re_extensions`: 
+  * **Important:** we've decided to extract `utils.re_extensions` into an independent package named `re_extensions` (presently at v0.0.3), so any future updates should be looked up in https://github.com/Chitaoji/re-extensions instead; we will stay in sync with it, however;
+  * `real_findall()` now returns match objects instead of spans and groups;
+  * `smart_sub()` accepts a new optional parameter called `count=`;
+  * `SmartPattern` supports [] to indicate a Unicode (str) or bytes pattern (like what `re.Pattern` does);
+  * new regex operations `smart_split()`, `smart_findall()`, `line_findall()`, `smart_subn()`, and `smart_fullmatch()`;
+  * created a namespace `Smart` for all the smart operations;
+  * bugfixes for `rsplit()`, `lsplit()`, and `smart_sub()`.
+* Reduced the running cost of `PyText.findall()` by taking advantage of the new regex operation `line_findall()`.
+
 ### v0.1.24
-* New method `PyText.is_file()` and `PyText.is_dir()` to find out whether the instance represents a file / directory.
+* New methods `PyText.is_file()` and `PyText.is_dir()` to find out whether the instance represents a file / directory.
 * New method `PyText.check_format()` for format checking.
 * Defined the comparison ordering methods `__eq__()`, `__gt__()`, and `__ge__()` for `PyText`. They compares two `PyText` object via their absolute paths.
 * Updated `utils.re_extensions`: 
   * new regex operations `smart_search()`, `smart_match()`, and `smart_sub()`;
   * new string operation `counted_strip()`;
   * new utility classes `SmartPattern` and `SmartMatch`.
-  * new utility functions `find_right_bracket()` and `find_left_bracket()`;
+  * new utility functions `find_right_bracket()` and `find_left_bracket()`.
 * `Replacer.to_styler()` will no longer return a styler when *pandas* version < 1.4.0.
 
 ### v0.1.23
-* New utility function `utils.re_extensions.word_wrap()`.
+* New string operation `utils.re_extensions.word_wrap()`.
 * Various improvements.
 
 ### v0.1.22
-* `textpy()` is going to be deprecated to avoid conflicts with the package name `textpy`. Please use `module()` insead.
+* The module-level function `textpy()` is going to be deprecated to avoid conflicts with the package name `textpy`. Please use `module()` insead.
 * New methods `PyText.replace()` and `PyText.delete()`.
 * New class `Replacer` as the return type of `PyText.replace()`, with public methods `.confirm()`, `.rollback()`, etc.
 * Added a dunder method `PyText.__truediv__()` as an alternative to `PyText.jumpto()`.

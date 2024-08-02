@@ -11,4 +11,5 @@ REQUIRES:
   - pandas
   - Jinja2
   - black
+  - hintwith>=0.1.3
 EXTRAS: {}

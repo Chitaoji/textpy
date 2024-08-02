@@ -26,7 +26,7 @@ from typing import (
 import pandas as pd
 from typing_extensions import Self
 
-from .utils.re_extensions import Smart
+from .utils.re_extensions import smart_sub
 from .utils.validator import SimpleValidator
 
 if TYPE_CHECKING:
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 
     from .abc import PyText
     from .text import PyFile
-    from .utils.re_extensions import PatternStr, ReplStr
+    from .utils.re_extensions import PatternType, ReplType
 
 
 __all__ = ["display_params"]
@@ -67,7 +67,7 @@ class TextFinding:
     """Finding of text."""
 
     obj: "PyText"
-    pattern: "PatternStr"
+    pattern: "PatternType"
     nline: int
     linestr: str
     order: int = 0
@@ -92,7 +92,7 @@ class TextFinding:
     def __ge__(self, __other: Self) -> bool:
         return self == __other or self > __other
 
-    def to_tuple(self) -> Tuple["PyText", "PatternStr", int, str]:
+    def to_tuple(self) -> Tuple["PyText", "PatternType", int, str]:
         """To tuple."""
         return self.obj, self.pattern, self.nline, self.linestr
 
@@ -115,9 +115,12 @@ class FindTextResult:
         for res in sorted(self.res):
             t, p, n, _line = res.to_tuple()
             string += f"\n{t.relpath}" + f":{n}" * display_params.line_numbers + ": "
-            new = Smart.sub(p, partial(self._repr, res), " " * t.spaces + _line)
+            new = smart_sub(p, partial(self._repr, res), " " * t.spaces + _line)
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
+
+    def __bool__(self) -> bool:
+        return bool(self.res)
 
     def append(self, finding: TextFinding) -> None:
         """
@@ -191,7 +194,7 @@ class FindTextResult:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
-            df.iloc[i, 1] = Smart.sub(p, partial(self.styl, res), _line)
+            df.iloc[i, 1] = smart_sub(p, partial(self.styl, res), _line)
         styler = (
             df.style.hide(axis=0)
             .set_properties(**{"text-align": "left"})
@@ -276,11 +279,14 @@ class FileEditor:
         self.pyfile = pyfile
         self.overwrite = overwrite
         self.new_text = ""
-        self.pattern: "PatternStr" = ""
+        self.pattern: "PatternType" = ""
         self.based_on = based_on
         self.is_based_on = False
-        self.__repl: "ReplStr" = ""
+        self.__repl: "ReplType" = ""
         self.__count: int = 0
+
+    def __bool__(self) -> bool:
+        return self.__count > 0
 
     def read(self) -> str:
         """
@@ -326,15 +332,15 @@ class FileEditor:
             return self.read() == text
         return True
 
-    def replace(self, pattern: "PatternStr", repl: "ReplStr") -> int:
+    def replace(self, pattern: "PatternType", repl: "ReplType") -> int:
         """
         Replace patterns with replacement.
 
         Parameters
         ----------
-        pattern : PatternStr
+        pattern : PatternType
             String pattern.
-        repl : ReprStr
+        repl : ReplType
             Replacement.
 
         Returns
@@ -345,7 +351,7 @@ class FileEditor:
         """
         self.__count = 0
         self.__repl = repl
-        self.new_text = Smart.sub(
+        self.new_text = smart_sub(
             pattern,
             self.counted_repl,
             self.based_on.new_text if self.based_on else self.pyfile.text,

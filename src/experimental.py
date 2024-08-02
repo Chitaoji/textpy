@@ -11,7 +11,7 @@ from .utils.re_extensions import SmartPattern
 
 if TYPE_CHECKING:
     from .abc import PyText
-    from .utils.re_extensions import ReplStr
+    from .utils.re_extensions import ReplType
 
 __all__ = ["back_to_py38"]
 
@@ -63,7 +63,7 @@ def __type_hint_generics(module: "PyText", replacer: Replacer) -> Replacer:
     return replacer
 
 
-def __type_hint_generics_0(replaced: str, to_replace: str) -> Tuple[str, "ReplStr"]:
+def __type_hint_generics_0(replaced: str, to_replace: str) -> Tuple[str, "ReplType"]:
     return (
         f"((->|:)[^=\n]*?\\W|\n\\s*){replaced}[\\[\\]),:]",
         lambda m: m.group()[: -1 - len(replaced)] + to_replace + m.group()[-1],

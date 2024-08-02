@@ -11,18 +11,18 @@ import re
 from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Union, overload
+from typing import TYPE_CHECKING, Dict, Generic, List, Optional, Union, overload
 
 import black
 from typing_extensions import ParamSpec, Self
 
 from .interaction import NULL, FileEditor, FindTextResult, Replacer, TextFinding
-from .utils.re_extensions import SmartPattern, pattern_inreg, real_findall
+from .utils.re_extensions import SmartPattern, line_findall, pattern_inreg
 
 if TYPE_CHECKING:
     from re import Pattern
 
-    from .utils.re_extensions import PatternStr, ReplStr
+    from .utils.re_extensions import PatternType, ReplType
 
 
 __all__ = ["PyText", "Docstring"]
@@ -290,7 +290,7 @@ class PyText(ABC, Generic[P]):
 
     @overload
     def findall(
-        self, pattern: "PatternStr", /, *_: P.args, **kwargs: P.kwargs
+        self, pattern: "PatternType", /, *_: P.args, **kwargs: P.kwargs
     ) -> FindTextResult: ...
     def findall(
         self, pattern, /, styler=True, based_on: Replacer = None, **kwargs
@@ -300,7 +300,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str]]
+        pattern : Union[str, Pattern[str], SmartPattern[str]]
             String pattern.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
@@ -334,12 +334,10 @@ class PyText(ABC, Generic[P]):
                         break
             res.join(latest.findall(pattern, styler=False))
         elif not self.children:
-            for nline, _, group in real_findall(
-                self.__pattern_expand(pattern), self.text, linemode=True
-            ):
-                if group:
+            for nline, g in line_findall(self.__pattern_expand(pattern), self.text):
+                if g:
                     res.append(
-                        TextFinding(self, pattern, self.start_line + nline - 1, group)
+                        TextFinding(self, pattern, self.start_line + nline - 1, g)
                     )
         else:
             res.join(self.header.findall(pattern, styler=False, based_on=based_on))
@@ -350,8 +348,8 @@ class PyText(ABC, Generic[P]):
     @overload
     def replace(
         self,
-        pattern: "PatternStr",
-        repl: "ReplStr",
+        pattern: "PatternType",
+        repl: "ReplType",
         overwrite: bool = True,
         /,
         *_: P.args,
@@ -375,9 +373,9 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str]]
+        pattern : Union[str, Pattern[str], SmartPattern[str]]
             String pattern.
-        repl : ReprStr
+        repl : ReplType
             Speficies the string to replace the patterns. If Callable, should
             be a function that receives the Match object, and gives back
             the replacement string to be used.
@@ -434,7 +432,7 @@ class PyText(ABC, Generic[P]):
     @overload
     def delete(
         self,
-        pattern: "PatternStr",
+        pattern: "PatternType",
         overwrite: bool = True,
         /,
         *_: P.args,
@@ -448,7 +446,7 @@ class PyText(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str]]
+        pattern : Union[str, Pattern[str], SmartPattern[str]]
             String pattern.
         overwrite : bool, optional
             Determines whether to overwrite the original files. If False, the
@@ -479,12 +477,12 @@ class PyText(ABC, Generic[P]):
 
     @staticmethod
     def __pattern_trans(
-        pattern: Any,
+        pattern: "PatternType",
         whole_word: bool = False,
         dotall: bool = False,
         case_sensitive: bool = True,
         regex: bool = True,
-    ) -> Union["Pattern[str]", SmartPattern]:
+    ) -> Union["Pattern[str]", SmartPattern[str]]:
         if isinstance(pattern, re.Pattern):
             p, f = pattern.pattern, pattern.flags
         elif isinstance(pattern, SmartPattern):
@@ -509,8 +507,8 @@ class PyText(ABC, Generic[P]):
 
     @staticmethod
     def __pattern_expand(
-        pattern: Union["Pattern[str]", SmartPattern]
-    ) -> Union["Pattern[str]", SmartPattern]:
+        pattern: Union["Pattern[str]", SmartPattern[str]]
+    ) -> Union["Pattern[str]", SmartPattern[str]]:
         if pattern.flags & re.DOTALL:
             new_pattern = "[^\n]*" + pattern.pattern + "[^\n]*"
         else:
@@ -570,13 +568,13 @@ class PyText(ABC, Generic[P]):
             List of `PyText` instances.
 
         """
-        track: List["PyText"] = []
+        tracks: List["PyText"] = []
         obj: Optional["PyText"] = self
         while obj is not None:
-            track.append(obj)
+            tracks.append(obj)
             obj = obj.parent
-        track.reverse()
-        return track
+        tracks.reverse()
+        return tracks
 
 
 class Docstring(ABC):
@@ -663,7 +661,7 @@ def black_format(string: str) -> str:
 
 
 # pylint: disable=unused-argument
-def _ignore(
+def _defaults(
     whole_word: bool = False,
     dotall: bool = False,
     case_sensitive: bool = True,
