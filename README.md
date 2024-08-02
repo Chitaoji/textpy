@@ -179,17 +179,17 @@ This project falls under the BSD 3-Clause License.
 ## History
 ### v0.1.25
 * Updated `utils.re_extensions`: 
-  * **Important:** we've decided to extract `utils.re_extensions` into an independent package named `re_extensions`, so any future updates should be looked up in https://github.com/Chitaoji/re-extensions instead; `textpy` will stay in sync with it, however;
+  * **Important:** we've decided to extract `utils.re_extensions` into an independent package named `re_extensions` (presently at v0.0.3), so any future updates should be looked up in https://github.com/Chitaoji/re-extensions instead; we will stay in sync with it, however;
   * `real_findall()` now returns match objects instead of spans and groups;
   * `smart_sub()` accepts a new optional parameter called `count=`;
   * `SmartPattern` supports [] to indicate a Unicode (str) or bytes pattern (like what `re.Pattern` does);
   * new regex operations `smart_split()`, `smart_findall()`, `line_findall()`, `smart_subn()`, and `smart_fullmatch()`;
   * created a namespace `Smart` for all the smart operations;
   * bugfixes for `rsplit()`, `lsplit()`, and `smart_sub()`.
-
+* Reduced the running cost of `PyText.findall()` by taking advantage of the new regex operation `line_findall()`.
 
 ### v0.1.24
-* New method `PyText.is_file()` and `PyText.is_dir()` to find out whether the instance represents a file / directory.
+* New methods `PyText.is_file()` and `PyText.is_dir()` to find out whether the instance represents a file / directory.
 * New method `PyText.check_format()` for format checking.
 * Defined the comparison ordering methods `__eq__()`, `__gt__()`, and `__ge__()` for `PyText`. They compares two `PyText` object via their absolute paths.
 * Updated `utils.re_extensions`: 
@@ -200,7 +200,7 @@ This project falls under the BSD 3-Clause License.
 * `Replacer.to_styler()` will no longer return a styler when *pandas* version < 1.4.0.
 
 ### v0.1.23
-* New utility function `utils.re_extensions.word_wrap()`.
+* New string operation `utils.re_extensions.word_wrap()`.
 * Various improvements.
 
 ### v0.1.22
