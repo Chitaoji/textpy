@@ -501,7 +501,7 @@ def smart_findall(pattern: PatternType, string: str, flags: FlagType = 0) -> Lis
 
 def smart_sub(
     pattern: PatternType,
-    repl: "ReplType",
+    repl: ReplType,
     string: str,
     count: int = 0,
     flags: FlagType = 0,
@@ -553,7 +553,7 @@ def smart_sub(
 
 def smart_subn(
     pattern: PatternType,
-    repl: "ReplType",
+    repl: ReplType,
     string: str,
     count: int = 0,
     flags: FlagType = 0,

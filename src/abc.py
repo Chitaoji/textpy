@@ -663,7 +663,7 @@ def black_format(string: str) -> str:
 
 
 # pylint: disable=unused-argument
-def _ignore(
+def _defaults(
     whole_word: bool = False,
     dotall: bool = False,
     case_sensitive: bool = True,

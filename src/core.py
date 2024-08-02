@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Callable, Optional, Union
 
 from typing_extensions import deprecated
 
-from .abc import P, _ignore, as_path
+from .abc import P, _defaults, as_path
 from .text import PyDir, PyFile
 
 if TYPE_CHECKING:
@@ -26,7 +26,7 @@ def module(
     home: Optional[Union[Path, str]] = None,
     encoding: Optional[str] = None,
     *,
-    _: Callable[P, None] = _ignore,
+    _: Callable[P, None] = _defaults,
 ) -> "PyText[P]":
     """
     Statically analyzes a python file or a python module. Each python file
