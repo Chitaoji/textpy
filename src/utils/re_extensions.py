@@ -27,9 +27,6 @@ FlagType = Union[int, "RegexFlag"]
 
 
 __all__ = [
-    "rsplit",
-    "lsplit",
-    "real_findall",
     "find_right_bracket",
     "find_left_bracket",
     "pattern_inreg",
@@ -44,7 +41,11 @@ __all__ = [
     "smart_sub",
     "smart_subn",
     "smart_split",
+    "rsplit",
+    "lsplit",
     "smart_findall",
+    "line_findall",
+    "real_findall",
     "Smart",
 ]
 
@@ -675,8 +676,8 @@ def rsplit(
     string : str
         String to be splitted.
     maxsplit : int, optional
-        Max number of splits, if specified to be 0, there will be no
-        more limits, by default 0.
+        Max number of splits; if set to 0, there will be no limits; if
+        < 0, the string will not be splitted; by default 0.
     flags : FlagType, optional
         Regex flags, by default 0.
 
@@ -728,8 +729,8 @@ def lsplit(
     string : str
         String to be splitted.
     maxsplit : int, optional
-        Max number of splits, if specified to be 0, there will be no
-        more limits, by default 0.
+        Max number of splits; if set to 0, there will be no limits; if
+        < 0, the string will not be splitted; by default 0.
     flags : FlagType, optional
         Regex flags, by default 0.
 
@@ -766,6 +767,52 @@ def lsplit(
     return splits
 
 
+def line_findall(
+    pattern: PatternType, string: str, flags: FlagType = 0
+) -> List[Tuple[int, str]]:
+    """
+    Finds all non-overlapping matches in the string. Differences to
+    `smart_findall()` that it returns a list of 2-tuples containing
+    (nline, substring); nline is the line number of the matched
+    substring.
+
+    Parameters
+    ----------
+    pattern : Union[str, Pattern[str], SmartPattern[str]]
+        Regex pattern.
+    string : str
+        String to be searched.
+    flags : FlagType, optional
+        Regex flags, by default 0.
+
+    Returns
+    -------
+    List[Tuple[int, str]]
+        List of 2-tuples containing (nline, substring).
+
+    """
+    finds = []
+    nline: int = 1
+
+    while searched := smart_search(pattern, string, flags=flags):
+        span, group = searched.span(), searched.group()
+
+        left = string[: span[0]]
+        nline += line_count(left) - 1
+
+        finds.append((nline, group))
+        nline += line_count(group) - 1
+
+        if len(string) == 0:
+            break
+        if span[1] == 0:
+            nline += 1 if string[0] == "\n" else 0
+            string = string[1:]
+        else:
+            string = string[span[1] :]
+    return finds
+
+
 @overload
 def real_findall(
     pattern: PatternType,
@@ -783,7 +830,8 @@ def real_findall(
 def real_findall(pattern: PatternType, string: str, flags=0, linemode=False):
     """
     Finds all non-overlapping matches in the string. Differences to
-    `smart_findall()` that it returns the match objects directly.
+    `smart_findall()` or `line_findall()` that it returns match objects
+    instead of matched substrings.
 
     Parameters
     ----------
@@ -794,17 +842,15 @@ def real_findall(pattern: PatternType, string: str, flags=0, linemode=False):
     flags : FlagType, optional
         Regex flags, by default 0.
     linemode : bool, optional
-        Determines whether to match the pattern on each line of the
-        string, by default False.
+        Determines whether to calculate the line number of the matched
+        substring, by default False.
 
     Returns
     -------
     List[Union[SmartMatch[str], Tuple[int, SmartMatch[str]]]]
         List of finding result. If `linemode` is False, each list
         element is a match object; if `linemode` is True, each list
-        element is a tuple consisting of the line number where the
-        substring is matched and the match object.
-
+        element is a 2-tuple containing (nline, substring).
     """
     finds = []
     nline: int = 1
@@ -879,6 +925,9 @@ class Smart:
         @hintwith(smart_findall, True)
         def findall(): ...
         @staticmethod
+        @hintwith(line_findall, True)
+        def line_findall(): ...
+        @staticmethod
         @hintwith(real_findall, True)
         def real_findall(): ...
 
@@ -895,4 +944,5 @@ class Smart:
         rsplit = rsplit
         lsplit = lsplit
         findall = smart_findall
+        line_findall = line_findall
         real_findall = real_findall

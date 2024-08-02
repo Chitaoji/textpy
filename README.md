@@ -183,7 +183,7 @@ This project falls under the BSD 3-Clause License.
   * `real_findall()` now returns match objects instead of spans and groups;
   * `smart_sub()` accepts a new optional parameter called `count=`;
   * `SmartPattern` supports [] to indicate a Unicode (str) or bytes pattern (like what `re.Pattern` does);
-  * new regex operations `smart_split()`, `smart_findall()`, `smart_subn()`, and `smart_fullmatch()`;
+  * new regex operations `smart_split()`, `smart_findall()`, `line_findall()`, `smart_subn()`, and `smart_fullmatch()`;
   * created a namespace `Smart` for all the smart operations;
   * bugfixes for `rsplit()`, `lsplit()`, and `smart_sub()`.
 
