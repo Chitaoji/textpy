@@ -516,7 +516,7 @@ def smart_sub(
     ----------
     pattern : Union[str, Pattern[str], SmartPattern[str]]
         Regex pattern.
-    repl : ReplType
+    repl : Union[str, Callable[[Match[str]], str]]
         Speficies the string to replace the patterns. If Callable, should
         be a function that receives the Match object, and gives back
         the replacement string to be used.
@@ -570,7 +570,7 @@ def smart_subn(
     ----------
     pattern : Union[str, Pattern[str], SmartPattern[str]]
         Regex pattern.
-    repl : ReplType
+    repl : Union[str, Callable[[Match[str]], str]]
         Speficies the string to replace the patterns. If Callable, should
         be a function that receives the Match object, and gives back
         the replacement string to be used.
