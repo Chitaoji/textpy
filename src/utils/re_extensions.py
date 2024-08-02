@@ -841,17 +841,17 @@ def real_findall(pattern: PatternType, string: str, flags=0, linemode=False):
     flags : FlagType, optional
         Regex flags, by default 0.
     linemode : bool, optional
-        Determines whether to match on each line; if True, returns a list
-        of 2-tuples containing (nline, match), and the spans of the match
-        object will be indices in the line (instead of in the whole string);
-        by default False.
+        Determines whether to match by line; if True, returns a list of
+        2-tuples containing (nline, match), and the span of the match
+        object will only be indices within the line (rather than indices
+        within the entire string); by default False.
 
     Returns
     -------
     List[Union[SmartMatch[str], Tuple[int, SmartMatch[str]]]]
-        List of finding result. If `linemode` is False, each list
-        element is a match object; if `linemode` is True, each list
-        element is a 2-tuple containing (nline, match).
+        List of finding result. If `linemode` is False, each list element
+        is a match object; if `linemode` is True, each list element is a
+        2-tuple containing (nline, match).
 
     """
     finds = []
