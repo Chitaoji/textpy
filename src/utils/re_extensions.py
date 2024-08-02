@@ -32,6 +32,7 @@ __all__ = [
     "pattern_inreg",
     "line_count",
     "line_count_iter",
+    "counted_strip",
     "word_wrap",
     "SmartPattern",
     "SmartMatch",
@@ -162,8 +163,7 @@ def pattern_inreg(pattern: str) -> str:
 
 def line_count(string: str) -> int:
     """
-    Counts the number of lines in the string, which equals to (number
-    of "\\n") + 1.
+    Counts the number of lines in the string; returns (number of "\\n") + 1.
 
     Parameters
     ----------
@@ -173,10 +173,10 @@ def line_count(string: str) -> int:
     Returns
     -------
     int
-        Total number of lines.
+        Number of lines.
 
     """
-    return 1 + len(re.findall("\n", string))
+    return 1 + string.count("\n")
 
 
 def line_count_iter(iterstr: Iterable[str]) -> Iterable[Tuple[int, str]]:
@@ -199,7 +199,7 @@ def line_count_iter(iterstr: Iterable[str]) -> Iterable[Tuple[int, str]]:
     cnt: int = 1
     for s in iterstr:
         yield cnt, s
-        cnt += len(re.findall("\n", s))
+        cnt += s.count("\n")
 
 
 def word_wrap(string: str, maximum: int = 80) -> str:
@@ -772,9 +772,8 @@ def line_findall(
 ) -> List[Tuple[int, str]]:
     """
     Finds all non-overlapping matches in the string. Differences to
-    `smart_findall()` that it returns a list of 2-tuples containing
-    (nline, substring); nline is the line number of the matched
-    substring.
+    `smart_findall()` that it returns a list of 2-tuples containing (nline,
+    substring); nline is the line number of the matched substring.
 
     Parameters
     ----------
@@ -798,10 +797,10 @@ def line_findall(
         span, group = searched.span(), searched.group()
 
         left = string[: span[0]]
-        nline += line_count(left) - 1
+        nline += left.count("\n")
 
         finds.append((nline, group))
-        nline += line_count(group) - 1
+        nline += group.count("\n")
 
         if len(string) == 0:
             break
@@ -842,15 +841,18 @@ def real_findall(pattern: PatternType, string: str, flags=0, linemode=False):
     flags : FlagType, optional
         Regex flags, by default 0.
     linemode : bool, optional
-        Determines whether to calculate the line number of the matched
-        substring, by default False.
+        Determines whether to match on each line; if True, returns a list
+        of 2-tuples containing (nline, match), and the spans of the match
+        object will be indices in the line (instead of in the whole string);
+        by default False.
 
     Returns
     -------
     List[Union[SmartMatch[str], Tuple[int, SmartMatch[str]]]]
         List of finding result. If `linemode` is False, each list
         element is a match object; if `linemode` is True, each list
-        element is a 2-tuple containing (nline, substring).
+        element is a 2-tuple containing (nline, match).
+
     """
     finds = []
     nline: int = 1
@@ -861,7 +863,7 @@ def real_findall(pattern: PatternType, string: str, flags=0, linemode=False):
         span, group = searched.span(), searched.group()
         if linemode:
             left = string[: span[0]]
-            lc_left = line_count(left) - 1
+            lc_left = left.count("\n")
             nline += lc_left
             if lc_left > 0:
                 line_pos = 0
@@ -871,7 +873,7 @@ def real_findall(pattern: PatternType, string: str, flags=0, linemode=False):
                 group,
             )
             finds.append((nline, matched))
-            nline += line_count(group) - 1
+            nline += group.count("\n")
             if "\n" in group:
                 line_pos = len(group) - 1 - group.rfind("\n")
             else:
