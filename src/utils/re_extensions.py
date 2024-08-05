@@ -1,18 +1,8 @@
 """Extensions for the `re` package."""
 
 import re
-from typing import (
-    TYPE_CHECKING,
-    Callable,
-    Generic,
-    Iterable,
-    List,
-    Literal,
-    Tuple,
-    TypeVar,
-    Union,
-    overload,
-)
+from typing import (TYPE_CHECKING, Callable, Generic, Iterable, List, Literal,
+                    Tuple, TypeVar, Union, overload)
 
 if TYPE_CHECKING:
     from re import Match, Pattern, RegexFlag
@@ -27,6 +17,7 @@ FlagType = Union[int, "RegexFlag"]
 
 
 __all__ = [
+    "quote_collapse",
     "find_right_bracket",
     "find_left_bracket",
     "pattern_inreg",
@@ -49,6 +40,44 @@ __all__ = [
     "real_findall",
     "Smart",
 ]
+
+
+def quote_collapse(string: str) -> str:
+    """
+    Returns a copy of the string with the contents in quotes
+    collapsed.
+
+    """
+    last_quote = ""
+    quotes: List[Tuple[int, int]] = []
+    pos_now, last_pos, len_s = 0, 0, len(string)
+    while pos_now < len_s:
+        if string[pos_now] == "\\":
+            pos_now += 2
+            continue
+        elif (char := string[pos_now]) in "'\"":
+            if last_quote:
+                if last_quote == char:
+                    pos_now += 1
+                    last_quote, last_pos = "", pos_now
+                    continue
+                elif last_quote == char * 3:
+                    pos_now += 3
+                    last_quote, last_pos = "", pos_now
+                    continue
+            elif string[pos_now + 1 : pos_now + 3] == char * 2:
+                quotes.append((last_pos, pos_now))
+                last_quote = char * 3
+                pos_now += 3
+                continue
+            else:
+                quotes.append((last_pos, pos_now))
+                last_quote = char
+        pos_now += 1
+    if last_quote:
+        raise SyntaxError(f"unterminated string literal: {last_quote!r}")
+    quotes.append((last_pos, pos_now))
+    return "".join([string[i:j] for i, j in quotes])
 
 
 def find_right_bracket(string: str, start: int, crossline: bool = False) -> int:
@@ -689,7 +718,7 @@ def rsplit(
     """
     if maxsplit < 0 or not (searched := smart_search(pattern, string, flags=flags)):
         return [string]
-    splits = [string[: searched.start()]]
+    splits = [""]
     stored = ""
     while searched and string:
         if searched.end() == 0:
