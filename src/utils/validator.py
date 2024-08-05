@@ -42,7 +42,8 @@ class SimpleValidator:
             return
         if not isinstance(value, self._type):
             raise TypeError(
-                f"invalid type for {self.name!r}: expected {tuple_repr(self._type, is_type=True)}; "
+                f"invalid type for {self.name!r}: expected "
+                f"{tuple_repr(self._type, is_type=True)}; "
                 f"got {value.__class__.__name__!r} instead"
             )
         if self.literal is not ...:

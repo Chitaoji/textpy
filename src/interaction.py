@@ -53,7 +53,7 @@ class DisplayParams:
     """
 
     color_scheme: ColorSchemeStr = SimpleValidator(
-        literal=get_args(ColorSchemeStr), default="dark"
+        str, literal=get_args(ColorSchemeStr), default="dark"
     )
     enable_styler: bool = SimpleValidator(bool, default=True)
     line_numbers: bool = SimpleValidator(bool, default=True)
