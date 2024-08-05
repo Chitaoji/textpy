@@ -177,6 +177,11 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.26
+* Updated `utils.re_extensions`: 
+  * bugfix for `rsplit()`;
+  * new regex operation `quote_collapse()`.
+
 ### v0.1.25
 * Updated `utils.re_extensions`: 
   * **Important:** we've decided to extract `utils.re_extensions` into an independent package named `re_extensions` (presently at v0.0.3), so any future updates should be looked up in https://github.com/Chitaoji/re-extensions instead; we will stay in sync with it, however;
