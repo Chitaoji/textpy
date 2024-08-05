@@ -180,7 +180,7 @@ This project falls under the BSD 3-Clause License.
 ### v0.1.26
 * Updated `utils.re_extensions`: 
   * bugfix for `rsplit()`;
-  * new regex operation `quote_collapse()`.
+  * new string operation `quote_collapse()`.
 
 ### v0.1.25
 * Updated `utils.re_extensions`: 

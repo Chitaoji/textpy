@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Dict, Generic, List, Optional, Union, overload
 import black
 from typing_extensions import ParamSpec, Self
 
+from .imports import Imports
 from .interaction import NULL, FileEditor, FindTextResult, Replacer, TextFinding
 from .utils.re_extensions import SmartPattern, line_findall, pattern_inreg
 
@@ -215,7 +216,7 @@ class PyText(ABC, Generic[P]):
             The relative name.
 
         """
-        return self.absname.split(".", maxsplit=1)[-1]
+        return "." + self.absname.partition(".")[-1]
 
     @cached_property
     def abspath(self) -> Path:
@@ -475,6 +476,11 @@ class PyText(ABC, Generic[P]):
             pattern, "", overwrite, styler=styler, based_on=based_on, **kwargs
         )
 
+    @cached_property
+    def imports(self) -> Imports:
+        """Import infomation."""
+        return Imports(self)
+
     @staticmethod
     def __pattern_trans(
         pattern: "PatternType",
@@ -490,7 +496,9 @@ class PyText(ABC, Generic[P]):
         elif isinstance(pattern, str):
             p, f = pattern, 0
         else:
-            raise TypeError(f"argument 'pattern' can not be {type(p)}")
+            raise TypeError(
+                f"'pattern' can not be instance of {p.__class__.__name__!r}"
+            )
         if not regex:
             p = pattern_inreg(p)
         if not case_sensitive:
