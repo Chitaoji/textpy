@@ -104,7 +104,7 @@ True
 ```
 Sometimes, your python module may contain not just one file but multiple files and folders, but don't worry, since `tx.module()` provides support for complex file hierarchies. If the path points to a file, the return type will be `PyFile`; otherwise, the return type will be `PyDir`.
 
-In conclusion, suppose you've got a python package, you can simply give the package dirpath to `tx.module()`, and do things like before:
+In conclusion, once you've got a python package, you can simply give the package dirpath to `tx.module()`, and do things like before:
 
 ```py
 >>> pkg_dir = "examples/" # you can type any path here
