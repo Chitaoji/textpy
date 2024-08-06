@@ -59,13 +59,14 @@ If you are using a *Jupyter* notebook, you can run a cell like this:
 >>> myfile.findall("content")
 ```
 
+
 Note that in the *Jupyter* notebook case, the matched substrings are **clickable**,
 linking to where the patterns were found.
 
 ## Examples
 ### tx.module()
 The previous demonstration introduced the core function `tx.module()`. In fact, the
-return type of `tx.module()` is a subclass of the abstract class `PyText`, who supports
+return of `tx.module()` is a subinstance of the abstract class `PyText`, who supports
 various text manipulation methods:
 ```py
 >>> isinstance(m, tx.PyText)
@@ -73,11 +74,11 @@ True
 ```
 Sometimes, your python module may contain not just one file but multiple files and
 folders, but don't worry, since `tx.module()` provides support for complex file
-hierarchies. The return type will be either `PyDir` or `PyFile`, both subclasses of
-`PyText`, depending on the path type.
+hierarchies. If the path points to a file, the return type will be `PyFile`; otherwise,
+the return type will be `PyDir`.
 
-In conclusion, suppose you've got a python package, you can simply give the package
-dirpath to `tx.module()`, and do things like before:
+In conclusion, once you've got a python package, you can simply give the package dirpath
+to `tx.module()`, and do things like before:
 
 ```py
 >>> pkg_dir = "examples/" # you can type any path here
@@ -124,10 +125,15 @@ examples/myfile.py:30: '    <book/magazine> : MyBook'
 examples/myfile.py:31: '        A <book/magazine>.'
 examples/myfile.py:34: '    print(<book/magazine>.content)'
 ```
-At this point, the replacement has not yet taken effect on the files. Use `.confirm()`
-to confirm the changes and make them done:
+At this point, the replacement has not actually taken effect yet. Use `.confirm()` to
+confirm the changes and write them to the file(s):
 ```py
 >>> replacer.confirm()
+{'successful': ['examples/myfile.py'], 'failed': []}
+```
+If you want to rollback the changes, run:
+```py
+>>> replacer.rollback()
 {'successful': ['examples/myfile.py'], 'failed': []}
 ```
 
@@ -145,6 +151,9 @@ examples/myfile.py:31: '        A <book>.'
 examples/myfile.py:34: '    print(<book>.content)'
 
 >>> deleter.confirm()
+{'successful': ['examples/myfile.py'], 'failed': []}
+
+>>> deleter.rollback()
 {'successful': ['examples/myfile.py'], 'failed': []}
 ```
 
