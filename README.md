@@ -1,5 +1,5 @@
 # textpy
-Reads a python module and statically analyzes it. This works well with Jupyter extensions in VS Code, and will have better performance when the module files are formatted with *PEP-8*.
+Reads a python module and statically analyzes it. This works well with *Jupyter* extensions in *VS Code*, and will have better performance when the module files are formatted with *PEP-8*.
 
 ## Installation
 ```sh
@@ -12,8 +12,9 @@ lazyr>=0.0.16
 pandas
 Jinja2
 black
+hintwith>=0.1.3
 ```
-NOTE: *pandas*>=1.4.0 is recommended. Lower versions of *pandas* are also available, but some properties of this package will be affected.
+NOTE: *pandas*>=1.4.0 is recommended. Lower versions of *pandas* are also valid, but some properties of this package are not supported by them.
 
 ## Quick Start
 To demonstrate the usage of this module, we put a file named `myfile.py` under `./examples/` (you can find it in the repository, or create a new file of your own):
@@ -63,7 +64,7 @@ examples/myfile.py:7: 'class <MyBook>:'
 examples/myfile.py:24: 'def print_my_book(book: <MyBook>) -> None:'
 examples/myfile.py:30: '    book : <MyBook>'
 ```
-If you are using a Jupyter notebook in VS Code, you can run a cell like this:
+If you are using a *Jupyter* notebook, you can run a cell like this:
 ```py
 >>> myfile.findall("content")
 ```
@@ -91,7 +92,7 @@ If you are using a Jupyter notebook in VS Code, you can run a cell like this:
   </tbody>
 </table>
 <!--/html-->
-Note that in the Jupyter notebook case, the matched substrings are **clickable**, linking to where the patterns were found.
+Note that in the *Jupyter* notebook case, the matched substrings are **clickable**, linking to where the patterns were found.
 
 ## Examples
 ### tx.module()

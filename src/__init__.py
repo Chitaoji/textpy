@@ -1,7 +1,7 @@
 '''
 # textpy
-Reads a python module and statically analyzes it. This works well with Jupyter
-extensions in VS Code, and will have better performance when the module files are
+Reads a python module and statically analyzes it. This works well with *Jupyter*
+extensions in *VS Code*, and will have better performance when the module files are
 formatted with *PEP-8*.
 
 ## Quick Start
@@ -54,12 +54,12 @@ examples/myfile.py:7: 'class <MyBook>:'
 examples/myfile.py:24: 'def print_my_book(book: <MyBook>) -> None:'
 examples/myfile.py:30: '    book : <MyBook>'
 ```
-If you are using a Jupyter notebook in VS Code, you can run a cell like this:
+If you are using a *Jupyter* notebook, you can run a cell like this:
 ```py
 >>> myfile.findall("content")
 ```
 
-Note that in the Jupyter notebook case, the matched substrings are **clickable**,
+Note that in the *Jupyter* notebook case, the matched substrings are **clickable**,
 linking to where the patterns were found.
 
 ## Examples
