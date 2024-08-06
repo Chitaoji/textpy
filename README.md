@@ -14,7 +14,7 @@ Jinja2
 black
 hintwith>=0.1.3
 ```
-NOTE: *pandas*>=1.4.0 is recommended. Lower versions of *pandas* are also valid, but some properties of this package are not supported by them.
+NOTE: *pandas*>=1.4.0 is recommended. Lower versions of *pandas* are also valid, but some features of this package are not supported by them.
 
 ## Quick Start
 To demonstrate the usage of this module, we put a file named `myfile.py` under `./examples/` (you can find it in the repository, or create a new file of your own):
@@ -97,12 +97,12 @@ Note that in the *Jupyter* notebook case, the matched substrings are **clickable
 
 ## Examples
 ### tx.module()
-The previous demonstration introduced the core function `tx.module()`. In fact, the return type of `tx.module()` is a subclass of the abstract class `PyText`, who supports various text manipulation methods:
+The previous demonstration introduced the core function `tx.module()`. In fact, the return of `tx.module()` is a subinstance of the abstract class `PyText`, who supports various text manipulation methods:
 ```py
 >>> isinstance(m, tx.PyText)
 True
 ```
-Sometimes, your python module may contain not just one file but multiple files and folders, but don't worry, since `tx.module()` provides support for complex file hierarchies. The return type will be either `PyDir` or `PyFile`, both subclasses of `PyText`, depending on the path type.
+Sometimes, your python module may contain not just one file but multiple files and folders, but don't worry, since `tx.module()` provides support for complex file hierarchies. If the path points to a file, the return type will be `PyFile`; otherwise, the return type will be `PyDir`.
 
 In conclusion, suppose you've got a python package, you can simply give the package dirpath to `tx.module()`, and do things like before:
 
