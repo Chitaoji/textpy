@@ -6,8 +6,9 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
+import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Optional, Union
+from typing import TYPE_CHECKING, Callable, Literal, Optional, Union
 
 from typing_extensions import deprecated
 
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
     from .abc import PyText
 
 
-__all__ = ["module", "textpy"]
+__all__ = ["module", "textpy", "type_of_script"]
 
 
 def module(
@@ -76,3 +77,15 @@ textpy = deprecated(
     "tx.textpy() is deprecated and will be removed in a future version "
     "- use tx.module() instead"
 )(module)
+
+
+def type_of_script() -> Literal["jupyter", "ipython", "terminal"]:
+    """Returns the type of script."""
+    if "IPython" in sys.modules:
+        ipython = sys.modules["IPython"].get_ipython()
+        ipy_str = str(type(ipython))
+        if "zmqshell" in ipy_str:
+            return "jupyter"
+        if "terminal" in ipy_str:
+            return "ipython"
+    return "terminal"

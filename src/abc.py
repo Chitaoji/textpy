@@ -313,7 +313,7 @@ class PyText(ABC, Generic[P]):
         regex : bool, optional
             Whether to enable regular expressions, by default True.
         styler : bool, optional
-            Whether to use a `Styler` object to beautify the representation
+            Whether to return a `Styler` object to beautify the representation
             of result in a Jupyter notebook, this only takes effect when
             `pandas.__version__ >= 1.4.0`, by default True.
 
@@ -393,7 +393,7 @@ class PyText(ABC, Generic[P]):
         regex : bool, optional
             Whether to enable regular expressions, by default True.
         styler : bool, optional
-            Whether to use a `Styler` object to beautify the representation
+            Whether to return a `Styler` object to beautify the representation
             of result in a Jupyter notebook, this only takes effect when
             `pandas.__version__ >= 1.4.0`, by default True.
 
@@ -462,7 +462,7 @@ class PyText(ABC, Generic[P]):
         regex : bool, optional
             Whether to enable regular expressions, by default True.
         styler : bool, optional
-            Whether to use a `Styler` object to beautify the representation
+            Whether to return a `Styler` object to beautify the representation
             of result in a Jupyter notebook, this only takes effect when
             `pandas.__version__ >= 1.4.0`, by default True.
 

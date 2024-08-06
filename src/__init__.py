@@ -191,3 +191,8 @@ __all__.extend(core.__all__)
 __all__.extend(interaction.__all__)
 __all__.extend(doc.__all__)
 __all__.extend(text.__all__)
+
+SCRIPT_TYPE = type_of_script()
+
+if SCRIPT_TYPE == "jupyter":
+    display_params.enable_styler = True

@@ -1,5 +1,5 @@
 """
-Contains interaction tools: display_params().
+Contains interaction tools: display_params.
 
 NOTE: this module is private. All functions and objects are available in the main
 `textpy` namespace - use that instead.
@@ -55,7 +55,7 @@ class DisplayParams:
     color_scheme: ColorSchemeStr = SimpleValidator(
         str, literal=get_args(ColorSchemeStr), default="dark"
     )
-    enable_styler: bool = SimpleValidator(bool, default=True)
+    enable_styler: bool = SimpleValidator(bool, default=False)
     line_numbers: bool = SimpleValidator(bool, default=True)
 
 
