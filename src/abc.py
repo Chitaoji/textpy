@@ -294,7 +294,7 @@ class PyText(ABC, Generic[P]):
         self, pattern: "PatternType", /, *_: P.args, **kwargs: P.kwargs
     ) -> FindTextResult: ...
     def findall(
-        self, pattern, /, styler=True, based_on: Replacer = None, **kwargs
+        self, pattern, /, based_on: Replacer = None, **kwargs
     ) -> FindTextResult:
         """
         Finds all non-overlapping matches of `pattern`.
@@ -312,10 +312,6 @@ class PyText(ABC, Generic[P]):
             Specifies case sensitivity, by default True.
         regex : bool, optional
             Whether to enable regular expressions, by default True.
-        styler : bool, optional
-            Whether to return a `Styler` object to beautify the representation
-            of result in a Jupyter notebook, this only takes effect when
-            `pandas.__version__ >= 1.4.0`, by default True.
 
         Returns
         -------
@@ -333,7 +329,7 @@ class PyText(ABC, Generic[P]):
                     if e.pyfile == self and not e.is_based_on:
                         latest = self.__class__(e.new_text, mask=self)
                         break
-            res.join(latest.findall(pattern, styler=False))
+            res.join(latest.findall(pattern))
         elif not self.children:
             for nline, g in line_findall(self.__pattern_expand(pattern), self.text):
                 if g:
@@ -341,10 +337,10 @@ class PyText(ABC, Generic[P]):
                         TextFinding(self, pattern, self.start_line + nline - 1, g)
                     )
         else:
-            res.join(self.header.findall(pattern, styler=False, based_on=based_on))
+            res.join(self.header.findall(pattern, based_on=based_on))
             for c in self.children:
-                res.join(c.findall(pattern, styler=False, based_on=based_on))
-        return res.to_styler() if styler else res
+                res.join(c.findall(pattern, based_on=based_on))
+        return res
 
     @overload
     def replace(
@@ -362,7 +358,6 @@ class PyText(ABC, Generic[P]):
         repl,
         /,
         overwrite=True,
-        styler=True,
         based_on: Optional[Replacer] = None,
         **kwargs,
     ) -> "Replacer":
@@ -392,10 +387,6 @@ class PyText(ABC, Generic[P]):
             Specifies case sensitivity, by default True.
         regex : bool, optional
             Whether to enable regular expressions, by default True.
-        styler : bool, optional
-            Whether to return a `Styler` object to beautify the representation
-            of result in a Jupyter notebook, this only takes effect when
-            `pandas.__version__ >= 1.4.0`, by default True.
 
         Returns
         -------
@@ -423,12 +414,11 @@ class PyText(ABC, Generic[P]):
                         pattern,
                         repl,
                         overwrite=overwrite,
-                        styler=False,
                         based_on=based_on,
                         **kwargs,
                     )
                 )
-        return replacer.to_styler() if styler else replacer
+        return replacer
 
     @overload
     def delete(
@@ -439,9 +429,7 @@ class PyText(ABC, Generic[P]):
         *_: P.args,
         **kwargs: P.kwargs,
     ) -> "Replacer": ...
-    def delete(
-        self, pattern, /, overwrite=True, styler=True, based_on=None, **kwargs
-    ) -> "Replacer":
+    def delete(self, pattern, /, overwrite=True, based_on=None, **kwargs) -> "Replacer":
         """
         An alternative to `.replace(pattern, "", *args, **kwargs)`
 
@@ -461,10 +449,6 @@ class PyText(ABC, Generic[P]):
             Specifies case sensitivity, by default True.
         regex : bool, optional
             Whether to enable regular expressions, by default True.
-        styler : bool, optional
-            Whether to return a `Styler` object to beautify the representation
-            of result in a Jupyter notebook, this only takes effect when
-            `pandas.__version__ >= 1.4.0`, by default True.
 
         Returns
         -------
@@ -472,13 +456,11 @@ class PyText(ABC, Generic[P]):
             Text replacer.
 
         """
-        return self.replace(
-            pattern, "", overwrite, styler=styler, based_on=based_on, **kwargs
-        )
+        return self.replace(pattern, "", overwrite, based_on=based_on, **kwargs)
 
     @cached_property
     def imports(self) -> Imports:
-        """Import infomation."""
+        """Import infomation of the module."""
         return Imports(self)
 
     @staticmethod
@@ -674,6 +656,5 @@ def _defaults(
     dotall: bool = False,
     case_sensitive: bool = True,
     regex: bool = True,
-    styler: bool = True,
     based_on: Optional[Replacer] = None,
 ) -> None: ...

@@ -75,7 +75,7 @@ True
 Sometimes, your python module may contain not just one file but multiple files and
 folders, but don't worry, since `tx.module()` provides support for complex file
 hierarchies. If the path points to a file, the return type will be `PyFile`; otherwise,
-the return type will be `PyDir`.
+the return type will be `PyDir` - both are subclasses of `PyText`.
 
 In conclusion, once you've got a python package, you can simply give the package dirpath
 to `tx.module()`, and do things like before:
@@ -94,21 +94,16 @@ some pattern in a python module.
 >>> myfile.findall("optional")
 examples/myfile.py:13: '    story : str, <optional>'
 ```
-The optional argument `styler=` determines whether to return a pandas `Styler` object to
-beautify the representation. If you are not running python in a jupyter script, this
-option will be invalid by default. However, you can compulsively enable the stylers by
-setting `display_params.enable_styler` to True:
+The return type of `.findall()` has a `_repr_mimebundle()` method to beautify the
+representation in a jupyter notebook. However, you can compulsively disable this feature
+by setting `display_params.repr_html` to False:
 ```py
 >>> from textpy import display_params
->>> display_params.enable_styler = True
-
->>> myfile.findall("optional", styler=True)
-<pandas.io.formats.style.Styler object at ...>
+>>> display_params.repr_html = False
 ```
 In addition, the `.findall()` method has some optional parameters to customize the
 matching pattern, including `whole_word=`, `case_sensitive=`, and `regex=`.
 ```py
->>> display_params.enable_styler = False
 >>> myfile.findall("mybook", case_sensitive=False, regex=False, whole_word=True)
 examples/myfile.py:7: 'class <MyBook>:'
 examples/myfile.py:24: 'def print_my_book(book: <MyBook>) -> None:'
@@ -195,8 +190,3 @@ __all__.extend(core.__all__)
 __all__.extend(interaction.__all__)
 __all__.extend(doc.__all__)
 __all__.extend(text.__all__)
-
-SCRIPT_TYPE = type_of_script()
-
-if SCRIPT_TYPE == "jupyter":
-    display_params.enable_styler = True

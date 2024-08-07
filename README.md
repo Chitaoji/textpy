@@ -119,17 +119,13 @@ As mentioned before, user can use `.findall()` to find all non-overlapping match
 >>> myfile.findall("optional")
 examples/myfile.py:13: '    story : str, <optional>'
 ```
-The optional argument `styler=` determines whether to return a pandas `Styler` object to beautify the representation. If you are not running python in a jupyter script, this option will be invalid by default. However, you can compulsively enable the stylers by setting `display_params.enable_styler` to True:
+The return object of `.findall()` has a `_repr_mimebundle_()` method to beautify the representation inside a jupyter notebook. However, you can compulsively disable this feature by setting `display_params.repr_html` to False:
 ```py
 >>> from textpy import display_params
->>> display_params.enable_styler = True
-
->>> myfile.findall("optional", styler=True)
-<pandas.io.formats.style.Styler object at ...>
+>>> display_params.repr_html = False
 ``` 
-In addition, the `.findall()` method has some optional parameters to customize the matching pattern, including `whole_word=`, `case_sensitive=`, and `regex=`.
+In addition, the `.findall()` method has some optional parameters to customize the pattern, including `whole_word=`, `case_sensitive=`, and `regex=`.
 ```py
->>> display_params.enable_styler = False 
 >>> myfile.findall("mybook", case_sensitive=False, regex=False, whole_word=True)
 examples/myfile.py:7: 'class <MyBook>:'
 examples/myfile.py:24: 'def print_my_book(book: <MyBook>) -> None:'
@@ -192,7 +188,6 @@ This project falls under the BSD 3-Clause License.
 
 ## History
 ### v0.1.27
-* Automatically set the default value for `display_params.enable_styler` according to the type of script.
 * New property `PyText.imports`.
 
 ### v0.1.26
@@ -220,7 +215,7 @@ This project falls under the BSD 3-Clause License.
   * new string operation `counted_strip()`;
   * new utility classes `SmartPattern` and `SmartMatch`.
   * new utility functions `find_right_bracket()` and `find_left_bracket()`.
-* `Replacer.to_styler()` will no longer return a styler when *pandas* version < 1.4.0.
+* `Replacer._repr_mimebundle_()` will no longer return html data when *pandas* version < 1.4.0.
 
 ### v0.1.23
 * New string operation `utils.re_extensions.word_wrap()`.
@@ -238,8 +233,8 @@ This project falls under the BSD 3-Clause License.
 
 ### v0.1.20
 * Fixed issues:
-  * incorrectly displayed file paths in the output of `TextPy.findall(styler=False)`;
-  * expired file links in the output of `TextPy.findall(styler=True, line_numbers=False)`.
+  * incorrectly displayed file paths in the output of `TextPy.findall()`;
+  * expired file links in the output of `TextPy.findall(line_numbers=False)`.
 
 ### v0.1.19
 * Various improvements.

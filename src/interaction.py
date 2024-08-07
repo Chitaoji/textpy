@@ -13,13 +13,13 @@ from functools import cached_property, partial
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
+    Any,
     Callable,
     Dict,
     List,
     Literal,
     Optional,
     Tuple,
-    Union,
     get_args,
 )
 
@@ -55,7 +55,7 @@ class DisplayParams:
     color_scheme: ColorSchemeStr = SimpleValidator(
         str, literal=get_args(ColorSchemeStr), default="dark"
     )
-    enable_styler: bool = SimpleValidator(bool, default=False)
+    repr_html: bool = SimpleValidator(bool, default=True)
     line_numbers: bool = SimpleValidator(bool, default=True)
 
 
@@ -119,6 +119,11 @@ class FindTextResult:
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
 
+    def _repr_mimebundle_(self, *_, **__) -> Dict[str, Any]:
+        if display_params.repr_html and pd.__version__ >= "1.4.0":
+            return {"text/html": self.to_html()}
+        return {"text/plain": repr(self)}
+
     def __bool__(self) -> bool:
         return bool(self.res)
 
@@ -171,19 +176,17 @@ class FindTextResult:
         """
         self.extend(other.res)
 
-    def to_styler(self) -> Union["Styler", Self]:
+    def to_html(self) -> str:
         """
-        Return a `Styler` of dataframe to beautify the representation in a
-        Jupyter notebook.
+        Return an html string to beautify the representation inside a
+        jupyter notebook.
 
         Returns
         -------
-        Union[Styler, Self]
-            A `Styler` or an instance of self.
+        str
+            An html string.
 
         """
-        if not display_params.enable_styler or pd.__version__ < "1.4.0":
-            return self
         df = pd.DataFrame("", index=range(len(self.res)), columns=["source", "match"])
         for i, res in enumerate(sorted(self.res)):
             t, p, n, _line = res.to_tuple()
@@ -200,8 +203,7 @@ class FindTextResult:
             .set_properties(**{"text-align": "left"})
             .set_table_styles([{"selector": "th", "props": [("text-align", "center")]}])
         )
-        setattr(styler, "getself", lambda: self)
-        return styler
+        return styler.to_html()
 
     def getself(self) -> Self:
         """
@@ -377,6 +379,11 @@ class Replacer:
     def __repr__(self) -> str:
         return repr(self.__find_text_result)
 
+    def _repr_mimebundle_(self, *_, **__) -> Dict[str, Any]:
+        if display_params.repr_html and pd.__version__ >= "1.4.0":
+            return {"text/html": self.__find_text_result.to_html()}
+        return {"text/plain": repr(self)}
+
     def __bool__(self) -> bool:
         return bool(self.editors)
 
@@ -480,25 +487,6 @@ class Replacer:
             )
         return info
 
-    def to_styler(self) -> Union["Styler", Self]:
-        """
-        Return a `Styler` of dataframe to beautify the representation in a
-        Jupyter notebook.
-
-        Returns
-        -------
-        Union[Styler, Self]
-            A `Styler` or an instance of self.
-
-        """
-        if not display_params.enable_styler or pd.__version__ < "1.4.0":
-            return self
-        styler = self.__find_text_result.to_styler()
-        setattr(styler, "confirm", self.confirm)
-        setattr(styler, "rollback", self.rollback)
-        setattr(styler, "getself", lambda: self)
-        return styler
-
     def getself(self) -> Self:
         """
         Returns self.
@@ -540,7 +528,7 @@ class Replacer:
                 pyfile = e.pyfile.__class__(e.based_on.new_text, mask=e.pyfile)
             else:
                 pyfile = e.pyfile
-            new_res = pyfile.findall(e.pattern, styler=False)
+            new_res = pyfile.findall(e.pattern)
             new_res.set_order(i)
             res.join(new_res)
         return res
