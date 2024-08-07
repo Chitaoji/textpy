@@ -1,6 +1,6 @@
 '''
 # textpy
-Reads a python module and statically analyzes it. This works well with *Jupyter*
+Reads a python module and statically analyzes it. This works well with jupyter
 extensions in *VS Code*, and will have better performance when the module files are
 formatted with *PEP-8*.
 
@@ -49,18 +49,18 @@ Run the following codes to find all the occurrences of some pattern (for example
 >>> import textpy as tx
 >>> myfile = tx.module("./examples/myfile.py") # reads the python module
 
->>> myfile.findall("MyBook", styler=False)
+>>> myfile.findall("MyBook")
 examples/myfile.py:7: 'class <MyBook>:'
 examples/myfile.py:24: 'def print_my_book(book: <MyBook>) -> None:'
 examples/myfile.py:30: '    book : <MyBook>'
 ```
-If you are using a *Jupyter* notebook, you can run a cell like this:
+If you are using a jupyter notebook, you can run a cell like this:
 ```py
 >>> myfile.findall("content")
 ```
 
 
-Note that in the *Jupyter* notebook case, the matched substrings are **clickable**,
+Note that in the jupyter notebook case, the matched substrings are **clickable**,
 linking to where the patterns were found.
 
 ## Examples
@@ -91,20 +91,24 @@ to `tx.module()`, and do things like before:
 As mentioned before, user can use `.findall()` to find all non-overlapping matches of
 some pattern in a python module.
 ```py
->>> myfile.findall("optional", styler=False)
+>>> myfile.findall("optional")
 examples/myfile.py:13: '    story : str, <optional>'
 ```
-The optional argument `styler=` determines whether to use a pandas `Styler` object to
-beautify the representation. If you are running python in the console, please always set
-`styler=False`. You can also disable the stylers in `display_params`, so that you don't
-need to repeat `styler=False` every time in the following examples:
+The optional argument `styler=` determines whether to return a pandas `Styler` object to
+beautify the representation. If you are not running python in a jupyter script, this
+option will be invalid by default. However, you can compulsively enable the stylers by
+setting `display_params.enable_styler` to True:
 ```py
 >>> from textpy import display_params
->>> display_params.enable_styler = False
+>>> display_params.enable_styler = True
+
+>>> myfile.findall("optional", styler=True)
+<pandas.io.formats.style.Styler object at ...>
 ```
 In addition, the `.findall()` method has some optional parameters to customize the
 matching pattern, including `whole_word=`, `case_sensitive=`, and `regex=`.
 ```py
+>>> display_params.enable_styler = False
 >>> myfile.findall("mybook", case_sensitive=False, regex=False, whole_word=True)
 examples/myfile.py:7: 'class <MyBook>:'
 examples/myfile.py:24: 'def print_my_book(book: <MyBook>) -> None:'

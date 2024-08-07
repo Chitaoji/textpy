@@ -66,7 +66,7 @@ class Imports:
     def children(self) -> List[Self]:
         """Children nodes."""
         if self.pytext_obj.is_dir():
-            return list(map(Imports, self.pytext_obj.children))
+            return [x.imports for x in self.pytext_obj.children]
         return []
 
     @cached_property
