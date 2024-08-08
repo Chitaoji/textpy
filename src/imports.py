@@ -65,10 +65,7 @@ class Imports:
         self.pytext_obj = obj
 
     def __repr__(self) -> str:
-        return (
-            f"<{self.__class__.__name__} object; count={len(self.history)}, "
-            f"files={self.file_number}>"
-        )
+        return f"<{self.__class__.__name__} object; count={len(self.history)}>"
 
     @cached_property
     def children(self) -> List[Self]:
@@ -76,13 +73,6 @@ class Imports:
         if self.pytext_obj.is_dir():
             return [x.imports for x in self.pytext_obj.children]
         return []
-
-    @cached_property
-    def file_number(self) -> int:
-        """Number of files."""
-        if self.children:
-            return sum(c.file_number for c in self.children)
-        return 1
 
     @cached_property
     def history(self) -> List[ImportHistory]:
