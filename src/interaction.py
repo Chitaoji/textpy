@@ -55,8 +55,8 @@ class DisplayParams:
     color_scheme: ColorSchemeStr = SimpleValidator(
         str, literal=get_args(ColorSchemeStr), default="dark"
     )
-    repr_html: bool = SimpleValidator(bool, default=True)
-    line_numbers: bool = SimpleValidator(bool, default=True)
+    repr_mimebundle: bool = SimpleValidator(bool, default=True)
+    repr_line_numbers: bool = SimpleValidator(bool, default=True)
 
 
 display_params = DisplayParams()
@@ -114,15 +114,17 @@ class FindTextResult:
         string: str = ""
         for res in sorted(self.res):
             t, p, n, _line = res.to_tuple()
-            string += f"\n{t.relpath}" + f":{n}" * display_params.line_numbers + ": "
+            if display_params.repr_line_numbers:
+                string += f"\n{t.relpath}:{n}: "
+            else:
+                string += f"\n{t.relpath}: "
             new = smart_sub(p, partial(self._repr, res), " " * t.spaces + _line)
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
 
-    def _repr_mimebundle_(self, *_, **__) -> Dict[str, Any]:
-        if display_params.repr_html and pd.__version__ >= "1.4.0":
+    def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
+        if display_params.repr_mimebundle and pd.__version__ >= "1.4.0":
             return {"text/html": self.to_html()}
-        return {"text/plain": repr(self)}
 
     def __bool__(self) -> bool:
         return bool(self.res)
@@ -193,7 +195,7 @@ class FindTextResult:
             df.iloc[i, 0] = ".".join(
                 [self.__style_source(x) for x in t.track()]
             ).replace(".NULL", "")
-            if display_params.line_numbers:
+            if display_params.repr_line_numbers:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
@@ -379,10 +381,9 @@ class Replacer:
     def __repr__(self) -> str:
         return repr(self.__find_text_result)
 
-    def _repr_mimebundle_(self, *_, **__) -> Dict[str, Any]:
-        if display_params.repr_html and pd.__version__ >= "1.4.0":
+    def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
+        if display_params.repr_mimebundle and pd.__version__ >= "1.4.0":
             return {"text/html": self.__find_text_result.to_html()}
-        return {"text/plain": repr(self)}
 
     def __bool__(self) -> bool:
         return bool(self.editors)
