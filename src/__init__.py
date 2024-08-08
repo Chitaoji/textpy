@@ -69,7 +69,7 @@ The previous demonstration introduced the core function `tx.module()`. In fact, 
 return of `tx.module()` is a subinstance of the abstract class `PyText`, who supports
 various text manipulation methods:
 ```py
->>> isinstance(m, tx.PyText)
+>>> isinstance(myfile, tx.PyText)
 True
 ```
 Sometimes, your python module may contain not just one file but multiple files and
@@ -81,8 +81,8 @@ In conclusion, once you've got a python package, you can simply give the package
 to `tx.module()`, and do things like before:
 
 ```py
->>> pkg_dir = "examples/" # you can type any path here
->>> pattern = "" # you can type any regular expression here
+>>> pkg_dir = "" # type any path here
+>>> pattern = "" # type any regex pattern here
 
 >>> res = tx.module(pkg_dir).findall(pattern)
 ```
@@ -94,15 +94,15 @@ some pattern in a python module.
 >>> myfile.findall("optional")
 examples/myfile.py:13: '    story : str, <optional>'
 ```
-The return type of `.findall()` has a `_repr_mimebundle()` method to beautify the
-representation in a jupyter notebook. However, you can compulsively disable this feature
-by setting `display_params.repr_html` to False:
+The return object of `.findall()` has a `_repr_mimebundle_()` method to beautify the
+representation inside a jupyter notebook. However, you can compulsively disable this
+feature by setting `display_params.repr_mimebundle` to False:
 ```py
 >>> from textpy import display_params
->>> display_params.repr_html = False
+>>> display_params.repr_mimebundle = False
 ```
 In addition, the `.findall()` method has some optional parameters to customize the
-matching pattern, including `whole_word=`, `case_sensitive=`, and `regex=`.
+pattern, including `whole_word=`, `case_sensitive=`, and `regex=`.
 ```py
 >>> myfile.findall("mybook", case_sensitive=False, regex=False, whole_word=True)
 examples/myfile.py:7: 'class <MyBook>:'

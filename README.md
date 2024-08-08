@@ -99,7 +99,7 @@ Note that in the jupyter notebook case, the matched substrings are **clickable**
 ### tx.module()
 The previous demonstration introduced the core function `tx.module()`. In fact, the return of `tx.module()` is a subinstance of the abstract class `PyText`, who supports various text manipulation methods:
 ```py
->>> isinstance(m, tx.PyText)
+>>> isinstance(myfile, tx.PyText)
 True
 ```
 Sometimes, your python module may contain not just one file but multiple files and folders, but don't worry, since `tx.module()` provides support for complex file hierarchies. If the path points to a file, the return type will be `PyFile`; otherwise, the return type will be `PyDir` - both are subclasses of `PyText`.
@@ -107,8 +107,8 @@ Sometimes, your python module may contain not just one file but multiple files a
 In conclusion, once you've got a python package, you can simply give the package dirpath to `tx.module()`, and do things like before:
 
 ```py
->>> pkg_dir = "examples/" # you can type any path here
->>> pattern = "" # you can type any regular expression here
+>>> pkg_dir = "" # type any path here
+>>> pattern = "" # type any regex pattern here
 
 >>> res = tx.module(pkg_dir).findall(pattern)
 ```
@@ -188,7 +188,7 @@ This project falls under the BSD 3-Clause License.
 
 ## History
 ### v0.1.27
-* Created a utility class `HTMLTableMaker` to replace the import of `Styler`; this significantly reduces the running overhead of `*._repr_mimebundle_()`.
+* Created a utility class `HTMLTableMaker` to replace the use of `Styler`; this significantly reduces the running overhead of `*._repr_mimebundle_()`.
 * New property `PyText.imports` for import analyzing.
 
 ### v0.1.26
