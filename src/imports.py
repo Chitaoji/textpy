@@ -65,7 +65,10 @@ class Imports:
         self.pytext_obj = obj
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} object; count={len(self.history)}>"
+        return (
+            f"<{self.__class__.__name__} object; module={self.pytext_obj.absname!r}"
+            f", count={len(self.history)}>"
+        )
 
     @cached_property
     def children(self) -> List[Self]:
