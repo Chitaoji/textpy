@@ -65,17 +65,17 @@ linking to where the patterns were found.
 
 ## Examples
 ### tx.module()
-The previous demonstration introduced the core function `tx.module()`. In fact, the
-return of `tx.module()` is a subinstance of the abstract class `PyText`, who supports
-various text manipulation methods:
+The previous demonstration introduced the core function `tx.module()`. The return of
+`tx.module()` is a subinstance of the abstract class `PyText`, who supports various text
+manipulation methods:
 ```py
 >>> isinstance(myfile, tx.PyText)
 True
 ```
-Sometimes, your python module may contain not just one file but multiple files and
-folders, but don't worry, since `tx.module()` provides support for complex file
-hierarchies. If the path points to a file, the return type will be `PyFile`; otherwise,
-the return type will be `PyDir` - both are subclasses of `PyText`.
+Sometimes, your python module may contain not just one file, but don't worry, since
+`tx.module()` provides support for complex file hierarchies. If the path points to a
+single file, the return type will be `PyFile`; otherwise, the return type will be
+`PyDir` - both are subclasses of `PyText`.
 
 In conclusion, once you've got a python package, you can simply give the package dirpath
 to `tx.module()`, and do things like before:
