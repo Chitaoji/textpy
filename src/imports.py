@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Literal, NamedTuple, Optional
 
 from typing_extensions import Self
 
+from .utils.re_extensions import quote_collapse
+
 if TYPE_CHECKING:
     from .abc import PyText
 
@@ -95,9 +97,10 @@ class Imports:
             "((?:[.\\w]+(?: +as +)?(?:[.\\w]+)? *,? *)+)"
         )
         type_check_pattern = "(?:\n|^)if +TYPE_CHECKING *:(?:\n+    .*)+(?:\nelse *:)?"
-        text = re.sub(type_check_pattern, "", self.pytext_obj.text)
-        type_check_text = "".join(re.findall(type_check_pattern, self.pytext_obj.text))
-        hist = self.__text2hist(pattern, text, False)
+        text = quote_collapse(self.pytext_obj.text)
+        functional_text = re.sub(type_check_pattern, "", text)
+        type_check_text = "".join(re.findall(type_check_pattern, text))
+        hist = self.__text2hist(pattern, functional_text, False)
         hist.extend(self.__text2hist(pattern, type_check_text, True))
         return hist
 

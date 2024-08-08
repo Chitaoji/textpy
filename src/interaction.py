@@ -105,8 +105,8 @@ class FindTextResult:
         reprfunc: Optional[Callable] = None,
     ) -> None:
         self.res: List[TextFinding] = []
-        self.styl = stylfunc if stylfunc else self.__style_match
-        self._repr = reprfunc if reprfunc else self.__default_repr
+        self.stylfunc = stylfunc if stylfunc else self.__style_match
+        self.reprfunc = reprfunc if reprfunc else self.__default_repr
 
     def __repr__(self) -> str:
         string: str = ""
@@ -116,7 +116,7 @@ class FindTextResult:
                 string += f"\n{t.relpath}:{n}: "
             else:
                 string += f"\n{t.relpath}: "
-            new = smart_sub(p, partial(self._repr, res), " " * t.spaces + _line)
+            new = smart_sub(p, partial(self.reprfunc, res), " " * t.spaces + _line)
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
 
@@ -197,7 +197,7 @@ class FindTextResult:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
-            df.iloc[i, 1] = smart_sub(p, partial(self.styl, res), _line)
+            df.iloc[i, 1] = smart_sub(p, partial(self.stylfunc, res), _line)
         styler = (
             df.style.hide(axis=0)
             .set_properties(**{"text-align": "left"})
