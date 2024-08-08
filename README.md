@@ -188,8 +188,8 @@ This project falls under the BSD 3-Clause License.
 
 ## History
 ### v0.1.27
+* Created a new utility class `HTMLMaker` to replace the import of `Styler`; this significantly reduces the running overhead of `*._repr_mimebundle_()`.
 * New property `PyText.imports`.
-
 ### v0.1.26
 * Updated `utils.re_extensions`: 
   * bugfix for `rsplit()`;
@@ -215,7 +215,6 @@ This project falls under the BSD 3-Clause License.
   * new string operation `counted_strip()`;
   * new utility classes `SmartPattern` and `SmartMatch`.
   * new utility functions `find_right_bracket()` and `find_left_bracket()`.
-* `Replacer._repr_mimebundle_()` will no longer return html data when *pandas* version < 1.4.0.
 
 ### v0.1.23
 * New string operation `utils.re_extensions.word_wrap()`.

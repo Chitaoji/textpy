@@ -7,6 +7,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 import logging
+import random
 import re
 from dataclasses import dataclass
 from functools import cached_property, partial
@@ -31,6 +32,8 @@ from .utils.validator import SimpleValidator
 
 if TYPE_CHECKING:
     from re import Match
+
+    from pandas.io.formats.style import Styler
 
     from .abc import PyText
     from .text import PyFile
@@ -121,7 +124,7 @@ class FindTextResult:
         return string.lstrip()
 
     def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
-        if display_params.repr_mimebundle and pd.__version__ >= "1.4.0":
+        if display_params.repr_mimebundle:
             return {"text/html": self.to_html()}
 
     def __bool__(self) -> bool:
@@ -176,15 +179,14 @@ class FindTextResult:
         """
         self.extend(other.res)
 
-    def to_html(self) -> str:
+    def to_styler(self) -> "Styler":
         """
-        Return an html string to beautify the representation inside a
-        jupyter notebook.
+        Return a pandas styler for representation.
 
         Returns
         -------
-        str
-            An html string.
+        Styler
+            Pandas styler.
 
         """
         df = pd.DataFrame("", index=range(len(self.res)), columns=["source", "match"])
@@ -198,24 +200,40 @@ class FindTextResult:
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
             df.iloc[i, 1] = smart_sub(p, partial(self.stylfunc, res), _line)
-        styler = (
-            df.style.hide(axis=0)
-            .set_properties(**{"text-align": "left"})
-            .set_table_styles([{"selector": "th", "props": [("text-align", "center")]}])
+        return df.style.hide(axis=0).set_table_styles(
+            [
+                {"selector": "th", "props": [("text-align", "center")]},
+                {"selector": "td", "props": [("text-align", "left")]},
+            ]
         )
-        return styler.to_html()
 
-    def getself(self) -> Self:
+    def to_html(self) -> str:
         """
-        Returns self.
+        Return an html string for representation.
 
         Returns
         -------
-        Self
-            An instance of self.
+        str
+            Html string.
 
         """
-        return self
+        html_maker = HTMLMaker(
+            index=range(len(self.res)),
+            columns=["source", "match"],
+            th=[("text-align", "center")],
+            td=[("text-align", "left")],
+        )
+        for i, res in enumerate(sorted(self.res)):
+            t, p, n, _line = res.to_tuple()
+            html_maker[i, 0] = ".".join(
+                [self.__style_source(x) for x in t.track()]
+            ).replace(".NULL", "")
+            if display_params.repr_line_numbers:
+                html_maker[i, 0] += ":" + make_ahref(
+                    f"{t.execpath}:{n}", str(n), color="inherit"
+                )
+            html_maker[i, 1] = smart_sub(p, partial(self.stylfunc, res), _line)
+        return html_maker.make()
 
     @staticmethod
     def __default_repr(_: TextFinding, m: "Match[str]", /) -> str:
@@ -245,6 +263,80 @@ class FindTextResult:
                 bg_color=get_bg_colors()[0],
             )
         )
+
+
+@dataclass
+class HTMLMaker:
+    """
+    Make an html table.
+
+    Parameters
+    ----------
+    index : list
+        Table index.
+    columns : list
+        Table columns.
+    th : List[Tuple[str, str]]
+        Properties for 'th'.
+    td : List[Tuple[str, str]]
+        Properties for 'td'.
+
+    """
+
+    index: list
+    columns: list
+    th: List[Tuple[str, str]]
+    td: List[Tuple[str, str]]
+
+    def __post_init__(self):
+        self.data = [
+            ["" for _ in range(len(self.columns))] for _ in range(len(self.index))
+        ]
+
+    def __getitem__(self, __key: Tuple[int, int]) -> str:
+        return self.data[__key[0]][__key[1]]
+
+    def __setitem__(self, __key: Tuple[int, int], __value: str) -> None:
+        self.data[__key[0]][__key[1]] = __value
+
+    def make(self) -> str:
+        """Make a string of the html table."""
+        table_id = f"T_{random.randint(10000, 99999)}"
+        th = ";\n  ".join(": ".join(x) for x in self.th)
+        td = ";\n  ".join(": ".join(x) for x in self.td)
+        columns = []
+        for i, x in enumerate(self.columns):
+            columns.append(
+                f'<th id="{table_id}_level0_col{i}" class="col_heading level0 col{i}"'
+                f" >{x}</th>"
+            )
+        thead = "\n      ".join(columns)
+        rows = []
+        for i, r in enumerate(self.data):
+            row = "    <tr>"
+            for j, x in enumerate(r):
+                row += f"""
+      <td id="{table_id}_row{i}_col{j}" class="data row{i} col{j}" >{x}</td>"""
+            rows.append(row + "\n    </tr>\n")
+        tbody = "".join(rows)
+        return f"""<style type="text/css">
+#{table_id} th {"{"}
+  {th};
+{"}"}
+#{table_id} td {"{"}
+  {td};
+{"}"}
+</style>
+<table id="{table_id}">
+  <thead>
+    <tr>
+      {thead}
+    </tr>
+  </thead>
+  <tbody>
+{tbody}  </tbody>
+</table>
+"""
 
 
 class FileEditor:
@@ -380,7 +472,7 @@ class Replacer:
         return repr(self.__find_text_result)
 
     def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
-        if display_params.repr_mimebundle and pd.__version__ >= "1.4.0":
+        if display_params.repr_mimebundle:
             return {"text/html": self.__find_text_result.to_html()}
 
     def __bool__(self) -> bool:
@@ -486,18 +578,6 @@ class Replacer:
             )
         return info
 
-    def getself(self) -> Self:
-        """
-        Returns self.
-
-        Returns
-        -------
-        Self
-            An instance of self.
-
-        """
-        return self
-
     def __style(self, r: TextFinding, m: "Match[str]", /) -> str:
         url = f"{r.obj.execpath}:{r.nline}:{1+r.obj.spaces+m.start()}"
         bgc = get_bg_colors()
@@ -564,8 +644,8 @@ def make_ahref(
     if Path(url).stem == NULL:
         href = ""
     else:
-        href = f"href='{url}' "
-    return f"<a {href}style='{style}'>{text}</a>"
+        href = f'href="{url}" '
+    return f'<a {href}style="{style}">{text}</a>'
 
 
 def get_bg_colors() -> Tuple[str, str, str]:
