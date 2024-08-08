@@ -32,8 +32,6 @@ from .utils.validator import SimpleValidator
 if TYPE_CHECKING:
     from re import Match
 
-    from pandas.io.formats.style import Styler
-
     from .abc import PyText
     from .text import PyFile
     from .utils.re_extensions import PatternType, ReplType
