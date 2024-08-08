@@ -217,7 +217,7 @@ class FindTextResult:
             Html string.
 
         """
-        html_maker = HTMLMaker(
+        html_maker = HTMLTableMaker(
             index=range(len(self.res)),
             columns=["source", "match"],
             th=[("text-align", "center")],
@@ -266,7 +266,7 @@ class FindTextResult:
 
 
 @dataclass
-class HTMLMaker:
+class HTMLTableMaker:
     """
     Make an html table.
 

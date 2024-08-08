@@ -188,8 +188,9 @@ This project falls under the BSD 3-Clause License.
 
 ## History
 ### v0.1.27
-* Created a new utility class `HTMLMaker` to replace the import of `Styler`; this significantly reduces the running overhead of `*._repr_mimebundle_()`.
-* New property `PyText.imports`.
+* Created a utility class `HTMLTableMaker` to replace the import of `Styler`; this significantly reduces the running overhead of `*._repr_mimebundle_()`.
+* New property `PyText.imports` for import analyzing.
+
 ### v0.1.26
 * Updated `utils.re_extensions`: 
   * bugfix for `rsplit()`;
