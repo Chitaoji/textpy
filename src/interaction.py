@@ -7,7 +7,6 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 import logging
-import random
 import re
 from dataclasses import dataclass
 from functools import cached_property, partial
@@ -35,9 +34,9 @@ if TYPE_CHECKING:
 
     from pandas.io.formats.style import Styler
 
+    from ._typing import PatternType, ReplType
     from .abc import PyText
     from .text import PyFile
-    from .utils.re_extensions import PatternType, ReplType
 
 
 __all__ = ["display_params"]
@@ -45,6 +44,7 @@ __all__ = ["display_params"]
 NULL = "NULL"  # Path stems or filenames should avoid this.
 ColorSchemeStr = Literal["dark", "modern", "high-intensty", "no-color"]
 TreeClassStr = Literal["cell", "plain"]
+TableClassStr = Literal["classic", "plain"]
 
 
 @dataclass
@@ -59,6 +59,9 @@ class DisplayParams:
     )
     tree_class: TreeClassStr = SimpleValidator(
         str, literal=get_args(TreeClassStr), default="cell"
+    )
+    table_class: TableClassStr = SimpleValidator(
+        str, literal=get_args(TableClassStr), default="classic"
     )
     use_mimebundle: bool = SimpleValidator(bool, default=True)
     show_line_numbers: bool = SimpleValidator(bool, default=True)
@@ -222,10 +225,7 @@ class FindTextResult:
 
         """
         html_maker = HTMLTableMaker(
-            index=range(len(self.res)),
-            columns=["source", "match"],
-            th=[("text-align", "center")],
-            td=[("text-align", "left")],
+            index=range(len(self.res)), columns=["source", "match"]
         )
         for i, res in enumerate(sorted(self.res)):
             t, p, n, _line = res.to_tuple()
@@ -280,17 +280,11 @@ class HTMLTableMaker:
         Table index.
     columns : list
         Table columns.
-    th : List[Tuple[str, str]]
-        Properties for 'th'.
-    td : List[Tuple[str, str]]
-        Properties for 'td'.
 
     """
 
     index: list
     columns: list
-    th: List[Tuple[str, str]]
-    td: List[Tuple[str, str]]
 
     def __post_init__(self):
         self.data = [
@@ -305,33 +299,32 @@ class HTMLTableMaker:
 
     def make(self) -> str:
         """Make a string of the html table."""
-        table_id = f"T_{random.randint(10000, 99999)}"
-        th = ";\n  ".join(": ".join(x) for x in self.th)
-        td = ";\n  ".join(": ".join(x) for x in self.td)
+        tclass = display_params.table_class
+        if tclass == "classic":
+            tstyle = """<style type="text/css">
+.classic th {
+  text-align: center;
+}
+.classic td {
+  text-align: left;
+}
+</style>
+"""
+        else:
+            tstyle = ""
         columns = []
         for i, x in enumerate(self.columns):
-            columns.append(
-                f'<th id="{table_id}_level0_col{i}" class="col_heading level0 col{i}"'
-                f" >{x}</th>"
-            )
+            columns.append(f'<th class="col_heading level0 col{i}" >{x}</th>')
         thead = "\n      ".join(columns)
         rows = []
         for i, r in enumerate(self.data):
             row = "    <tr>"
             for j, x in enumerate(r):
                 row += f"""
-      <td id="{table_id}_row{i}_col{j}" class="data row{i} col{j}" >{x}</td>"""
+      <td class="data row{i} col{j}" >{x}</td>"""
             rows.append(row + "\n    </tr>\n")
         tbody = "".join(rows)
-        return f"""<style type="text/css">
-#{table_id} th {"{"}
-  {th};
-{"}"}
-#{table_id} td {"{"}
-  {td};
-{"}"}
-</style>
-<table id="{table_id}">
+        return f"""{tstyle}<table class="{tclass}">
   <thead>
     <tr>
       {thead}

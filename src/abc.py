@@ -23,7 +23,7 @@ from .utils.re_extensions import SmartPattern, line_findall, pattern_inreg
 if TYPE_CHECKING:
     from re import Pattern
 
-    from .utils.re_extensions import PatternType, ReplType
+    from ._typing import PatternType, ReplType
 
 
 __all__ = ["PyText", "Docstring"]

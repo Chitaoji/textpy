@@ -10,8 +10,8 @@ from .interaction import Replacer
 from .utils.re_extensions import SmartPattern
 
 if TYPE_CHECKING:
+    from ._typing import ReplType
     from .abc import PyText
-    from .utils.re_extensions import ReplType
 
 __all__ = ["back_to_py38"]
 
