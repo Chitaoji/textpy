@@ -43,28 +43,25 @@ __all__ = ["display_params"]
 
 NULL = "NULL"  # Path stems or filenames should avoid this.
 ColorSchemeStr = Literal["dark", "modern", "high-intensty", "no-color"]
-TreeClassStr = Literal["cell", "plain"]
-TableClassStr = Literal["classic", "plain"]
+TreeStyleStr = Literal["cell", "plain"]
+TableStyleStr = Literal["classic", "plain"]
 
 
 @dataclass
 class DisplayParams:
-    """
-    Params for displaying.
-
-    """
+    """Parameters for displaying."""
 
     color_scheme: ColorSchemeStr = SimpleValidator(
         str, literal=get_args(ColorSchemeStr), default="dark"
     )
-    tree_class: TreeClassStr = SimpleValidator(
-        str, literal=get_args(TreeClassStr), default="cell"
+    filetree_style: TreeStyleStr = SimpleValidator(
+        str, literal=get_args(TreeStyleStr), default="cell"
     )
-    table_class: TableClassStr = SimpleValidator(
-        str, literal=get_args(TableClassStr), default="classic"
+    table_style: TableStyleStr = SimpleValidator(
+        str, literal=get_args(TableStyleStr), default="classic"
     )
     use_mimebundle: bool = SimpleValidator(bool, default=True)
-    show_line_numbers: bool = SimpleValidator(bool, default=True)
+    skip_line_numbers: bool = SimpleValidator(bool, default=False)
 
 
 display_params = DisplayParams()
@@ -122,10 +119,10 @@ class FindTextResult:
         string: str = ""
         for res in sorted(self.res):
             t, p, n, _line = res.to_tuple()
-            if display_params.show_line_numbers:
-                string += f"\n{t.relpath}:{n}: "
-            else:
+            if display_params.skip_line_numbers:
                 string += f"\n{t.relpath}: "
+            else:
+                string += f"\n{t.relpath}:{n}: "
             new = smart_sub(p, partial(self.reprfunc, res), " " * t.spaces + _line)
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
@@ -202,7 +199,7 @@ class FindTextResult:
             df.iloc[i, 0] = ".".join(
                 [self.__style_source(x) for x in t.track()]
             ).replace(".NULL", "")
-            if display_params.show_line_numbers:
+            if not display_params.skip_line_numbers:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
@@ -232,7 +229,7 @@ class FindTextResult:
             html_maker[i, 0] = ".".join(
                 [self.__style_source(x) for x in t.track()]
             ).replace(".NULL", "")
-            if display_params.show_line_numbers:
+            if not display_params.skip_line_numbers:
                 html_maker[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
@@ -299,7 +296,7 @@ class HTMLTableMaker:
 
     def make(self) -> str:
         """Make a string of the html table."""
-        tclass = display_params.table_class
+        tclass = display_params.table_style
         if tclass == "classic":
             tstyle = """<style type="text/css">
 .classic th {
