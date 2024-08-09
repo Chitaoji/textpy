@@ -54,25 +54,25 @@ class Imports:
 
     Parameters
     ----------
-    obj : PyText
-        `PyText` object.
+    pymodule : PyText
+        A python module.
 
     """
 
-    def __init__(self, obj: "PyText") -> None:
-        self.pytext_obj = obj
+    def __init__(self, pymodule: "PyText") -> None:
+        self.pymodule = pymodule
 
     def __repr__(self) -> str:
         return (
-            f"<{self.__class__.__name__} object; module={self.pytext_obj.absname!r}"
+            f"<{self.__class__.__name__} object; module={self.pymodule.absname!r}"
             f", count={len(self.history)}>"
         )
 
     @cached_property
     def children(self) -> List[Self]:
         """Children nodes."""
-        if self.pytext_obj.is_dir():
-            return [x.imports for x in self.pytext_obj.children]
+        if self.pymodule.is_dir():
+            return [x.imports for x in self.pymodule.children]
         return []
 
     @cached_property
@@ -88,7 +88,7 @@ class Imports:
             "((?:[.\\w]+(?: +as +)?(?:[.\\w]+)? *,? *)+)"
         )
         type_check_pattern = "(?:\n|^)if +TYPE_CHECKING *:(?:\n+    .*)+(?:\nelse *:)?"
-        text = quote_collapse(self.pytext_obj.text)
+        text = quote_collapse(self.pymodule.text)
         functional_text = re.sub(type_check_pattern, "", text)
         type_check_text = "".join(re.findall(type_check_pattern, text))
         hist = self.__text2hist(pattern, functional_text, False)
@@ -105,7 +105,7 @@ class Imports:
                 for names in re.split(" *, *", imported):
                     n, a = re.match("([.\\w]+)(?: +as +)?([.\\w]+)?", names).groups()
                     hist.append(
-                        ImportHistory(self.pytext_obj.absname, fro, n, a, type_checking)
+                        ImportHistory(self.pymodule.absname, fro, n, a, type_checking)
                     )
         return hist
 

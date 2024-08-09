@@ -212,15 +212,7 @@ class FindTextResult:
         )
 
     def to_html(self) -> str:
-        """
-        Return an html string for representation.
-
-        Returns
-        -------
-        str
-            Html string.
-
-        """
+        """Return an html string for representation."""
         html_maker = HTMLTableMaker(
             index=range(len(self.res)), columns=["source", "match"]
         )
@@ -467,10 +459,14 @@ class Replacer:
 
     def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
         if display_params.use_mimebundle:
-            return {"text/html": self.__find_text_result.to_html()}
+            return {"text/html": self.to_html()}
 
     def __bool__(self) -> bool:
         return bool(self.editors)
+
+    def to_html(self) -> str:
+        """Return an html string for representation."""
+        return self.__find_text_result.to_html()
 
     def append(self, editor: FileEditor) -> None:
         """
@@ -605,6 +601,24 @@ class Replacer:
             new_res.set_order(i)
             res.join(new_res)
         return res
+
+
+def make_file_tree(pytext: "PyText") -> str:
+    """
+    Make an html file-tree.
+
+    Parameters
+    ----------
+    pytext : PyText
+        A python module / class / function / method.
+
+    Returns
+    -------
+    str
+        Html string.
+
+    """
+    return ""
 
 
 def make_ahref(

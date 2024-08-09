@@ -41,14 +41,21 @@ class PyDir(PyText):
 
     @cached_property
     def header(self) -> "PyContent":
+        if self._header is None:
+            _ = self.children
+        if self._header:
+            return PyContent("", parent=self, mask=self._header)
         return PyContent("", parent=self)
 
     @cached_property
     def children(self) -> List[PyText]:
         children: List[PyText] = []
+        self._header = ""
         for _path in self.path.iterdir():
             if _path.suffix == ".py":
                 children.append(PyFile(_path, parent=self))
+                if _path.stem == "__init__":
+                    self._header = children[-1]
             elif _path.is_dir():
                 _module = PyDir(_path, parent=self)
                 if len(_module.children) > 0:

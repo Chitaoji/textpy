@@ -172,6 +172,8 @@ class PyText(ABC, Generic[P]):
         """
         Children names.
 
+        NOTE: This takes up additional memory space.
+
         Returns
         -------
         List[str]
@@ -184,6 +186,8 @@ class PyText(ABC, Generic[P]):
     def children_dict(self) -> Dict[str, "PyText"]:
         """
         Dictionary of children nodes.
+
+        NOTE: This takes up additional memory space.
 
         Returns
         -------
@@ -265,7 +269,8 @@ class PyText(ABC, Generic[P]):
     @cached_property
     def execpath(self) -> Path:
         """
-        Find the relative path to the working environment.
+        Find the relative path to the working environment. If is directory,
+        try to find a '__init__.py' first.
 
         Returns
         -------
@@ -273,6 +278,8 @@ class PyText(ABC, Generic[P]):
             The relative path to the working environment.
 
         """
+        if self.is_dir():
+            return self.header.execpath
         try:
             return self.abspath.relative_to(self.abspath.cwd())
         except ValueError:
@@ -335,11 +342,10 @@ class PyText(ABC, Generic[P]):
         res = FindTextResult()
         if based_on and self.is_file():
             latest = self
-            if based_on:
-                for e in based_on.editors:
-                    if e.pyfile == self and not e.is_based_on:
-                        latest = self.__class__(e.new_text, mask=self)
-                        break
+            for e in based_on.editors:
+                if e.pyfile == self and not e.is_based_on:
+                    latest = self.__class__(e.new_text, mask=self)
+                    break
             res.join(latest.findall(pattern))
         elif not self.children:
             for nline, g in line_findall(self.__pattern_expand(pattern), self.text):
@@ -544,15 +550,17 @@ class PyText(ABC, Generic[P]):
         """
         if target == "":
             return self
-        splits = re.split("\\.", target, maxsplit=1)
+        if target == NULL:
+            raise ValueError("can not jump to NULL")
+        splits = target.split(".", maxsplit=1)
         if len(splits) == 1:
             splits.append("")
         if splits[0] == "":
             if self.parent is not None:
                 return self.parent.jumpto(splits[1])
             raise ValueError(f"'{self.absname}' hasn't got a parent")
-        elif splits[0] in self.children_dict:
-            return self.children_dict[splits[0]].jumpto(splits[1])
+        elif splits[0] in self.children_names:
+            return self.children[self.children_names.index(splits[0])].jumpto(splits[1])
         elif self.name == splits[0]:
             return self.jumpto(splits[1])
         else:
