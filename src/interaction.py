@@ -44,6 +44,7 @@ __all__ = ["display_params"]
 
 NULL = "NULL"  # Path stems or filenames should avoid this.
 ColorSchemeStr = Literal["dark", "modern", "high-intensty", "no-color"]
+TreeClassStr = Literal["cell", "plain"]
 
 
 @dataclass
@@ -56,8 +57,11 @@ class DisplayParams:
     color_scheme: ColorSchemeStr = SimpleValidator(
         str, literal=get_args(ColorSchemeStr), default="dark"
     )
-    repr_mimebundle: bool = SimpleValidator(bool, default=True)
-    repr_line_numbers: bool = SimpleValidator(bool, default=True)
+    tree_class: TreeClassStr = SimpleValidator(
+        str, literal=get_args(TreeClassStr), default="cell"
+    )
+    use_mimebundle: bool = SimpleValidator(bool, default=True)
+    show_line_numbers: bool = SimpleValidator(bool, default=True)
 
 
 display_params = DisplayParams()
@@ -115,7 +119,7 @@ class FindTextResult:
         string: str = ""
         for res in sorted(self.res):
             t, p, n, _line = res.to_tuple()
-            if display_params.repr_line_numbers:
+            if display_params.show_line_numbers:
                 string += f"\n{t.relpath}:{n}: "
             else:
                 string += f"\n{t.relpath}: "
@@ -124,7 +128,7 @@ class FindTextResult:
         return string.lstrip()
 
     def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
-        if display_params.repr_mimebundle:
+        if display_params.use_mimebundle:
             return {"text/html": self.to_html()}
 
     def __bool__(self) -> bool:
@@ -195,7 +199,7 @@ class FindTextResult:
             df.iloc[i, 0] = ".".join(
                 [self.__style_source(x) for x in t.track()]
             ).replace(".NULL", "")
-            if display_params.repr_line_numbers:
+            if display_params.show_line_numbers:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
@@ -228,7 +232,7 @@ class FindTextResult:
             html_maker[i, 0] = ".".join(
                 [self.__style_source(x) for x in t.track()]
             ).replace(".NULL", "")
-            if display_params.repr_line_numbers:
+            if display_params.show_line_numbers:
                 html_maker[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
@@ -472,7 +476,7 @@ class Replacer:
         return repr(self.__find_text_result)
 
     def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
-        if display_params.repr_mimebundle:
+        if display_params.use_mimebundle:
             return {"text/html": self.__find_text_result.to_html()}
 
     def __bool__(self) -> bool:
