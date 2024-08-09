@@ -8,19 +8,17 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 import re
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, NamedTuple, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, NamedTuple, Optional, Union
 
 from typing_extensions import Self
 
 from .utils.re_extensions import quote_collapse
 
 if TYPE_CHECKING:
+    from ._typing import HistoryGroups, HistoryKey
     from .abc import PyText
 
 __all__ = []
-
-HistoryKey = Literal["where", "fro", "name", "as_name", "type_checking"]
-HistoryGroupResult = Dict[Any, Union["HistoryGroupResult", List["ImportHistory"]]]
 
 
 class ImportHistory(NamedTuple):
@@ -111,7 +109,7 @@ class Imports:
                     )
         return hist
 
-    def groupby(self, *by: Union[HistoryKey, List[HistoryKey]]) -> HistoryGroupResult:
+    def groupby(self, *by: Union["HistoryKey", List["HistoryKey"]]) -> "HistoryGroups":
         """
         Group the import history by the key.
 
@@ -135,8 +133,8 @@ class Imports:
 
     @staticmethod
     def __hitory_groupby(
-        history: Any, by: Union[HistoryKey, List[HistoryKey]]
-    ) -> HistoryGroupResult:
+        history: Any, by: Union["HistoryKey", List["HistoryKey"]]
+    ) -> "HistoryGroups":
         if isinstance(history, dict):
             return {k: Imports.__hitory_groupby(v, by) for k, v in history.items()}
 

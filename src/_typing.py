@@ -7,7 +7,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 import logging
-from typing import TYPE_CHECKING, Callable, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Union
 
 from typing_extensions import TypeAlias
 
@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 
     from hintwith import hintwith
 
+    from .imports import ImportHistory
     from .utils.re_extensions import (
         SmartMatch,
         SmartPattern,
@@ -40,6 +41,8 @@ PatternType = Union[str, "Pattern[str]", "SmartPattern[str]"]
 MatchType = Union["Match[str]", "SmartMatch[str]", None]
 ReplType = Union[str, Callable[["Match[str]"], str]]
 FlagType = Union[int, "RegexFlag"]
+HistoryKey = Literal["where", "fro", "name", "as_name", "type_checking"]
+HistoryGroups = Dict[Any, Union["HistoryGroups", List["ImportHistory"]]]
 
 
 class Smart:
