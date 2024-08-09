@@ -7,7 +7,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Optional, Union
+from typing import TYPE_CHECKING, Callable, Optional, Set, Union
 
 from typing_extensions import deprecated
 
@@ -25,6 +25,7 @@ def module(
     path_or_text: Union[Path, str],
     home: Optional[Union[Path, str]] = None,
     encoding: Optional[str] = None,
+    ignore: Union[str, Set[str]] = "build",
     *,
     _: Callable[P, None] = _defaults,
 ) -> "PyText[P]":
@@ -42,6 +43,8 @@ def module(
         None.
     encoding : str, optional
         Specifies encoding, by default None.
+    ignore : Union[str, Set[str]], optional
+        Subpath(s) to ignore, by default "build".
 
     Returns
     -------
@@ -65,10 +68,11 @@ def module(
 
     """
     path_or_text = as_path(path_or_text, home=home)
+    ignore = {ignore} if isinstance(ignore, str) else ignore
     if isinstance(path_or_text, str) or path_or_text.is_file():
-        return PyFile(path_or_text, home=home, encoding=encoding)
+        return PyFile(path_or_text, home=home, encoding=encoding, ignore=ignore)
     if path_or_text.is_dir():
-        return PyDir(path_or_text, home=home, encoding=encoding)
+        return PyDir(path_or_text, home=home, encoding=encoding, ignore=ignore)
     raise FileExistsError(f"file not exists: '{path_or_text}'")
 
 

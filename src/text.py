@@ -51,7 +51,9 @@ class PyDir(PyText):
     def children(self) -> List[PyText]:
         children: List[PyText] = []
         self._header = ""
-        for _path in self.path.iterdir():
+        for _path in sorted(self.path.iterdir()):
+            if _path.name in self.ignore:
+                continue
             if _path.suffix == ".py":
                 children.append(PyFile(_path, parent=self))
                 if _path.stem == "__init__":
