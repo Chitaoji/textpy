@@ -40,8 +40,8 @@ class PyDir(PyText):
         return NumpyFormatDocstring(_doc, parent=self)
 
     @cached_property
-    def header(self) -> PyText:
-        return PyFile("", parent=self)
+    def header(self) -> "PyContent":
+        return PyContent("", parent=self)
 
     @cached_property
     def children(self) -> List[PyText]:
@@ -80,7 +80,7 @@ class PyFile(PyText):
         return NumpyFormatDocstring(_doc, parent=self)
 
     @cached_property
-    def header(self) -> PyText:
+    def header(self) -> "PyContent":
         if self._header is None:
             _ = self.children
         return PyContent(self._header, parent=self)
@@ -173,7 +173,7 @@ class PyClass(PyText):
         return NumpyFormatDocstring(_doc, parent=self)
 
     @cached_property
-    def header(self) -> PyText:
+    def header(self) -> "PyContent":
         if self._header is None:
             _ = self.children
         return PyContent(self._header, parent=self)
@@ -212,7 +212,7 @@ class PyFunc(PyText):
         return NumpyFormatDocstring(_doc, parent=self)
 
     @cached_property
-    def header(self) -> PyText:
+    def header(self) -> "PyContent":
         _header = re.search(".*\n[^\\s][^\n]*", self.text, re.DOTALL).group()
         return PyContent(_header, parent=self)
 
@@ -242,5 +242,5 @@ class PyContent(PyText):
         return NumpyFormatDocstring("", parent=self)
 
     @cached_property
-    def header(self) -> PyText:
+    def header(self) -> "PyContent":
         return self

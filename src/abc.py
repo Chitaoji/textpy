@@ -17,13 +17,21 @@ import black
 from typing_extensions import ParamSpec, Self
 
 from .imports import Imports
-from .interaction import NULL, FileEditor, FindTextResult, Replacer, TextFinding
+from .interaction import (
+    NULL,
+    FileEditor,
+    FindTextResult,
+    Replacer,
+    TextFinding,
+    make_file_tree,
+)
 from .utils.re_extensions import SmartPattern, line_findall, pattern_inreg
 
 if TYPE_CHECKING:
     from re import Pattern
 
     from ._typing import PatternType, ReplType
+    from .text import PyContent
 
 
 __all__ = ["PyText", "Docstring"]
@@ -116,11 +124,15 @@ class PyText(ABC, Generic[P]):
     def __ge__(self, __other: Self) -> bool:
         return self.abspath >= __other.abspath
 
+    def to_html(self) -> str:
+        """Return an html string for representation."""
+        return make_file_tree(self)
+
     @cached_property
     @abstractmethod
     def doc(self) -> "Docstring":
         """
-        Docstring of a function / class / method.
+        Docstring of a module / class / function / method.
 
         Returns
         -------
@@ -131,9 +143,9 @@ class PyText(ABC, Generic[P]):
 
     @cached_property
     @abstractmethod
-    def header(self) -> "PyText":
+    def header(self) -> "PyContent":
         """
-        Header of a file / function / class / method.
+        Header of a module / function / class / method.
 
         Returns
         -------
