@@ -566,23 +566,23 @@ class PyText(ABC, Generic[P]):
             Raised when `target` doesn't exist.
 
         """
-        if target == "":
+        if not target:
             return self
         if target == NULL:
             raise ValueError("can not jump to NULL")
         splits = target.split(".", maxsplit=1)
-        if len(splits) == 1:
-            splits.append("")
-        if splits[0] == "":
+        a, b = (splits[0], "") if len(splits) == 1 else splits
+        if not a:
             if self.parent is not None:
-                return self.parent.jumpto(splits[1])
+                return self.parent.jumpto(b)
             raise ValueError(f"'{self.absname}' hasn't got a parent")
-        elif splits[0] in self.children_names:
-            return self.children[self.children_names.index(splits[0])].jumpto(splits[1])
-        elif self.name == splits[0]:
-            return self.jumpto(splits[1])
-        else:
-            raise ValueError(f"'{splits[0]}' is not a child of '{self.absname}'")
+        to_find = {a[:-2], a} if a.endswith("()") else {a, a + "()"}
+        for i in range(len(self.children) - 1, -1, -1):
+            if self.children[i].name in to_find:
+                return self.children[i].jumpto(b)
+        if self.name == a:
+            return self.jumpto(b)
+        raise ValueError(f"'{a}' is not a child of '{self.absname}'")
 
     def track(self) -> List["PyText"]:
         """
