@@ -41,9 +41,9 @@ class PyDir(PyText):
 
     @cached_property
     def doc(self) -> "Docstring":
-        if "__init__" in self.children_names:
+        try:
             _doc = self.jumpto("__init__").doc.text
-        else:
+        except ValueError:
             _doc = ""
         return NumpyFormatDocstring(_doc, parent=self)
 
@@ -177,16 +177,16 @@ class PyClass(PyText):
 
     @cached_property
     def doc(self) -> "Docstring":
-        if "__init__" in self.children_names and (
-            t := self.jumpto("__init__").doc.text
-        ):
-            _doc = t
+        searched = re.search('""".*?"""', self.header.text, re.DOTALL)
+        if searched:
+            _doc = re.sub("\n    ", "\n", searched.group()[3:-3])
         else:
-            searched = re.search('""".*?"""', self.header.text, re.DOTALL)
-            if searched:
-                _doc = re.sub("\n    ", "\n", searched.group()[3:-3])
-            else:
-                _doc = ""
+            _doc = ""
+        if not _doc:
+            try:
+                _doc = self.jumpto("__init__").doc.text
+            except ValueError:
+                ...
         return NumpyFormatDocstring(_doc, parent=self)
 
     @cached_property
