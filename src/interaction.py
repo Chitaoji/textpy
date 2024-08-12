@@ -291,26 +291,21 @@ class HTMLTableMaker:
         tclass = display_params.table_style
         if tclass == "classic":
             tstyle = """<style type="text/css">
-.classic th {
+.table-classic th {
   text-align: center;
 }
-.classic td {
+.table-classic td {
   text-align: left;
 }
 </style>
-<table class="classic">"""
+<table class="table-classic">"""
         else:
             tstyle = "<table>"
-        columns = []
-        for i, x in enumerate(self.columns):
-            columns.append(f'<th class="col_heading level0 col{i}" >{x}</th>')
-        thead = "\n      ".join(columns)
+        thead = "\n      ".join(f"<th>{x}</th>" for x in self.columns)
         rows = []
-        for i, r in enumerate(self.data):
-            row = "    <tr>"
-            for j, x in enumerate(r):
-                row += f'\n      <td class="data row{i} col{j}" >{x}</td>'
-            rows.append(row + "\n    </tr>\n")
+        for x in self.data:
+            row = "</td>\n      <td>".join(x)
+            rows.append("    <tr>\n      <td>" + row + "</td>\n    </tr>\n")
         tbody = "".join(rows)
         return f"""{tstyle}
   <thead>
@@ -659,6 +654,7 @@ def make_html_tree(pytext: "PyText") -> str:
     right: 50%;
 }
 .vertical code,
+.vertical summary,
 .vertical span {
     border: solid .1em #666;
     border-radius: .2em;
@@ -669,6 +665,7 @@ def make_html_tree(pytext: "PyText") -> str:
 }
 .vertical ul:before,
 .vertical code:before,
+.vertical summary:before,
 .vertical span:before {
     outline: solid 1px #666;
     content: "";
@@ -680,6 +677,7 @@ def make_html_tree(pytext: "PyText") -> str:
     top: -.5em;
 }
 .vertical code:before,
+.vertical summary:before,
 .vertical span:before {
     top: -.55em;
 }
@@ -689,6 +687,7 @@ def make_html_tree(pytext: "PyText") -> str:
 .vertical>li:before,
 .vertical>li:after,
 .vertical>li>code:before,
+.vertical>li>details>summary:before,
 .vertical>li>span:before {
     outline: none;
 }
@@ -696,22 +695,24 @@ def make_html_tree(pytext: "PyText") -> str:
 <ul class="vertical">"""
     else:
         tstyle = "<ul>"
-    return f"{tstyle}\n{__get_li(pytext,insight=not pytext.is_dir())}\n</ul>"
+    return f"{tstyle}\n{__get_li(pytext)}\n</ul>"
 
 
-def __get_li(pytext: "PyText", insight: bool = False) -> str:
-    if insight and pytext.children:
+def __get_li(pytext: "PyText") -> str:
+    if pytext.is_dir() and pytext.children:
+        tchidren = "\n".join(__get_li(x) for x in pytext.children)
+        return f"""<li><details open><summary>{pytext.name}</summary>\n<ul>
+{tchidren}\n</ul>\n</details></li>"""
+    if pytext.children:
         tchidren = "\n".join(
-            __get_li(x, insight=insight)
+            __get_li(x)
             for x in pytext.children
             if x.name != NULL and not x.name.startswith("_")
         )
         if tchidren:
             name = pytext.name + (".py" if pytext.is_file() else "")
-            return f"<li> <span>{name}</span>\n<ul>\n{tchidren}\n</ul>\n</li>"
-    if pytext.is_dir() and pytext.children:
-        tchidren = "\n".join(__get_li(x) for x in pytext.children)
-        return f"<li> <span>{pytext.name}</span>\n<ul>\n{tchidren}\n</ul>\n</li>"
+            return f"""<li><details><summary>{name}</summary>\n<ul>\n{tchidren}
+</ul>\n</details></li>"""
     name = pytext.name + (".py" if pytext.is_file() else "")
     return f"<li><span>{name}</span></li>"
 

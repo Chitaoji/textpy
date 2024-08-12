@@ -64,7 +64,8 @@ class PyText(ABC, Generic[P]):
     start_line : int, optional
         Starting line number, by default None.
     home : Union[Path, str, None], optional
-        Specifies the home path if `path_or_text` is relative, by default None.
+        Specifies the home path; only takes effect when `path_or_text` is
+        relative; by default None.
     encoding : str, optional
         Specifies encoding, by default None.
 
