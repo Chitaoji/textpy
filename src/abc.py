@@ -580,7 +580,7 @@ class PyText(ABC, Generic[P]):
         for i in range(len(self.children) - 1, -1, -1):
             if self.children[i].name in to_find:
                 return self.children[i].jumpto(b)
-        if self.name == a:
+        if self.name in to_find:
             return self.jumpto(b)
         raise ValueError(f"'{a}' is not a child of '{self.absname}'")
 
