@@ -19,7 +19,15 @@ from .utils.re_extensions import counted_strip, line_count, line_count_iter, rsp
 if TYPE_CHECKING:
     from .abc import Docstring
 
-__all__ = ["PyDir", "PyFile", "PyClass", "PyFunc", "PyMethod", "PyContent"]
+__all__ = [
+    "PyDir",
+    "PyFile",
+    "PyClass",
+    "PyFunc",
+    "PyMethod",
+    "PyProperty",
+    "PyContent",
+]
 
 
 class PyDir(PyText):
@@ -195,6 +203,10 @@ class PyClass(PyText):
         for i, _str in line_count_iter(rsplit("(?:\n@.*)*\ndef ", sub_text)):
             if _cnt == 0:
                 self._header = _str.replace("\n", "\n    ")
+            elif _str.startswith(("\n@property", "\n@cached_property")):
+                children.append(
+                    PyProperty(_str, parent=self, start_line=self.start_line + i - 1)
+                )
             else:
                 children.append(
                     PyMethod(_str, parent=self, start_line=self.start_line + i - 1)
@@ -232,6 +244,14 @@ class PyMethod(PyFunc):
     def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         super().__pytext_post_init__(path_or_text=path_or_text)
         self.spaces = 4
+
+
+class PyProperty(PyMethod):
+    """Stores the code and docstring of a class property."""
+
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
+        super().__pytext_post_init__(path_or_text=path_or_text)
+        self.name = self.name[:-2]
 
 
 class PyContent(PyText):

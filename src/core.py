@@ -60,12 +60,13 @@ def module(
 
     See Also
     --------
-    PyDir : Stores a directory of python files.
-    PyFile : Stores the code of a python file.
+    PyDir : Stores a directory.
+    PyFile : Stores a python file.
+    PyFunc : Stores the code and docstring of a function.
     PyClass : Stores the code and docstring of a class.
     PyMethod : Stores the code and docstring of a class method.
-    PyFunc : Stores the code and docstring of a function.
-    PyContent : Stores a part of a file.
+    PyProperty : Stores the code and docstring of a class property.
+    PyContent : Stores other infomation.
     NumpyFormatDocstring : Stores a numpy-formatted docstring.
 
     """
