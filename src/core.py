@@ -18,14 +18,16 @@ if TYPE_CHECKING:
     from .abc import PyText
 
 
-__all__ = ["module", "textpy"]
+__all__ = ["module", "textpy", "DEFAULT_IGNORE_PATHS"]
+
+DEFAULT_IGNORE_PATHS = {"build", ".git", ".github"}
 
 
 def module(
     path_or_text: Union[Path, str],
     home: Optional[Union[Path, str]] = None,
     encoding: Optional[str] = None,
-    ignore: Union[str, Set[str]] = "build",
+    ignore: Optional[Set[str]] = None,
     *,
     _: Callable[P, None] = _defaults,
 ) -> "PyText[P]":
@@ -43,8 +45,8 @@ def module(
         None.
     encoding : str, optional
         Specifies encoding, by default None.
-    ignore : Union[str, Set[str]], optional
-        Subpath(s) to ignore, by default "build".
+    ignore : Set[str], optional
+        Subpaths to ignore, by default `DEFAULT_IGNORE_PATHS`.
 
     Returns
     -------
@@ -68,7 +70,8 @@ def module(
 
     """
     path_or_text = as_path(path_or_text, home=home)
-    ignore = {ignore} if isinstance(ignore, str) else ignore
+    if ignore is None:
+        ignore = DEFAULT_IGNORE_PATHS
     if isinstance(path_or_text, str) or path_or_text.is_file():
         return PyFile(path_or_text, home=home, encoding=encoding, ignore=ignore)
     if path_or_text.is_dir():
