@@ -43,7 +43,7 @@ __all__ = ["display_params"]
 
 NULL = "NULL"  # Path stems or filenames should avoid this.
 ColorSchemeStr = Literal["dark", "modern", "high-intensty", "no-color"]
-TreeStyleStr = Literal["cell", "plain"]
+TreeStyleStr = Literal["vertical", "plain"]
 TableStyleStr = Literal["classic", "plain"]
 
 
@@ -54,8 +54,8 @@ class DisplayParams:
     color_scheme: ColorSchemeStr = SimpleValidator(
         str, literal=get_args(ColorSchemeStr), default="dark"
     )
-    filetree_style: TreeStyleStr = SimpleValidator(
-        str, literal=get_args(TreeStyleStr), default="cell"
+    tree_style: TreeStyleStr = SimpleValidator(
+        str, literal=get_args(TreeStyleStr), default="vertical"
     )
     table_style: TableStyleStr = SimpleValidator(
         str, literal=get_args(TableStyleStr), default="classic"
@@ -298,9 +298,9 @@ class HTMLTableMaker:
   text-align: left;
 }
 </style>
-"""
+<table class="classic">"""
         else:
-            tstyle = ""
+            tstyle = "<table>"
         columns = []
         for i, x in enumerate(self.columns):
             columns.append(f'<th class="col_heading level0 col{i}" >{x}</th>')
@@ -309,11 +309,10 @@ class HTMLTableMaker:
         for i, r in enumerate(self.data):
             row = "    <tr>"
             for j, x in enumerate(r):
-                row += f"""
-      <td class="data row{i} col{j}" >{x}</td>"""
+                row += f'\n      <td class="data row{i} col{j}" >{x}</td>'
             rows.append(row + "\n    </tr>\n")
         tbody = "".join(rows)
-        return f"""{tstyle}<table class="{tclass}">
+        return f"""{tstyle}
   <thead>
     <tr>
       {thead}
@@ -603,7 +602,7 @@ class Replacer:
         return res
 
 
-def make_file_tree(pytext: "PyText") -> str:
+def make_html_tree(pytext: "PyText") -> str:
     """
     Make an html file-tree.
 
@@ -618,7 +617,103 @@ def make_file_tree(pytext: "PyText") -> str:
         Html string.
 
     """
-    return ""
+    tclass = display_params.tree_style
+    if tclass == "vertical":
+        tstyle = """<style type="text/css">
+.vertical,
+.vertical ul,
+.vertical li {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+}
+.vertical {
+    margin: 0 0 1em;
+    text-align: center;
+}
+.vertical,
+.vertical ul {
+    display: table;
+}
+.vertical ul {
+    width: 100%;
+}
+.vertical li {
+    display: table-cell;
+    padding: .5em 0;
+    vertical-align: top;
+}
+.vertical li:before {
+    outline: solid 1px #666;
+    content: "";
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+.vertical li:first-child:before {
+    left: 50%;
+}
+.vertical li:last-child:before {
+    right: 50%;
+}
+.vertical code,
+.vertical span {
+    border: solid .1em #666;
+    border-radius: .2em;
+    display: inline-block;
+    margin: 0 .2em .5em;
+    padding: .2em .5em;
+    position: relative;
+}
+.vertical ul:before,
+.vertical code:before,
+.vertical span:before {
+    outline: solid 1px #666;
+    content: "";
+    height: .5em;
+    left: 50%;
+    position: absolute;
+}
+.vertical ul:before {
+    top: -.5em;
+}
+.vertical code:before,
+.vertical span:before {
+    top: -.55em;
+}
+.vertical>li {
+    margin-top: 0;
+}
+.vertical>li:before,
+.vertical>li:after,
+.vertical>li>code:before,
+.vertical>li>span:before {
+    outline: none;
+}
+</style>
+<ul class="vertical">"""
+    else:
+        tstyle = "<ul>"
+    return f"{tstyle}\n{__get_li(pytext,insight=not pytext.is_dir())}\n</ul>"
+
+
+def __get_li(pytext: "PyText", insight: bool = False) -> str:
+    if insight and pytext.children:
+        tchidren = "\n".join(
+            __get_li(x, insight=insight)
+            for x in pytext.children
+            if x.name != NULL and not x.name.startswith("_")
+        )
+        if tchidren:
+            name = pytext.name + (".py" if pytext.is_file() else "")
+            return f"<li> <span>{name}</span>\n<ul>\n{tchidren}\n</ul>\n</li>"
+    if pytext.is_dir() and pytext.children:
+        tchidren = "\n".join(__get_li(x) for x in pytext.children)
+        return f"<li> <span>{pytext.name}</span>\n<ul>\n{tchidren}\n</ul>\n</li>"
+    name = pytext.name + (".py" if pytext.is_file() else "")
+    return f"<li><span>{name}</span></li>"
 
 
 def make_ahref(

@@ -11,7 +11,17 @@ import re
 from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Generic, List, Optional, Union, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Set,
+    Union,
+    overload,
+)
 
 import black
 from typing_extensions import ParamSpec, Self
@@ -23,7 +33,8 @@ from .interaction import (
     FindTextResult,
     Replacer,
     TextFinding,
-    make_file_tree,
+    display_params,
+    make_html_tree,
 )
 from .utils.re_extensions import SmartPattern, line_findall, pattern_inreg
 
@@ -67,6 +78,7 @@ class PyText(ABC, Generic[P]):
         start_line: Optional[int] = None,
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
+        ignore: Set[str] = ...,
         mask: Optional[Self] = None,
     ) -> None:
         self.text: str = ""
@@ -84,11 +96,13 @@ class PyText(ABC, Generic[P]):
         if parent is None:
             self.home = as_path(Path(""), home=home)
             self.encoding = encoding
+            self.ignore = ignore
         else:
             self.home = parent.home
             self.encoding = parent.encoding
+            self.ignore = parent.ignore
 
-        self._header: Optional[str] = None
+        self._header: Optional[Any] = None
         self.__pytext_post_init__(path_or_text)
 
         if mask:
@@ -99,6 +113,10 @@ class PyText(ABC, Generic[P]):
 
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}({self.absname!r})"
+
+    def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
+        if display_params.use_mimebundle:
+            return {"text/html": self.to_html()}
 
     def __truediv__(self, __value: "str") -> "PyText":
         return self.jumpto(__value)
@@ -126,7 +144,7 @@ class PyText(ABC, Generic[P]):
 
     def to_html(self) -> str:
         """Return an html string for representation."""
-        return make_file_tree(self)
+        return make_html_tree(self)
 
     @cached_property
     @abstractmethod
