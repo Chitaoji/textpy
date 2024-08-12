@@ -570,19 +570,23 @@ class PyText(ABC, Generic[P]):
             return self
         if target == NULL:
             raise ValueError("can not jump to NULL")
-        splits = target.split(".", maxsplit=1)
+        if target.startswith(("/", "\\")):
+            raise ValueError(f"can not jump to absolute path: {target!r}")
+        splits = re.sub("[/\\\\]+", ".", target).split(".", maxsplit=1)
         a, b = (splits[0], "") if len(splits) == 1 else splits
         if not a:
             if self.parent is not None:
                 return self.parent.jumpto(b)
-            raise ValueError(f"'{self.absname}' hasn't got a parent")
+            raise ValueError(f"{self.absname!r} hasn't got a parent")
         to_find = {a[:-2], a} if a.endswith("()") else {a, a + "()"}
         for i in range(len(self.children) - 1, -1, -1):
             if self.children[i].name in to_find:
                 return self.children[i].jumpto(b)
         if self.name in to_find:
             return self.jumpto(b)
-        raise ValueError(f"'{a}' is not a child of '{self.absname}'")
+        if a == "py" and self.is_file():
+            return self.jumpto(b)
+        raise ValueError(f"{a!r} is not a child of {self.absname!r}")
 
     def track(self) -> List["PyText"]:
         """
