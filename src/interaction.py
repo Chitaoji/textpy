@@ -615,31 +615,31 @@ def make_html_tree(pytext: "PyText") -> str:
     tclass = display_params.tree_style
     if tclass == "vertical":
         tstyle = """<style type="text/css">
-.vertical,
-.vertical ul,
-.vertical li {
+.tree-vertical,
+.tree-vertical ul,
+.tree-vertical li {
     list-style: none;
     margin: 0;
     padding: 0;
     position: relative;
 }
-.vertical {
+.tree-vertical {
     margin: 0 0 1em;
     text-align: center;
 }
-.vertical,
-.vertical ul {
+.tree-vertical,
+.tree-vertical ul {
     display: table;
 }
-.vertical ul {
+.tree-vertical ul {
     width: 100%;
 }
-.vertical li {
+.tree-vertical li {
     display: table-cell;
     padding: .5em 0;
     vertical-align: top;
 }
-.vertical li:before {
+.tree-vertical li:before {
     outline: solid 1px #666;
     content: "";
     left: 0;
@@ -647,15 +647,15 @@ def make_html_tree(pytext: "PyText") -> str:
     right: 0;
     top: 0;
 }
-.vertical li:first-child:before {
+.tree-vertical li:first-child:before {
     left: 50%;
 }
-.vertical li:last-child:before {
+.tree-vertical li:last-child:before {
     right: 50%;
 }
-.vertical code,
-.vertical summary,
-.vertical span {
+.tree-vertical code,
+.tree-vertical details>summary,
+.tree-vertical li>span {
     border: solid .1em #666;
     border-radius: .2em;
     display: inline-block;
@@ -663,46 +663,62 @@ def make_html_tree(pytext: "PyText") -> str:
     padding: .2em .5em;
     position: relative;
 }
-.vertical ul:before,
-.vertical code:before,
-.vertical summary:before,
-.vertical span:before {
+.tree-vertical details>summary>span.open,
+.tree-vertical details[open]>summary>span.closed {
+    display: none;
+}
+.tree-vertical details[open]>summary>span.open {
+    display: inline;
+}
+.tree-vertical ul:before,
+.tree-vertical code:before,
+.tree-vertical details>summary:before,
+.tree-vertical li>span:before {
     outline: solid 1px #666;
     content: "";
     height: .5em;
     left: 50%;
     position: absolute;
 }
-.vertical ul:before {
+.tree-vertical ul:before {
     top: -.5em;
 }
-.vertical code:before,
-.vertical summary:before,
-.vertical span:before {
+.tree-vertical code:before,
+.tree-vertical details>summary:before,
+.tree-vertical li>span:before {
     top: -.55em;
 }
-.vertical>li {
+.tree-vertical>li {
     margin-top: 0;
 }
-.vertical>li:before,
-.vertical>li:after,
-.vertical>li>code:before,
-.vertical>li>details>summary:before,
-.vertical>li>span:before {
+.tree-vertical>li:before,
+.tree-vertical>li:after,
+.tree-vertical>li>code:before,
+.tree-vertical>li>details>summary:before,
+.tree-vertical>li>span:before {
     outline: none;
 }
 </style>
-<ul class="vertical">"""
+<ul class="tree-vertical">"""
     else:
-        tstyle = "<ul>"
+        tstyle = """
+<style type="text/css">       
+.tree-plain details>summary>span {
+    display: none;
+} 
+</style>
+<ul class="tree-plain">"""
     return f"{tstyle}\n{__get_li(pytext)}\n</ul>"
 
 
 def __get_li(pytext: "PyText") -> str:
     if pytext.is_dir() and pytext.children:
         tchidren = "\n".join(__get_li(x) for x in pytext.children)
-        return f"""<li><details open><summary>{pytext.name}</summary>\n<ul>
-{tchidren}\n</ul>\n</details></li>"""
+        return (
+            '<li><details><summary><span class="open">▼</span>'
+            f'<span class="closed">▶</span>{pytext.name}</summary>\n<ul>'
+            f"\n{tchidren}\n</ul>\n</details></li>"
+        )
     if pytext.children:
         tchidren = "\n".join(
             __get_li(x)
@@ -711,8 +727,11 @@ def __get_li(pytext: "PyText") -> str:
         )
         if tchidren:
             name = pytext.name + (".py" if pytext.is_file() else "")
-            return f"""<li><details><summary>{name}</summary>\n<ul>\n{tchidren}
-</ul>\n</details></li>"""
+            return (
+                '<li><details><summary><span class="open">▼</span>'
+                f'<span class="closed">▶</span>{name}</summary>\n<ul>'
+                f"\n{tchidren}\n</ul>\n</details></li>"
+            )
     name = pytext.name + (".py" if pytext.is_file() else "")
     return f"<li><span>{name}</span></li>"
 
