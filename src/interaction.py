@@ -663,6 +663,9 @@ def make_html_tree(pytext: "PyText") -> str:
     padding: .2em .5em;
     position: relative;
 }
+.tree-vertical details>summary {
+    cursor:pointer;
+}
 .tree-vertical details>summary>span.open,
 .tree-vertical details[open]>summary>span.closed {
     display: none;
