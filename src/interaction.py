@@ -690,7 +690,8 @@ def make_html_tree(pytext: "PyText") -> str:
 .tree-vertical code:before,
 .tree-vertical details>summary:before,
 .tree-vertical li>span:before {
-    top: -.55em;
+    top: -.56em;
+    height: .45em;
 }
 .tree-vertical>li {
     margin-top: 0;
