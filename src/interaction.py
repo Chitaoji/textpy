@@ -717,11 +717,11 @@ def make_html_tree(pytext: "PyText") -> str:
 
 
 def __get_li(pytext: "PyText") -> str:
+    triangle = '<span class="open">▼ </span><span class="closed">▶ </span>'
     if pytext.is_dir() and pytext.children:
         tchidren = "\n".join(__get_li(x) for x in pytext.children)
         return (
-            f'<li><details><summary><span class="open">▼ </span>'
-            f'<span class="closed">▶ </span>{pytext.name}</summary>\n<ul>'
+            f"<li><details><summary>{triangle}{pytext.name}</summary>\n<ul>"
             f"\n{tchidren}\n</ul>\n</details></li>"
         )
     if pytext.children:
@@ -733,8 +733,7 @@ def __get_li(pytext: "PyText") -> str:
         if tchidren:
             name = pytext.name + (".py" if pytext.is_file() else "")
             return (
-                f'<li><details><summary><span class="open">▼ </span>'
-                f'<span class="closed">▶ </span>{name}</summary>\n<ul>'
+                f"<li><details><summary>{triangle}{name}</summary>\n<ul>"
                 f"\n{tchidren}\n</ul>\n</details></li>"
             )
     name = pytext.name + (".py" if pytext.is_file() else "")
