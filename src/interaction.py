@@ -735,7 +735,7 @@ def __get_li(pytext: "PyText", main: bool = True) -> str:
         tchidren = "\n".join(
             __get_li(x, main=ul_class == "m")
             for x in pytext.children
-            if x.name != NULL and not x.name.startswith("_")
+            if x.name != NULL and __is_public(x.name)
         )
         if tchidren:
             name = pytext.name + (".py" if pytext.is_file() else "")
@@ -799,3 +799,11 @@ def get_bg_colors() -> Tuple[str, str, str]:
     if display_params.color_scheme == "high-intensty":
         return ["#505050", "#701414", "#147014"]
     return ["#505050", "#505050", "#505050"]
+
+
+def __is_public(name: str) -> bool:
+    if not name.startswith("_"):
+        return True
+    if name.startswith("__"):
+        return name.endswith(("__", "__()"))
+    return False
