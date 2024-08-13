@@ -619,7 +619,6 @@ def make_html_tree(pytext: "PyText") -> str:
 .tree-vertical,
 .tree-vertical ul.m,
 .tree-vertical li.m {
-    list-style: none;
     margin: 0;
     padding: 0;
     position: relative;
@@ -639,6 +638,10 @@ def make_html_tree(pytext: "PyText") -> str:
     display: table-cell;
     padding: .5em 0;
     vertical-align: top;
+}
+.tree-vertical ul.s,
+.tree-vertical li.s {
+    text-align: left;
 }
 .tree-vertical li.m:before {
     outline: solid 1px #666;
@@ -663,8 +666,10 @@ def make_html_tree(pytext: "PyText") -> str:
     padding: .2em .5em;
     position: relative;
 }
-.tree-vertical li.m>details>summary {
+.tree-vertical li>details>summary { 
     white-space: nowrap;
+}
+.tree-vertical li.m>details>summary {
     cursor: pointer;
 }
 .tree-vertical li.m>details>summary>span.open,
@@ -705,7 +710,7 @@ def make_html_tree(pytext: "PyText") -> str:
     return f"{tstyle}\n{__get_li(pytext)}\n</ul>"
 
 
-def __get_li(pytext: "PyText") -> str:
+def __get_li(pytext: "PyText", main: bool = True) -> str:
     triangle = (
         ""
         if display_params.tree_style == "plain"
@@ -714,23 +719,25 @@ def __get_li(pytext: "PyText") -> str:
     if pytext.is_dir() and pytext.children:
         tchidren = "\n".join(__get_li(x) for x in pytext.children)
         return (
-            f'<li class="m"><details><summary>{triangle}{pytext.name}</summary>\n<ul class="m">'
-            f"\n{tchidren}\n</ul>\n</details></li>"
+            f'<li class="m"><details><summary>{triangle}{pytext.name}</summary>\n'
+            f'<ul class="m">\n{tchidren}\n</ul>\n</details></li>'
         )
+    branch = "m" if main else "s"
+    triangle = triangle if main else ""
     if pytext.children:
         tchidren = "\n".join(
-            __get_li(x)
+            __get_li(x, main=display_params.tree_style == "vertical")
             for x in pytext.children
             if x.name != NULL and not x.name.startswith("_")
         )
         if tchidren:
             name = pytext.name + (".py" if pytext.is_file() else "")
             return (
-                f'<li class="m"><details><summary>{triangle}{name}</summary>\n<ul class="m">'
-                f"\n{tchidren}\n</ul>\n</details></li>"
+                f'<li class="{branch}"><details><summary>{triangle}{name}</summary>'
+                f'\n<ul class="{branch}">\n{tchidren}\n</ul>\n</details></li>'
             )
     name = pytext.name + (".py" if pytext.is_file() else "")
-    return f'<li class="m"><span>{name}</span></li>'
+    return f'<li class="{branch}"><span>{name}</span></li>'
 
 
 def make_ahref(
