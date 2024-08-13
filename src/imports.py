@@ -125,18 +125,18 @@ class Imports:
 
         """
         if len(by) >= 1:
-            groups = self.__hitory_groupby(self.history, by[0])
+            groups = self.__history_groupby(self.history, by[0])
             for key in by[1:]:
-                groups = self.__hitory_groupby(groups, key)
+                groups = self.__history_groupby(groups, key)
             return groups
         raise ValueError("'groupby()' accepts at least 1 argument")
 
     @staticmethod
-    def __hitory_groupby(
+    def __history_groupby(
         history: Any, by: Union["HistoryKey", List["HistoryKey"]]
     ) -> "HistoryGroups":
         if isinstance(history, dict):
-            return {k: Imports.__hitory_groupby(v, by) for k, v in history.items()}
+            return {k: Imports.__history_groupby(v, by) for k, v in history.items()}
 
         groups: Dict[Any, List[ImportHistory]] = {}
         if isinstance(by, str):

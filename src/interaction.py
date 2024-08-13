@@ -664,7 +664,8 @@ def make_html_tree(pytext: "PyText") -> str:
     position: relative;
 }
 .tree-vertical details>summary {
-    cursor:pointer;
+    white-space: nowrap;
+    cursor: pointer;
 }
 .tree-vertical details>summary>span.open,
 .tree-vertical details[open]>summary>span.closed {
@@ -718,8 +719,8 @@ def __get_li(pytext: "PyText") -> str:
     if pytext.is_dir() and pytext.children:
         tchidren = "\n".join(__get_li(x) for x in pytext.children)
         return (
-            '<li><details><summary><span class="open">▼</span>'
-            f'<span class="closed">▶</span>{pytext.name}</summary>\n<ul>'
+            f'<li><details><summary><span class="open">▼ </span>'
+            f'<span class="closed">▶ </span>{pytext.name}</summary>\n<ul>'
             f"\n{tchidren}\n</ul>\n</details></li>"
         )
     if pytext.children:
@@ -731,8 +732,8 @@ def __get_li(pytext: "PyText") -> str:
         if tchidren:
             name = pytext.name + (".py" if pytext.is_file() else "")
             return (
-                '<li><details><summary><span class="open">▼</span>'
-                f'<span class="closed">▶</span>{name}</summary>\n<ul>'
+                f'<li><details><summary><span class="open">▼ </span>'
+                f'<span class="closed">▶ </span>{name}</summary>\n<ul>'
                 f"\n{tchidren}\n</ul>\n</details></li>"
             )
     name = pytext.name + (".py" if pytext.is_file() else "")
