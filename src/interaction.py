@@ -727,22 +727,24 @@ def __get_li(pytext: "PyText", main: bool = True) -> str:
             f'<li class="m"><details><summary>{triangle}{pytext.name}</summary>\n'
             f'<ul class="m">\n{tchidren}\n</ul>\n</details></li>'
         )
-    branch = "m" if main else "s"
+
+    li_class = "m" if main else "s"
+    ul_class = "m" if display_params.tree_style == "vertical" else "s"
     triangle = triangle if main else ""
     if pytext.children:
         tchidren = "\n".join(
-            __get_li(x, main=display_params.tree_style == "vertical")
+            __get_li(x, main=ul_class == "m")
             for x in pytext.children
             if x.name != NULL and not x.name.startswith("_")
         )
         if tchidren:
             name = pytext.name + (".py" if pytext.is_file() else "")
             return (
-                f'<li class="{branch}"><details><summary>{triangle}{name}</summary>'
-                f'\n<ul class="{branch}">\n{tchidren}\n</ul>\n</details></li>'
+                f'<li class="{li_class}"><details><summary>{triangle}{name}</summary>'
+                f'\n<ul class="{ul_class}">\n{tchidren}\n</ul>\n</details></li>'
             )
     name = pytext.name + (".py" if pytext.is_file() else "")
-    return f'<li class="{branch}"><span>{name}</span></li>'
+    return f'<li class="{li_class}"><span>{name}</span></li>'
 
 
 def make_ahref(
