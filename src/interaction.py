@@ -55,13 +55,18 @@ class DisplayParams:
         str, literal=get_args(ColorSchemeStr), default="dark"
     )
     tree_style: TreeStyleStr = SimpleValidator(
-        str, literal=get_args(TreeStyleStr), default="vertical"
+        str, literal=get_args(TreeStyleStr), default="mixed"
     )
     table_style: TableStyleStr = SimpleValidator(
         str, literal=get_args(TableStyleStr), default="classic"
     )
     use_mimebundle: bool = SimpleValidator(bool, default=True)
     skip_line_numbers: bool = SimpleValidator(bool, default=False)
+
+    def defaults(self) -> Dict[str, Any]:
+        """Returns the default values as a dict."""
+        fields: Dict[str, Any] = getattr(self.__class__, "__dataclass_fields__")
+        return {k: v.default.default for k, v in fields.items()}
 
 
 display_params = DisplayParams()
@@ -97,8 +102,8 @@ class TextFinding:
     def __ge__(self, __other: Self) -> bool:
         return self == __other or self > __other
 
-    def to_tuple(self) -> Tuple["PyText", "PatternType", int, str]:
-        """To tuple."""
+    def astuple(self) -> Tuple["PyText", "PatternType", int, str]:
+        """Converts `self` to a tuple."""
         return self.obj, self.pattern, self.nline, self.linestr
 
 
@@ -118,7 +123,7 @@ class FindTextResult:
     def __repr__(self) -> str:
         string: str = ""
         for res in sorted(self.res):
-            t, p, n, _line = res.to_tuple()
+            t, p, n, _line = res.astuple()
             if display_params.skip_line_numbers:
                 string += f"\n{t.relpath}: "
             else:
@@ -195,7 +200,7 @@ class FindTextResult:
         """
         df = pd.DataFrame("", index=range(len(self.res)), columns=["source", "match"])
         for i, res in enumerate(sorted(self.res)):
-            t, p, n, _line = res.to_tuple()
+            t, p, n, _line = res.astuple()
             df.iloc[i, 0] = ".".join(
                 [self.__style_source(x) for x in t.track()]
             ).replace(".NULL", "")
@@ -217,7 +222,7 @@ class FindTextResult:
             index=range(len(self.res)), columns=["source", "match"]
         )
         for i, res in enumerate(sorted(self.res)):
-            t, p, n, _line = res.to_tuple()
+            t, p, n, _line = res.astuple()
             html_maker[i, 0] = ".".join(
                 [self.__style_source(x) for x in t.track()]
             ).replace(".NULL", "")
