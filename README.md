@@ -188,8 +188,13 @@ This project falls under the BSD 3-Clause License.
 
 ## History
 ### v0.1.27
-* Created a utility class `HTMLTableMaker` to replace the use of `Styler`; this significantly reduces the running overhead of `*._repr_mimebundle_()`.
-* New property `PyText.imports` for import analyzing.
+* New global parameters in `tx.display_params`: `tree_style=`, `table_style=`, `use_mimebundle=`, and `skip_line_numbers=`.
+* Added a method `display_params.defaults()` for users to get the default values of the parameters.
+* New subclass `PyProperty` inherited from `PyMethod`. Class properties will be stored in instances of `PyProperty` instead of `PyMethod` in the future.
+* Updated the method `PyText.jumpto()`; it now allows "/" as delimiters (in addition to "."); if a class or callable is defined more than once, it will jump to the last (previously first) definition. 
+* `PyText` has a `_repr_mimebundle_()` method now.
+* New property `PyText.imports`.
+* Created a utility class `HTMLTableMaker` in place of  `Styler`; this significantly reduces the running overhead of `*._repr_mimebundle_()`.
 
 ### v0.1.26
 * Updated `utils.re_extensions`: 
@@ -226,15 +231,13 @@ This project falls under the BSD 3-Clause License.
 * New methods `PyText.replace()` and `PyText.delete()`.
 * New class `Replacer` as the return type of `PyText.replace()`, with public methods `.confirm()`, `.rollback()`, etc.
 * Added a dunder method `PyText.__truediv__()` as an alternative to `PyText.jumpto()`.
-* New subclass `PyContent` inheriting from `PyText`. A `PyContent` object stores a part of a file that is not storable by instances of other subclasses.
+* New subclass `PyContent` inherited from `PyText`. A `PyContent` object stores a part of a file that is not storable by instances of other subclasses.
 
 ### v0.1.21
 * Improved behavior of clickables.
 
 ### v0.1.20
-* Fixed issues:
-  * incorrectly displayed file paths in the output of `TextPy.findall()`;
-  * expired file links in the output of `TextPy.findall(line_numbers=False)`.
+* Fixed issue: incorrect file links in the output of `TextPy.findall()`;
 
 ### v0.1.19
 * Various improvements.
