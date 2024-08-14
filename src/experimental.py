@@ -6,12 +6,12 @@ Experimental properties of textpy: back_to_py38(), etc.
 import re
 from typing import TYPE_CHECKING, List, Tuple
 
-from .interaction import Replacer, display_params
+from .interaction import Replacer
 from .utils.re_extensions import SmartPattern
 
 if TYPE_CHECKING:
+    from ._typing import ReplType
     from .abc import PyText
-    from .utils.re_extensions import ReplType
 
 __all__ = ["back_to_py38"]
 
@@ -28,12 +28,10 @@ def back_to_py38(module: "PyText") -> Replacer:
 
     """
     features_to_rollback = [__union_types, __type_hint_generics]
-    styler, display_params.enable_styler = display_params.enable_styler, False
     replacer = Replacer()
     for f in features_to_rollback:
         replacer = f(module, replacer)
-    display_params.enable_styler = styler
-    return replacer.to_styler()
+    return replacer
 
 
 def __union_types(module: "PyText", replacer: Replacer) -> Replacer:
@@ -58,12 +56,12 @@ def __type_hint_generics(module: "PyText", replacer: Replacer) -> Replacer:
         ("type", "Type"),
     ]
     for p in pairs:
-        while r := module.replace(*__type_hint_generics_0(*p), based_on=replacer):
+        while r := module.replace(*__type_hint_pairs(*p), based_on=replacer):
             replacer.join(r)
     return replacer
 
 
-def __type_hint_generics_0(replaced: str, to_replace: str) -> Tuple[str, "ReplType"]:
+def __type_hint_pairs(replaced: str, to_replace: str) -> Tuple[str, "ReplType"]:
     return (
         f"((->|:)[^=\n]*?\\W|\n\\s*){replaced}[\\[\\]),:]",
         lambda m: m.group()[: -1 - len(replaced)] + to_replace + m.group()[-1],

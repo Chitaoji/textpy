@@ -11,18 +11,38 @@ import re
 from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Generic, List, Optional, Union, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Set,
+    Union,
+    overload,
+)
 
 import black
 from typing_extensions import ParamSpec, Self
 
-from .interaction import NULL, FileEditor, FindTextResult, Replacer, TextFinding
+from .imports import Imports
+from .interaction import (
+    NULL,
+    FileEditor,
+    FindTextResult,
+    Replacer,
+    TextFinding,
+    display_params,
+    make_html_tree,
+)
 from .utils.re_extensions import SmartPattern, line_findall, pattern_inreg
 
 if TYPE_CHECKING:
     from re import Pattern
 
-    from .utils.re_extensions import PatternType, ReplType
+    from ._typing import PatternType, ReplType
+    from .text import PyContent
 
 
 __all__ = ["PyText", "Docstring"]
@@ -33,7 +53,7 @@ P = ParamSpec("P")
 
 class PyText(ABC, Generic[P]):
     """
-    Could be a python module, file, class, function, or method.
+    Could be a python module, file, function, class, method or property.
 
     Parameters
     ----------
@@ -44,7 +64,8 @@ class PyText(ABC, Generic[P]):
     start_line : int, optional
         Starting line number, by default None.
     home : Union[Path, str, None], optional
-        Specifies the home path if `path_or_text` is relative, by default None.
+        Specifies the home path; only takes effect when `path_or_text` is
+        relative; by default None.
     encoding : str, optional
         Specifies encoding, by default None.
 
@@ -58,6 +79,7 @@ class PyText(ABC, Generic[P]):
         start_line: Optional[int] = None,
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
+        ignore: Set[str] = ...,
         mask: Optional[Self] = None,
     ) -> None:
         self.text: str = ""
@@ -75,11 +97,13 @@ class PyText(ABC, Generic[P]):
         if parent is None:
             self.home = as_path(Path(""), home=home)
             self.encoding = encoding
+            self.ignore = ignore
         else:
             self.home = parent.home
             self.encoding = parent.encoding
+            self.ignore = parent.ignore
 
-        self._header: Optional[str] = None
+        self._header: Optional[Any] = None
         self.__pytext_post_init__(path_or_text)
 
         if mask:
@@ -90,6 +114,10 @@ class PyText(ABC, Generic[P]):
 
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}({self.absname!r})"
+
+    def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
+        if display_params.use_mimebundle:
+            return {"text/html": self.to_html()}
 
     def __truediv__(self, __value: "str") -> "PyText":
         return self.jumpto(__value)
@@ -115,11 +143,15 @@ class PyText(ABC, Generic[P]):
     def __ge__(self, __other: Self) -> bool:
         return self.abspath >= __other.abspath
 
+    def to_html(self) -> str:
+        """Return an html string for representation."""
+        return make_html_tree(self)
+
     @cached_property
     @abstractmethod
     def doc(self) -> "Docstring":
         """
-        Docstring of a function / class / method.
+        Docstring of a module / class / function / method.
 
         Returns
         -------
@@ -130,9 +162,9 @@ class PyText(ABC, Generic[P]):
 
     @cached_property
     @abstractmethod
-    def header(self) -> "PyText":
+    def header(self) -> "PyContent":
         """
-        Header of a file / function / class / method.
+        Header of a module / function / class / method.
 
         Returns
         -------
@@ -159,6 +191,8 @@ class PyText(ABC, Generic[P]):
         """
         Children names.
 
+        NOTE: This takes up additional memory space.
+
         Returns
         -------
         List[str]
@@ -171,6 +205,8 @@ class PyText(ABC, Generic[P]):
     def children_dict(self) -> Dict[str, "PyText"]:
         """
         Dictionary of children nodes.
+
+        NOTE: This takes up additional memory space.
 
         Returns
         -------
@@ -215,7 +251,7 @@ class PyText(ABC, Generic[P]):
             The relative name.
 
         """
-        return self.absname.split(".", maxsplit=1)[-1]
+        return "." + self.absname.partition(".")[-1]
 
     @cached_property
     def abspath(self) -> Path:
@@ -252,7 +288,8 @@ class PyText(ABC, Generic[P]):
     @cached_property
     def execpath(self) -> Path:
         """
-        Find the relative path to the working environment.
+        Find the relative path to the working environment. If is directory,
+        try to find a '__init__.py' first.
 
         Returns
         -------
@@ -260,6 +297,8 @@ class PyText(ABC, Generic[P]):
             The relative path to the working environment.
 
         """
+        if self.is_dir():
+            return self.header.execpath
         try:
             return self.abspath.relative_to(self.abspath.cwd())
         except ValueError:
@@ -293,7 +332,7 @@ class PyText(ABC, Generic[P]):
         self, pattern: "PatternType", /, *_: P.args, **kwargs: P.kwargs
     ) -> FindTextResult: ...
     def findall(
-        self, pattern, /, styler=True, based_on: Replacer = None, **kwargs
+        self, pattern, /, based_on: Replacer = None, **kwargs
     ) -> FindTextResult:
         """
         Finds all non-overlapping matches of `pattern`.
@@ -311,10 +350,6 @@ class PyText(ABC, Generic[P]):
             Specifies case sensitivity, by default True.
         regex : bool, optional
             Whether to enable regular expressions, by default True.
-        styler : bool, optional
-            Whether to use a `Styler` object to beautify the representation
-            of result in a Jupyter notebook, this only takes effect when
-            `pandas.__version__ >= 1.4.0`, by default True.
 
         Returns
         -------
@@ -326,13 +361,11 @@ class PyText(ABC, Generic[P]):
         res = FindTextResult()
         if based_on and self.is_file():
             latest = self
-            if based_on:
-                based_on = based_on.getself()
-                for e in based_on.editors:
-                    if e.pyfile == self and not e.is_based_on:
-                        latest = self.__class__(e.new_text, mask=self)
-                        break
-            res.join(latest.findall(pattern, styler=False))
+            for e in based_on.editors:
+                if e.pyfile == self and not e.is_based_on:
+                    latest = self.__class__(e.new_text, mask=self)
+                    break
+            res.join(latest.findall(pattern))
         elif not self.children:
             for nline, g in line_findall(self.__pattern_expand(pattern), self.text):
                 if g:
@@ -340,10 +373,10 @@ class PyText(ABC, Generic[P]):
                         TextFinding(self, pattern, self.start_line + nline - 1, g)
                     )
         else:
-            res.join(self.header.findall(pattern, styler=False, based_on=based_on))
+            res.join(self.header.findall(pattern, based_on=based_on))
             for c in self.children:
-                res.join(c.findall(pattern, styler=False, based_on=based_on))
-        return res.to_styler() if styler else res
+                res.join(c.findall(pattern, based_on=based_on))
+        return res
 
     @overload
     def replace(
@@ -361,7 +394,6 @@ class PyText(ABC, Generic[P]):
         repl,
         /,
         overwrite=True,
-        styler=True,
         based_on: Optional[Replacer] = None,
         **kwargs,
     ) -> "Replacer":
@@ -391,10 +423,6 @@ class PyText(ABC, Generic[P]):
             Specifies case sensitivity, by default True.
         regex : bool, optional
             Whether to enable regular expressions, by default True.
-        styler : bool, optional
-            Whether to use a `Styler` object to beautify the representation
-            of result in a Jupyter notebook, this only takes effect when
-            `pandas.__version__ >= 1.4.0`, by default True.
 
         Returns
         -------
@@ -407,7 +435,6 @@ class PyText(ABC, Generic[P]):
         if self.path.suffix == ".py":
             old = None
             if based_on:
-                based_on = based_on.getself()
                 for e in based_on.editors:
                     if e.pyfile == self and not e.is_based_on:
                         old = e
@@ -422,12 +449,11 @@ class PyText(ABC, Generic[P]):
                         pattern,
                         repl,
                         overwrite=overwrite,
-                        styler=False,
                         based_on=based_on,
                         **kwargs,
                     )
                 )
-        return replacer.to_styler() if styler else replacer
+        return replacer
 
     @overload
     def delete(
@@ -438,9 +464,7 @@ class PyText(ABC, Generic[P]):
         *_: P.args,
         **kwargs: P.kwargs,
     ) -> "Replacer": ...
-    def delete(
-        self, pattern, /, overwrite=True, styler=True, based_on=None, **kwargs
-    ) -> "Replacer":
+    def delete(self, pattern, /, overwrite=True, based_on=None, **kwargs) -> "Replacer":
         """
         An alternative to `.replace(pattern, "", *args, **kwargs)`
 
@@ -460,10 +484,6 @@ class PyText(ABC, Generic[P]):
             Specifies case sensitivity, by default True.
         regex : bool, optional
             Whether to enable regular expressions, by default True.
-        styler : bool, optional
-            Whether to use a `Styler` object to beautify the representation
-            of result in a Jupyter notebook, this only takes effect when
-            `pandas.__version__ >= 1.4.0`, by default True.
 
         Returns
         -------
@@ -471,9 +491,12 @@ class PyText(ABC, Generic[P]):
             Text replacer.
 
         """
-        return self.replace(
-            pattern, "", overwrite, styler=styler, based_on=based_on, **kwargs
-        )
+        return self.replace(pattern, "", overwrite, based_on=based_on, **kwargs)
+
+    @cached_property
+    def imports(self) -> Imports:
+        """Import infomation of the module."""
+        return Imports(self)
 
     @staticmethod
     def __pattern_trans(
@@ -490,7 +513,9 @@ class PyText(ABC, Generic[P]):
         elif isinstance(pattern, str):
             p, f = pattern, 0
         else:
-            raise TypeError(f"argument 'pattern' can not be {type(p)}")
+            raise TypeError(
+                f"'pattern' can not be instance of {p.__class__.__name__!r}"
+            )
         if not regex:
             p = pattern_inreg(p)
         if not case_sensitive:
@@ -542,21 +567,27 @@ class PyText(ABC, Generic[P]):
             Raised when `target` doesn't exist.
 
         """
-        if target == "":
+        if not target:
             return self
-        splits = re.split("\\.", target, maxsplit=1)
-        if len(splits) == 1:
-            splits.append("")
-        if splits[0] == "":
+        if target == NULL:
+            raise ValueError("can not jump to NULL")
+        if target.startswith(("/", "\\")):
+            raise ValueError(f"can not jump to absolute path: {target!r}")
+        splits = re.sub("[/\\\\]+", ".", target).split(".", maxsplit=1)
+        a, b = (splits[0], "") if len(splits) == 1 else splits
+        if not a:
             if self.parent is not None:
-                return self.parent.jumpto(splits[1])
-            raise ValueError(f"'{self.absname}' hasn't got a parent")
-        elif splits[0] in self.children_dict:
-            return self.children_dict[splits[0]].jumpto(splits[1])
-        elif self.name == splits[0]:
-            return self.jumpto(splits[1])
-        else:
-            raise ValueError(f"'{splits[0]}' is not a child of '{self.absname}'")
+                return self.parent.jumpto(b)
+            raise ValueError(f"{self.absname!r} hasn't got a parent")
+        to_find = {a[:-2], a} if a.endswith("()") else {a, a + "()"}
+        for i in range(len(self.children) - 1, -1, -1):
+            if self.children[i].name in to_find:
+                return self.children[i].jumpto(b)
+        if self.name in to_find:
+            return self.jumpto(b)
+        if a == "py" and self.is_file():
+            return self.jumpto(b)
+        raise ValueError(f"{a!r} is not a child of {self.absname!r}")
 
     def track(self) -> List["PyText"]:
         """
@@ -666,6 +697,5 @@ def _defaults(
     dotall: bool = False,
     case_sensitive: bool = True,
     regex: bool = True,
-    styler: bool = True,
     based_on: Optional[Replacer] = None,
 ) -> None: ...

@@ -1,5 +1,5 @@
 # textpy
-Reads a python module and statically analyzes it. This works well with Jupyter extensions in VS Code, and will have better performance when the module files are formatted with *PEP-8*.
+Reads a python module and statically analyzes it. This works well with jupyter extensions in *VS Code*, and will have better performance when the module files are formatted with *PEP-8*.
 
 ## Installation
 ```sh
@@ -9,11 +9,10 @@ $ pip install textpy
 ## Requirements
 ```txt
 lazyr>=0.0.16
-pandas
-Jinja2
+hintwith>=0.1.3
 black
 ```
-NOTE: *pandas*>=1.4.0 is recommended. Lower versions of *pandas* are also available, but some properties of this package will be affected.
+NOTE: *pandas*>=1.4.0 is recommended. Lower versions of *pandas* are also valid, but some features of this package are not supported by them.
 
 ## Quick Start
 To demonstrate the usage of this module, we put a file named `myfile.py` under `./examples/` (you can find it in the repository, or create a new file of your own):
@@ -58,12 +57,12 @@ Run the following codes to find all the occurrences of some pattern (for example
 >>> import textpy as tx
 >>> myfile = tx.module("./examples/myfile.py") # reads the python module
 
->>> myfile.findall("MyBook", styler=False)
+>>> myfile.findall("MyBook")
 examples/myfile.py:7: 'class <MyBook>:'
 examples/myfile.py:24: 'def print_my_book(book: <MyBook>) -> None:'
 examples/myfile.py:30: '    book : <MyBook>'
 ```
-If you are using a Jupyter notebook in VS Code, you can run a cell like this:
+If you are using a jupyter notebook, you can run a cell like this:
 ```py
 >>> myfile.findall("content")
 ```
@@ -91,22 +90,23 @@ If you are using a Jupyter notebook in VS Code, you can run a cell like this:
   </tbody>
 </table>
 <!--/html-->
-Note that in the Jupyter notebook case, the matched substrings are **clickable**, linking to where the patterns were found.
+
+Note that in the jupyter notebook case, the matched substrings are **clickable**, linking to where the patterns were found.
 
 ## Examples
 ### tx.module()
-The previous demonstration introduced the core function `tx.module()`. In fact, the return type of `tx.module()` is a subclass of the abstract class `PyText`, who supports various text manipulation methods:
+The previous demonstration introduced the core function `tx.module()`. The return of `tx.module()` is a subinstance of the abstract class `PyText`, who supports various text manipulation methods:
 ```py
->>> isinstance(m, tx.PyText)
+>>> isinstance(myfile, tx.PyText)
 True
 ```
-Sometimes, your python module may contain not just one file but multiple files and folders, but don't worry, since `tx.module()` provides support for complex file hierarchies. The return type will be either `PyDir` or `PyFile`, both subclasses of `PyText`, depending on the path type.
+Sometimes, your python module may contain not just one file, but don't worry, since `tx.module()` provides support for complex file hierarchies. If the path points to a single file, the return type will be `PyFile`; otherwise, the return type will be `PyDir` - both are subclasses of `PyText`.
 
-In conclusion, suppose you've got a python package, you can simply give the package dirpath to `tx.module()`, and do things like before:
+In conclusion, once you've got a python package, you can simply give the package dirpath to `tx.module()`, and do things like before:
 
 ```py
->>> pkg_dir = "examples/" # you can type any path here
->>> pattern = "" # you can type any regular expression here
+>>> pkg_dir = "" # type any path here
+>>> pattern = "" # type any regex pattern here
 
 >>> res = tx.module(pkg_dir).findall(pattern)
 ```
@@ -114,15 +114,15 @@ In conclusion, suppose you've got a python package, you can simply give the pack
 ### tx.PyText.findall()
 As mentioned before, user can use `.findall()` to find all non-overlapping matches of some pattern in a python module.
 ```py
->>> myfile.findall("optional", styler=False)
+>>> myfile.findall("optional")
 examples/myfile.py:13: '    story : str, <optional>'
 ```
-The optional argument `styler=` determines whether to use a pandas `Styler` object to beautify the representation. If you are running python in the console, please always set `styler=False`. You can also disable the stylers in `display_params`, so that you don't need to repeat `styler=False` every time in the following examples:
+The return object of `.findall()` has a `_repr_mimebundle_()` method to beautify the representation inside a jupyter notebook. However, you can compulsively disable this feature by setting `display_params.use_mimebundle` to False:
 ```py
 >>> from textpy import display_params
->>> display_params.enable_styler = False
+>>> display_params.use_mimebundle = False
 ``` 
-In addition, the `.findall()` method has some optional parameters to customize the matching pattern, including `whole_word=`, `case_sensitive=`, and `regex=`.
+In addition, the `.findall()` method has some optional parameters to customize the pattern, including `whole_word=`, `case_sensitive=`, and `regex=`.
 ```py
 >>> myfile.findall("mybook", case_sensitive=False, regex=False, whole_word=True)
 examples/myfile.py:7: 'class <MyBook>:'
@@ -143,9 +143,14 @@ examples/myfile.py:30: '    <book/magazine> : MyBook'
 examples/myfile.py:31: '        A <book/magazine>.'
 examples/myfile.py:34: '    print(<book/magazine>.content)'
 ```
-At this point, the replacement has not yet taken effect on the files. Use `.confirm()` to confirm the changes and make them done:
+At this point, the replacement has not actually taken effect yet. Use `.confirm()` to confirm the changes and write them to the file(s):
 ```py
 >>> replacer.confirm()
+{'successful': ['examples/myfile.py'], 'failed': []}
+```
+If you want to rollback the changes, run:
+```py
+>>> replacer.rollback()
 {'successful': ['examples/myfile.py'], 'failed': []}
 ```
 
@@ -164,6 +169,9 @@ examples/myfile.py:34: '    print(<book>.content)'
 
 >>> deleter.confirm()
 {'successful': ['examples/myfile.py'], 'failed': []}
+
+>>> deleter.rollback()
+{'successful': ['examples/myfile.py'], 'failed': []}
 ```
 
 ## See Also
@@ -177,10 +185,19 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.27
+* New gloabal parameters: `tree_style=`, `table_style=`, `use_mimebundle=`, and `skip_line_numbers=`; find them under `tx.display_params`.
+* Defined `display_params.defaults()` for users to get the default values of the parameters.
+* New subclass `PyProperty` inherited from `PyMethod`. Class properties will be stored in instances of `PyProperty` instead of `PyMethod` in the future.
+* Updated the method `PyText.jumpto()`; it now allows "/" as delimiters (in addition to "."); if a class or callable is defined more than once, jump to the last (previously first) place where it was defined. 
+* `PyText` has a `_repr_mimebundle_()` method now.
+* New property `PyText.imports`.
+* Created a utility class `HTMLTableMaker` in place of  `Styler`; this significantly reduces the running overhead of `*._repr_mimebundle_()`.
+
 ### v0.1.26
 * Updated `utils.re_extensions`: 
   * bugfix for `rsplit()`;
-  * new regex operation `quote_collapse()`.
+  * new string operation `quote_collapse()`.
 
 ### v0.1.25
 * Updated `utils.re_extensions`: 
@@ -202,7 +219,6 @@ This project falls under the BSD 3-Clause License.
   * new string operation `counted_strip()`;
   * new utility classes `SmartPattern` and `SmartMatch`.
   * new utility functions `find_right_bracket()` and `find_left_bracket()`.
-* `Replacer.to_styler()` will no longer return a styler when *pandas* version < 1.4.0.
 
 ### v0.1.23
 * New string operation `utils.re_extensions.word_wrap()`.
@@ -213,15 +229,13 @@ This project falls under the BSD 3-Clause License.
 * New methods `PyText.replace()` and `PyText.delete()`.
 * New class `Replacer` as the return type of `PyText.replace()`, with public methods `.confirm()`, `.rollback()`, etc.
 * Added a dunder method `PyText.__truediv__()` as an alternative to `PyText.jumpto()`.
-* New subclass `PyContent` inheriting from `PyText`. A `PyContent` object stores a part of a file that is not storable by instances of other subclasses.
+* New subclass `PyContent` inherited from `PyText`. A `PyContent` object stores a part of a file that is not storable by instances of other subclasses.
 
 ### v0.1.21
 * Improved behavior of clickables.
 
 ### v0.1.20
-* Fixed issues:
-  * incorrectly displayed file paths in the output of `TextPy.findall(styler=False)`;
-  * expired file links in the output of `TextPy.findall(styler=True, line_numbers=False)`.
+* Fixed issue: incorrect file links in the output of `TextPy.findall()`;
 
 ### v0.1.19
 * Various improvements.

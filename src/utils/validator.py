@@ -42,8 +42,9 @@ class SimpleValidator:
             return
         if not isinstance(value, self._type):
             raise TypeError(
-                f"invalid type for {self.name!r}: expected {tuple_repr(self._type)}; "
-                f"got {type(value)} instead"
+                f"invalid type for {self.name!r}: expected "
+                f"{tuple_repr(self._type, is_type=True)}; "
+                f"got {value.__class__.__name__!r} instead"
             )
         if self.literal is not ...:
             if not isinstance(self.literal, tuple):
@@ -72,7 +73,7 @@ class SimpleValidator:
         del instance.__dict__[self.name]
 
 
-def tuple_repr(maybe_tuple: Union[Any, Tuple[Any, ...]]) -> str:
+def tuple_repr(maybe_tuple: Union[Any, Tuple[Any, ...]], is_type: bool = False) -> str:
     """
     Returns the representational string of a tuple.
 
@@ -87,13 +88,14 @@ def tuple_repr(maybe_tuple: Union[Any, Tuple[Any, ...]]) -> str:
         Representational string.
 
     """
-    if isinstance(maybe_tuple, tuple):
-        if len(maybe_tuple) == 0:
-            return ""
-        elif len(maybe_tuple) == 1:
-            return repr(maybe_tuple[0])
-        elif len(maybe_tuple) == 2:
-            return "'" "' or '".join(maybe_tuple) + "'"
-        else:
-            return "'" + "', '".join(maybe_tuple[:-1]) + f"', or {maybe_tuple[-1]!r}"
-    return repr(maybe_tuple)
+    maybe_tuple = maybe_tuple if isinstance(maybe_tuple, tuple) else (maybe_tuple,)
+    if is_type:
+        maybe_tuple = [x.__name__ for x in maybe_tuple]
+    if len(maybe_tuple) == 0:
+        return ""
+    elif len(maybe_tuple) == 1:
+        return repr(maybe_tuple[0])
+    elif len(maybe_tuple) == 2:
+        return "'" + "' or '".join(maybe_tuple) + "'"
+    else:
+        return "'" + "', '".join(maybe_tuple[:-1]) + f"', or {maybe_tuple[-1]!r}"

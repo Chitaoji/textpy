@@ -7,7 +7,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Optional, Union
+from typing import TYPE_CHECKING, Callable, Optional, Set, Union
 
 from typing_extensions import deprecated
 
@@ -18,13 +18,16 @@ if TYPE_CHECKING:
     from .abc import PyText
 
 
-__all__ = ["module", "textpy"]
+__all__ = ["module", "textpy", "DEFAULT_IGNORE_PATHS"]
+
+DEFAULT_IGNORE_PATHS = {"build", ".git", ".github"}
 
 
 def module(
     path_or_text: Union[Path, str],
     home: Optional[Union[Path, str]] = None,
     encoding: Optional[str] = None,
+    ignore: Optional[Set[str]] = None,
     *,
     _: Callable[P, None] = _defaults,
 ) -> "PyText[P]":
@@ -42,6 +45,8 @@ def module(
         None.
     encoding : str, optional
         Specifies encoding, by default None.
+    ignore : Set[str], optional
+        Subpaths to ignore, by default `DEFAULT_IGNORE_PATHS`.
 
     Returns
     -------
@@ -55,20 +60,23 @@ def module(
 
     See Also
     --------
-    PyDir : Stores a directory of python files.
-    PyFile : Stores the code of a python file.
+    PyDir : Stores a directory.
+    PyFile : Stores a python file.
+    PyFunc : Stores the code and docstring of a function.
     PyClass : Stores the code and docstring of a class.
     PyMethod : Stores the code and docstring of a class method.
-    PyFunc : Stores the code and docstring of a function.
-    PyContent : Stores a part of a file.
+    PyProperty : Stores the code and docstring of a class property.
+    PyContent : Stores other infomation.
     NumpyFormatDocstring : Stores a numpy-formatted docstring.
 
     """
     path_or_text = as_path(path_or_text, home=home)
+    if ignore is None:
+        ignore = DEFAULT_IGNORE_PATHS
     if isinstance(path_or_text, str) or path_or_text.is_file():
-        return PyFile(path_or_text, home=home, encoding=encoding)
+        return PyFile(path_or_text, home=home, encoding=encoding, ignore=ignore)
     if path_or_text.is_dir():
-        return PyDir(path_or_text, home=home, encoding=encoding)
+        return PyDir(path_or_text, home=home, encoding=encoding, ignore=ignore)
     raise FileExistsError(f"file not exists: '{path_or_text}'")
 
 
@@ -76,3 +84,15 @@ textpy = deprecated(
     "tx.textpy() is deprecated and will be removed in a future version "
     "- use tx.module() instead"
 )(module)
+
+
+# def type_of_script() -> Literal["jupyter", "ipython", "terminal"]:
+#     """Returns the type of script."""
+#     if "IPython" in sys.modules:
+#         ipython = sys.modules["IPython"].get_ipython()
+#         ipy_str = str(type(ipython))
+#         if "zmqshell" in ipy_str:
+#             return "jupyter"
+#         if "terminal" in ipy_str:
+#             return "ipython"
+#     return "terminal"

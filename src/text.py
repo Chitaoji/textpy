@@ -19,7 +19,15 @@ from .utils.re_extensions import counted_strip, line_count, line_count_iter, rsp
 if TYPE_CHECKING:
     from .abc import Docstring
 
-__all__ = ["PyDir", "PyFile", "PyClass", "PyFunc", "PyMethod", "PyContent"]
+__all__ = [
+    "PyDir",
+    "PyFile",
+    "PyClass",
+    "PyFunc",
+    "PyMethod",
+    "PyProperty",
+    "PyContent",
+]
 
 
 class PyDir(PyText):
@@ -33,22 +41,31 @@ class PyDir(PyText):
 
     @cached_property
     def doc(self) -> "Docstring":
-        if "__init__" in self.children_names:
+        try:
             _doc = self.jumpto("__init__").doc.text
-        else:
+        except ValueError:
             _doc = ""
         return NumpyFormatDocstring(_doc, parent=self)
 
     @cached_property
-    def header(self) -> PyText:
-        return PyFile("", parent=self)
+    def header(self) -> "PyContent":
+        if self._header is None:
+            _ = self.children
+        if self._header:
+            return PyContent("", parent=self, mask=self._header)
+        return PyContent("", parent=self)
 
     @cached_property
     def children(self) -> List[PyText]:
         children: List[PyText] = []
-        for _path in self.path.iterdir():
+        self._header = ""
+        for _path in sorted(self.path.iterdir()):
+            if _path.name in self.ignore:
+                continue
             if _path.suffix == ".py":
                 children.append(PyFile(_path, parent=self))
+                if _path.stem == "__init__":
+                    self._header = children[-1]
             elif _path.is_dir():
                 _module = PyDir(_path, parent=self)
                 if len(_module.children) > 0:
@@ -80,7 +97,7 @@ class PyFile(PyText):
         return NumpyFormatDocstring(_doc, parent=self)
 
     @cached_property
-    def header(self) -> PyText:
+    def header(self) -> "PyContent":
         if self._header is None:
             _ = self.children
         return PyContent(self._header, parent=self)
@@ -160,20 +177,20 @@ class PyClass(PyText):
 
     @cached_property
     def doc(self) -> "Docstring":
-        if "__init__" in self.children_names and (
-            t := self.jumpto("__init__").doc.text
-        ):
-            _doc = t
+        searched = re.search('""".*?"""', self.header.text, re.DOTALL)
+        if searched:
+            _doc = re.sub("\n    ", "\n", searched.group()[3:-3])
         else:
-            searched = re.search('""".*?"""', self.header.text, re.DOTALL)
-            if searched:
-                _doc = re.sub("\n    ", "\n", searched.group()[3:-3])
-            else:
-                _doc = ""
+            _doc = ""
+        if not _doc:
+            try:
+                _doc = self.jumpto("__init__").doc.text
+            except ValueError:
+                ...
         return NumpyFormatDocstring(_doc, parent=self)
 
     @cached_property
-    def header(self) -> PyText:
+    def header(self) -> "PyContent":
         if self._header is None:
             _ = self.children
         return PyContent(self._header, parent=self)
@@ -186,6 +203,10 @@ class PyClass(PyText):
         for i, _str in line_count_iter(rsplit("(?:\n@.*)*\ndef ", sub_text)):
             if _cnt == 0:
                 self._header = _str.replace("\n", "\n    ")
+            elif _str.startswith(("\n@property", "\n@cached_property")):
+                children.append(
+                    PyProperty(_str, parent=self, start_line=self.start_line + i - 1)
+                )
             else:
                 children.append(
                     PyMethod(_str, parent=self, start_line=self.start_line + i - 1)
@@ -212,7 +233,7 @@ class PyFunc(PyText):
         return NumpyFormatDocstring(_doc, parent=self)
 
     @cached_property
-    def header(self) -> PyText:
+    def header(self) -> "PyContent":
         _header = re.search(".*\n[^\\s][^\n]*", self.text, re.DOTALL).group()
         return PyContent(_header, parent=self)
 
@@ -223,6 +244,14 @@ class PyMethod(PyFunc):
     def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         super().__pytext_post_init__(path_or_text=path_or_text)
         self.spaces = 4
+
+
+class PyProperty(PyMethod):
+    """Stores the code and docstring of a class property."""
+
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
+        super().__pytext_post_init__(path_or_text=path_or_text)
+        self.name = self.name[:-2]
 
 
 class PyContent(PyText):
@@ -242,5 +271,5 @@ class PyContent(PyText):
         return NumpyFormatDocstring("", parent=self)
 
     @cached_property
-    def header(self) -> PyText:
+    def header(self) -> "PyContent":
         return self

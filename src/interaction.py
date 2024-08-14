@@ -1,5 +1,5 @@
 """
-Contains interaction tools: display_params().
+Contains interaction tools: display_params.
 
 NOTE: this module is private. All functions and objects are available in the main
 `textpy` namespace - use that instead.
@@ -13,13 +13,13 @@ from functools import cached_property, partial
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
+    Any,
     Callable,
     Dict,
     List,
     Literal,
     Optional,
     Tuple,
-    Union,
     get_args,
 )
 
@@ -34,29 +34,39 @@ if TYPE_CHECKING:
 
     from pandas.io.formats.style import Styler
 
+    from ._typing import PatternType, ReplType
     from .abc import PyText
     from .text import PyFile
-    from .utils.re_extensions import PatternType, ReplType
 
 
 __all__ = ["display_params"]
 
 NULL = "NULL"  # Path stems or filenames should avoid this.
 ColorSchemeStr = Literal["dark", "modern", "high-intensty", "no-color"]
+TreeStyleStr = Literal["mixed", "vertical", "plain"]
+TableStyleStr = Literal["classic", "plain"]
 
 
 @dataclass
 class DisplayParams:
-    """
-    Params for displaying.
-
-    """
+    """Parameters for displaying."""
 
     color_scheme: ColorSchemeStr = SimpleValidator(
-        literal=get_args(ColorSchemeStr), default="dark"
+        str, literal=get_args(ColorSchemeStr), default="dark"
     )
-    enable_styler: bool = SimpleValidator(bool, default=True)
-    line_numbers: bool = SimpleValidator(bool, default=True)
+    tree_style: TreeStyleStr = SimpleValidator(
+        str, literal=get_args(TreeStyleStr), default="mixed"
+    )
+    table_style: TableStyleStr = SimpleValidator(
+        str, literal=get_args(TableStyleStr), default="classic"
+    )
+    use_mimebundle: bool = SimpleValidator(bool, default=True)
+    skip_line_numbers: bool = SimpleValidator(bool, default=False)
+
+    def defaults(self) -> Dict[str, Any]:
+        """Returns the default values as a dict."""
+        fields: Dict[str, Any] = getattr(self.__class__, "__dataclass_fields__")
+        return {k: v.default.default for k, v in fields.items()}
 
 
 display_params = DisplayParams()
@@ -92,8 +102,8 @@ class TextFinding:
     def __ge__(self, __other: Self) -> bool:
         return self == __other or self > __other
 
-    def to_tuple(self) -> Tuple["PyText", "PatternType", int, str]:
-        """To tuple."""
+    def astuple(self) -> Tuple["PyText", "PatternType", int, str]:
+        """Converts `self` to a tuple."""
         return self.obj, self.pattern, self.nline, self.linestr
 
 
@@ -107,17 +117,24 @@ class FindTextResult:
         reprfunc: Optional[Callable] = None,
     ) -> None:
         self.res: List[TextFinding] = []
-        self.styl = stylfunc if stylfunc else self.__style_match
-        self._repr = reprfunc if reprfunc else self.__default_repr
+        self.stylfunc = stylfunc if stylfunc else self.__style_match
+        self.reprfunc = reprfunc if reprfunc else self.__default_repr
 
     def __repr__(self) -> str:
         string: str = ""
         for res in sorted(self.res):
-            t, p, n, _line = res.to_tuple()
-            string += f"\n{t.relpath}" + f":{n}" * display_params.line_numbers + ": "
-            new = smart_sub(p, partial(self._repr, res), " " * t.spaces + _line)
+            t, p, n, _line = res.astuple()
+            if display_params.skip_line_numbers:
+                string += f"\n{t.relpath}: "
+            else:
+                string += f"\n{t.relpath}:{n}: "
+            new = smart_sub(p, partial(self.reprfunc, res), " " * t.spaces + _line)
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
+
+    def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
+        if display_params.use_mimebundle:
+            return {"text/html": self.to_html()}
 
     def __bool__(self) -> bool:
         return bool(self.res)
@@ -171,49 +188,50 @@ class FindTextResult:
         """
         self.extend(other.res)
 
-    def to_styler(self) -> Union["Styler", Self]:
+    def to_styler(self) -> "Styler":
         """
-        Return a `Styler` of dataframe to beautify the representation in a
-        Jupyter notebook.
+        Return a pandas styler for representation.
 
         Returns
         -------
-        Union[Styler, Self]
-            A `Styler` or an instance of self.
+        Styler
+            Pandas styler.
 
         """
-        if not display_params.enable_styler or pd.__version__ < "1.4.0":
-            return self
         df = pd.DataFrame("", index=range(len(self.res)), columns=["source", "match"])
         for i, res in enumerate(sorted(self.res)):
-            t, p, n, _line = res.to_tuple()
+            t, p, n, _line = res.astuple()
             df.iloc[i, 0] = ".".join(
                 [self.__style_source(x) for x in t.track()]
             ).replace(".NULL", "")
-            if display_params.line_numbers:
+            if not display_params.skip_line_numbers:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
-            df.iloc[i, 1] = smart_sub(p, partial(self.styl, res), _line)
-        styler = (
-            df.style.hide(axis=0)
-            .set_properties(**{"text-align": "left"})
-            .set_table_styles([{"selector": "th", "props": [("text-align", "center")]}])
+            df.iloc[i, 1] = smart_sub(p, partial(self.stylfunc, res), _line)
+        return df.style.hide(axis=0).set_table_styles(
+            [
+                {"selector": "th", "props": [("text-align", "center")]},
+                {"selector": "td", "props": [("text-align", "left")]},
+            ]
         )
-        setattr(styler, "getself", lambda: self)
-        return styler
 
-    def getself(self) -> Self:
-        """
-        Returns self.
-
-        Returns
-        -------
-        Self
-            An instance of self.
-
-        """
-        return self
+    def to_html(self) -> str:
+        """Return an html string for representation."""
+        html_maker = HTMLTableMaker(
+            index=range(len(self.res)), columns=["source", "match"]
+        )
+        for i, res in enumerate(sorted(self.res)):
+            t, p, n, _line = res.astuple()
+            html_maker[i, 0] = ".".join(
+                [self.__style_source(x) for x in t.track()]
+            ).replace(".NULL", "")
+            if not display_params.skip_line_numbers:
+                html_maker[i, 0] += ":" + make_ahref(
+                    f"{t.execpath}:{n}", str(n), color="inherit"
+                )
+            html_maker[i, 1] = smart_sub(p, partial(self.stylfunc, res), _line)
+        return html_maker.make()
 
     @staticmethod
     def __default_repr(_: TextFinding, m: "Match[str]", /) -> str:
@@ -243,6 +261,67 @@ class FindTextResult:
                 bg_color=get_bg_colors()[0],
             )
         )
+
+
+@dataclass
+class HTMLTableMaker:
+    """
+    Make an html table.
+
+    Parameters
+    ----------
+    index : list
+        Table index.
+    columns : list
+        Table columns.
+
+    """
+
+    index: list
+    columns: list
+
+    def __post_init__(self):
+        self.data = [
+            ["" for _ in range(len(self.columns))] for _ in range(len(self.index))
+        ]
+
+    def __getitem__(self, __key: Tuple[int, int]) -> str:
+        return self.data[__key[0]][__key[1]]
+
+    def __setitem__(self, __key: Tuple[int, int], __value: str) -> None:
+        self.data[__key[0]][__key[1]] = __value
+
+    def make(self) -> str:
+        """Make a string of the html table."""
+        tclass = display_params.table_style
+        if tclass == "classic":
+            tstyle = """<style type="text/css">
+.table-classic th {
+  text-align: center;
+}
+.table-classic td {
+  text-align: left;
+}
+</style>
+<table class="table-classic">"""
+        else:
+            tstyle = "<table>"
+        thead = "\n      ".join(f"<th>{x}</th>" for x in self.columns)
+        rows = []
+        for x in self.data:
+            row = "</td>\n      <td>".join(x)
+            rows.append("    <tr>\n      <td>" + row + "</td>\n    </tr>\n")
+        tbody = "".join(rows)
+        return f"""{tstyle}
+  <thead>
+    <tr>
+      {thead}
+    </tr>
+  </thead>
+  <tbody>
+{tbody}  </tbody>
+</table>
+"""
 
 
 class FileEditor:
@@ -377,8 +456,16 @@ class Replacer:
     def __repr__(self) -> str:
         return repr(self.__find_text_result)
 
+    def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
+        if display_params.use_mimebundle:
+            return {"text/html": self.to_html()}
+
     def __bool__(self) -> bool:
         return bool(self.editors)
+
+    def to_html(self) -> str:
+        """Return an html string for representation."""
+        return self.__find_text_result.to_html()
 
     def append(self, editor: FileEditor) -> None:
         """
@@ -480,37 +567,6 @@ class Replacer:
             )
         return info
 
-    def to_styler(self) -> Union["Styler", Self]:
-        """
-        Return a `Styler` of dataframe to beautify the representation in a
-        Jupyter notebook.
-
-        Returns
-        -------
-        Union[Styler, Self]
-            A `Styler` or an instance of self.
-
-        """
-        if not display_params.enable_styler or pd.__version__ < "1.4.0":
-            return self
-        styler = self.__find_text_result.to_styler()
-        setattr(styler, "confirm", self.confirm)
-        setattr(styler, "rollback", self.rollback)
-        setattr(styler, "getself", lambda: self)
-        return styler
-
-    def getself(self) -> Self:
-        """
-        Returns self.
-
-        Returns
-        -------
-        Self
-            An instance of self.
-
-        """
-        return self
-
     def __style(self, r: TextFinding, m: "Match[str]", /) -> str:
         url = f"{r.obj.execpath}:{r.nline}:{1+r.obj.spaces+m.start()}"
         bgc = get_bg_colors()
@@ -540,10 +596,155 @@ class Replacer:
                 pyfile = e.pyfile.__class__(e.based_on.new_text, mask=e.pyfile)
             else:
                 pyfile = e.pyfile
-            new_res = pyfile.findall(e.pattern, styler=False)
+            new_res = pyfile.findall(e.pattern)
             new_res.set_order(i)
             res.join(new_res)
         return res
+
+
+def make_html_tree(pytext: "PyText") -> str:
+    """
+    Make an html file-tree.
+
+    Parameters
+    ----------
+    pytext : PyText
+        A python module / class / function / method.
+
+    Returns
+    -------
+    str
+        Html string.
+
+    """
+    if display_params.tree_style == "plain":
+        tstyle = "<ul>"
+    else:
+        tstyle = """<style type="text/css">
+.tree-vertical,
+.tree-vertical ul.m,
+.tree-vertical li.m {
+    margin: 0;
+    padding: 0;
+    position: relative;
+}
+.tree-vertical {
+    margin: 0 0 1em;
+    text-align: center;
+}
+.tree-vertical,
+.tree-vertical ul.m {
+    display: table;
+}
+.tree-vertical ul.m {
+    width: 100%;
+}
+.tree-vertical li.m {
+    display: table-cell;
+    padding: .5em 0;
+    vertical-align: top;
+}
+.tree-vertical ul.s,
+.tree-vertical li.s {
+    text-align: left;
+}
+.tree-vertical li.m:before {
+    outline: solid 1px #666;
+    content: "";
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+.tree-vertical li.m:first-child:before {
+    left: 50%;
+}
+.tree-vertical li.m:last-child:before {
+    right: 50%;
+}
+.tree-vertical li.m>details>summary,
+.tree-vertical li.m>span {
+    border: solid .1em #666;
+    border-radius: .2em;
+    display: inline-block;
+    margin: 0 .2em .5em;
+    padding: .2em .5em;
+    position: relative;
+}
+.tree-vertical li>details>summary { 
+    white-space: nowrap;
+}
+.tree-vertical li.m>details>summary {
+    cursor: pointer;
+}
+.tree-vertical li.m>details>summary>span.open,
+.tree-vertical li.m>details[open]>summary>span.closed {
+    display: none;
+}
+.tree-vertical li.m>details[open]>summary>span.open {
+    display: inline;
+}
+.tree-vertical ul.m:before,
+.tree-vertical li.m>details>summary:before,
+.tree-vertical li.m>span:before {
+    outline: solid 1px #666;
+    content: "";
+    height: .5em;
+    left: 50%;
+    position: absolute;
+}
+.tree-vertical ul.m:before {
+    top: -.5em;
+}
+.tree-vertical li.m>details>summary:before,
+.tree-vertical li.m>span:before {
+    top: -.56em;
+    height: .45em;
+}
+.tree-vertical>li.m {
+    margin-top: 0;
+}
+.tree-vertical>li.m:before,
+.tree-vertical>li.m:after,
+.tree-vertical>li.m>details>summary:before,
+.tree-vertical>li.m>span:before {
+    outline: none;
+}
+</style>
+<ul class="tree-vertical">"""
+    return f"{tstyle}\n{__get_li(pytext)}\n</ul>"
+
+
+def __get_li(pytext: "PyText", main: bool = True) -> str:
+    triangle = (
+        ""
+        if display_params.tree_style == "plain"
+        else '<span class="open">▼ </span><span class="closed">▶ </span>'
+    )
+    if pytext.is_dir() and pytext.children:
+        tchidren = "\n".join(__get_li(x) for x in pytext.children)
+        return (
+            f'<li class="m"><details><summary>{triangle}{pytext.name}</summary>\n'
+            f'<ul class="m">\n{tchidren}\n</ul>\n</details></li>'
+        )
+
+    li_class = "m" if main else "s"
+    ul_class = "m" if display_params.tree_style == "vertical" else "s"
+    triangle = triangle if main else ""
+    if pytext.children:
+        tchidren = "\n".join(
+            __get_li(x, main=ul_class == "m")
+            for x in pytext.children
+            if x.name != NULL and __is_public(x.name)
+        )
+        if tchidren:
+            name = pytext.name + (".py" if pytext.is_file() else "")
+            return (
+                f'<li class="{li_class}"><details><summary>{triangle}{name}</summary>'
+                f'\n<ul class="{ul_class}">\n{tchidren}\n</ul>\n</details></li>'
+            )
+    name = pytext.name + (".py" if pytext.is_file() else "")
+    return f'<li class="{li_class}"><span>{name}</span></li>'
 
 
 def make_ahref(
@@ -577,8 +778,8 @@ def make_ahref(
     if Path(url).stem == NULL:
         href = ""
     else:
-        href = f"href='{url}' "
-    return f"<a {href}style='{style}'>{text}</a>"
+        href = f'href="{url}" '
+    return f'<a {href}style="{style}">{text}</a>'
 
 
 def get_bg_colors() -> Tuple[str, str, str]:
@@ -598,3 +799,11 @@ def get_bg_colors() -> Tuple[str, str, str]:
     if display_params.color_scheme == "high-intensty":
         return ["#505050", "#701414", "#147014"]
     return ["#505050", "#505050", "#505050"]
+
+
+def __is_public(name: str) -> bool:
+    if not name.startswith("_"):
+        return True
+    if name.startswith("__"):
+        return name.endswith(("__", "__()"))
+    return False

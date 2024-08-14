@@ -1,20 +1,24 @@
 """Extensions for the `re` package."""
 
 import re
-from typing import (TYPE_CHECKING, Callable, Generic, Iterable, List, Literal,
-                    Tuple, TypeVar, Union, overload)
+from typing import (
+    TYPE_CHECKING,
+    Generic,
+    Iterable,
+    List,
+    Literal,
+    Tuple,
+    TypeVar,
+    Union,
+    overload,
+)
 
 if TYPE_CHECKING:
-    from re import Match, Pattern, RegexFlag
+    from re import Pattern
 
-    from hintwith import hintwith
+    from .._typing import FlagType, MatchType, PatternType, ReplType
 
 AnyStr = TypeVar("AnyStr", str, bytes)
-PatternType = Union[str, "Pattern[str]", "SmartPattern[str]"]
-MatchType = Union["Match[str]", "SmartMatch[str]", None]
-ReplType = Union[str, Callable[["Match[str]"], str]]
-FlagType = Union[int, "RegexFlag"]
-
 
 __all__ = [
     "quote_collapse",
@@ -329,7 +333,7 @@ class SmartPattern(Generic[AnyStr]):
     def __init__(
         self,
         pattern: Union[AnyStr, "Pattern[AnyStr]"],
-        flags: FlagType = 0,
+        flags: "FlagType" = 0,
         ignore: str = "()[]{}",
         mark_ignore: str = "{}",
     ) -> None:
@@ -384,7 +388,9 @@ class SmartMatch(Generic[AnyStr]):
         return self.__span[1]
 
 
-def smart_search(pattern: PatternType, string: str, flags: FlagType = 0) -> MatchType:
+def smart_search(
+    pattern: "PatternType", string: str, flags: "FlagType" = 0
+) -> "MatchType":
     """
     Finds the first match in the string. Differences to `re.search()` that
     the pattern can be a `SmartPattern` object.
@@ -421,7 +427,9 @@ def smart_search(pattern: PatternType, string: str, flags: FlagType = 0) -> Matc
     return None
 
 
-def smart_match(pattern: PatternType, string: str, flags: FlagType = 0) -> MatchType:
+def smart_match(
+    pattern: "PatternType", string: str, flags: "FlagType" = 0
+) -> "MatchType":
     """
     Match the pattern. Differences to `re.match()` that the pattern can
     be a `SmartPattern` object.
@@ -469,8 +477,8 @@ def smart_match(pattern: PatternType, string: str, flags: FlagType = 0) -> Match
 
 
 def smart_fullmatch(
-    pattern: PatternType, string: str, flags: FlagType = 0
-) -> MatchType:
+    pattern: "PatternType", string: str, flags: "FlagType" = 0
+) -> "MatchType":
     """
     Match the pattern. Differences to `re.match()` that the pattern can
     be a `SmartPattern` object.
@@ -498,7 +506,9 @@ def smart_fullmatch(
     return None
 
 
-def smart_findall(pattern: PatternType, string: str, flags: FlagType = 0) -> List[str]:
+def smart_findall(
+    pattern: "PatternType", string: str, flags: "FlagType" = 0
+) -> List[str]:
     """
     Returns a list of all non-overlapping matches in the string. Differences
     to `re.findall()` that the pattern can be a `SmartPattern` object.
@@ -530,11 +540,11 @@ def smart_findall(pattern: PatternType, string: str, flags: FlagType = 0) -> Lis
 
 
 def smart_sub(
-    pattern: PatternType,
-    repl: ReplType,
+    pattern: "PatternType",
+    repl: "ReplType",
     string: str,
     count: int = 0,
-    flags: FlagType = 0,
+    flags: "FlagType" = 0,
 ) -> str:
     """
     Return the string obtained by replacing the leftmost non-overlapping
@@ -582,11 +592,11 @@ def smart_sub(
 
 
 def smart_subn(
-    pattern: PatternType,
-    repl: ReplType,
+    pattern: "PatternType",
+    repl: "ReplType",
     string: str,
     count: int = 0,
-    flags: FlagType = 0,
+    flags: "FlagType" = 0,
 ) -> Tuple[str, int]:
     """
     Return a 2-tuple containing (new_string, number); new_string is the string
@@ -637,7 +647,7 @@ def smart_subn(
 
 
 def smart_split(
-    pattern: PatternType, string: str, maxsplit: int = 0, flags: FlagType = 0
+    pattern: "PatternType", string: str, maxsplit: int = 0, flags: "FlagType" = 0
 ) -> List[str]:
     """
     Split the source string by the occurrences of the pattern, returning a
@@ -691,7 +701,7 @@ def smart_split(
 
 
 def rsplit(
-    pattern: PatternType, string: str, maxsplit: int = 0, flags: FlagType = 0
+    pattern: "PatternType", string: str, maxsplit: int = 0, flags: "FlagType" = 0
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
@@ -744,7 +754,7 @@ def rsplit(
 
 
 def lsplit(
-    pattern: PatternType, string: str, maxsplit: int = 0, flags: FlagType = 0
+    pattern: "PatternType", string: str, maxsplit: int = 0, flags: "FlagType" = 0
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
@@ -797,7 +807,7 @@ def lsplit(
 
 
 def line_findall(
-    pattern: PatternType, string: str, flags: FlagType = 0
+    pattern: "PatternType", string: str, flags: "FlagType" = 0
 ) -> List[Tuple[int, str]]:
     """
     Finds all non-overlapping matches in the string. Differences to
@@ -843,19 +853,19 @@ def line_findall(
 
 @overload
 def real_findall(
-    pattern: PatternType,
+    pattern: "PatternType",
     string: str,
-    flags: FlagType = 0,
+    flags: "FlagType" = 0,
     linemode: Literal[False] = False,
 ) -> List[SmartMatch[str]]: ...
 @overload
 def real_findall(
-    pattern: PatternType,
+    pattern: "PatternType",
     string: str,
-    flags: FlagType = 0,
+    flags: "FlagType" = 0,
     linemode: Literal[True] = True,
 ) -> List[Tuple[int, SmartMatch[str]]]: ...
-def real_findall(pattern: PatternType, string: str, flags=0, linemode=False):
+def real_findall(pattern: "PatternType", string: str, flags=0, linemode=False):
     """
     Finds all non-overlapping matches in the string. Differences to
     `smart_findall()` or `line_findall()` that it returns match objects
@@ -920,51 +930,15 @@ def real_findall(pattern: PatternType, string: str, flags=0, linemode=False):
     return finds
 
 
-class Smart:
-    """Namespace for smart operations."""
+if TYPE_CHECKING:
+    from .._typing import Smart
+else:
 
-    Pattern = SmartPattern
-    Match = SmartMatch
+    class Smart:
+        """Namespace for smart operations."""
 
-    if TYPE_CHECKING:
-        # pylint: disable=missing-function-docstring
-        @staticmethod
-        @hintwith(smart_search, True)
-        def search(): ...
-        @staticmethod
-        @hintwith(smart_match, True)
-        def match(): ...
-        @staticmethod
-        @hintwith(smart_fullmatch, True)
-        def fullmatch(): ...
-        @staticmethod
-        @hintwith(smart_sub, True)
-        def sub(): ...
-        @staticmethod
-        @hintwith(smart_subn, True)
-        def subn(): ...
-        @staticmethod
-        @hintwith(smart_split, True)
-        def split(): ...
-        @staticmethod
-        @hintwith(rsplit, True)
-        def rsplit(): ...
-        @staticmethod
-        @hintwith(lsplit, True)
-        def lsplit(): ...
-        @staticmethod
-        @hintwith(smart_findall, True)
-        def findall(): ...
-        @staticmethod
-        @hintwith(line_findall, True)
-        def line_findall(): ...
-        @staticmethod
-        @hintwith(real_findall, True)
-        def real_findall(): ...
-
-        # pylint: enable=missing-function-docstring
-
-    else:
+        Pattern = SmartPattern
+        Match = SmartMatch
 
         search = smart_search
         match = smart_match
