@@ -185,6 +185,9 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.28
+* Fixed issue: can not display HTML entities as plain text in `*._repr_mimebundle_()`.
+
 ### v0.1.27
 * New gloabal parameters: `tree_style=`, `table_style=`, `use_mimebundle=`, and `skip_line_numbers=`; find them under `tx.display_params`.
 * Defined `display_params.defaults()` for users to get the default values of the parameters.
