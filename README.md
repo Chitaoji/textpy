@@ -248,7 +248,7 @@ This project falls under the BSD 3-Clause License.
 * Updated LICENSE.
 
 ### v0.1.17
-* Refactored README.
+* Refactored README.md.
 
 ### v0.1.16
 * Lazily imported *pandas* to reduce the time cost for importing.
@@ -275,7 +275,7 @@ This project falls under the BSD 3-Clause License.
 * More flexible presentation of output from `TextPy.findall()`.
 
 ### v0.1.4
-* Fixed a display issue of README on PyPI.
+* Fixed a display issue of README.md on PyPI.
 
 ### v0.1.3
 * Initial release.
