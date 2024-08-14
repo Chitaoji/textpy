@@ -96,10 +96,10 @@ examples/myfile.py:13: '    story : str, <optional>'
 ```
 The return object of `.findall()` has a `_repr_mimebundle_()` method to beautify the
 representation inside a jupyter notebook. However, you can compulsively disable this
-feature by setting `display_params.repr_mimebundle` to False:
+feature by setting `display_params.use_mimebundle` to False:
 ```py
 >>> from textpy import display_params
->>> display_params.repr_mimebundle = False
+>>> display_params.use_mimebundle = False
 ```
 In addition, the `.findall()` method has some optional parameters to customize the
 pattern, including `whole_word=`, `case_sensitive=`, and `regex=`.
