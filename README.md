@@ -10,7 +10,7 @@ $ pip install textpy
 ```txt
 lazyr>=0.0.16
 hintwith>=0.1.3
-typing_extensions
+typing-extensions
 black
 ```
 **NOTE:** *pandas*>=1.4.0 is recommended but not necessary.
