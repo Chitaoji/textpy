@@ -9,5 +9,6 @@ REQUIRES_PYTHON: ">=3.8.13"
 REQUIRES: 
   - lazyr>=0.0.16
   - hintwith>=0.1.3
+  - typing_extensions
   - black
 EXTRAS: {}

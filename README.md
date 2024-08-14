@@ -12,7 +12,7 @@ lazyr>=0.0.16
 hintwith>=0.1.3
 black
 ```
-NOTE: *pandas*>=1.4.0 is recommended. Lower versions of *pandas* are also valid, but some features of this package are not supported by them.
+NOTE: *pandas*>=1.4.0 is recommended but not necessary.
 
 ## Quick Start
 To demonstrate the usage of this module, we put a file named `myfile.py` under `./examples/` (you can find it in the repository, or create a new file of your own):
