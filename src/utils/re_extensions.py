@@ -312,6 +312,9 @@ class SmartPattern(Generic[AnyStr]):
     By default "{}" is used to mark where the pattern should be ignored, or
     you can customize it by specifying `mark_ignore=`.
 
+    NOTE: All the groups in the pattern are combined into one group in
+    this case.
+
     Examples
     --------
     * When ignore="()", pattern "a{}b" can match the string "ab" or "a(c)b",
@@ -705,8 +708,11 @@ def rsplit(
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
-    `smart_split()` that all groups in the pattern are also returned, each
-    connected with the substring on its right.
+    `smart_split()` that the matched substrings are also returned, each
+    connected with the unmatched substring on its right.
+
+    NOTE: All the groups in the pattern are combined into one group in
+    this case.
 
     Parameters
     ----------
@@ -758,8 +764,11 @@ def lsplit(
 ) -> List[str]:
     """
     Split the string by the occurrences of the pattern. Differences to
-    `smart_split()` that all groups in the pattern are also returned, each
-    connected with the substring on its left.
+    `smart_split()` that the matched substrings are also returned, each
+    connected with the unmatched substring on its left.
+
+    NOTE: All the groups in the pattern are combined into one group in
+    this case.
 
     Parameters
     ----------
@@ -813,6 +822,9 @@ def line_findall(
     Finds all non-overlapping matches in the string. Differences to
     `smart_findall()` that it returns a list of 2-tuples containing (nline,
     substring); nline is the line number of the matched substring.
+
+    NOTE: All the groups in the pattern are combined into one group in
+    this case.
 
     Parameters
     ----------
@@ -870,6 +882,9 @@ def real_findall(pattern: "PatternType", string: str, flags=0, linemode=False):
     Finds all non-overlapping matches in the string. Differences to
     `smart_findall()` or `line_findall()` that it returns match objects
     instead of matched substrings.
+
+    NOTE: All the groups in the pattern are combined into one group in
+    this case.
 
     Parameters
     ----------
