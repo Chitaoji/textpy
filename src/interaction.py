@@ -26,7 +26,7 @@ from typing import (
 import pandas as pd
 from typing_extensions import Self
 
-from .utils.re_extensions import smart_sub
+from .utils.re_extensions import real_findall, smart_split, smart_sub
 from .utils.validator import SimpleValidator
 
 if TYPE_CHECKING:
@@ -208,7 +208,11 @@ class FindTextResult:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
-            df.iloc[i, 1] = smart_sub(p, partial(self.stylfunc, res), _line)
+            splits = smart_split(p, _line)
+            text = ""
+            for j, x in enumerate(real_findall(p, _line)):
+                text += make_plain_text(splits[j]) + self.stylfunc(res, x)
+            df.iloc[i, 1] = text + make_plain_text(splits[-1])
         return df.style.hide(axis=0).set_table_styles(
             [
                 {"selector": "th", "props": [("text-align", "center")]},
@@ -217,7 +221,7 @@ class FindTextResult:
         )
 
     def to_html(self) -> str:
-        """Return an html string for representation."""
+        """Return an HTML string for representation."""
         html_maker = HTMLTableMaker(
             index=range(len(self.res)), columns=["source", "match"]
         )
@@ -230,7 +234,11 @@ class FindTextResult:
                 html_maker[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
-            html_maker[i, 1] = smart_sub(p, partial(self.stylfunc, res), _line)
+            splits = smart_split(p, _line)
+            text = ""
+            for j, x in enumerate(real_findall(p, _line)):
+                text += make_plain_text(splits[j]) + self.stylfunc(res, x)
+            html_maker[i, 1] = text + make_plain_text(splits[-1])
         return html_maker.make()
 
     @staticmethod
@@ -256,7 +264,7 @@ class FindTextResult:
             if m.group() == ""
             else make_ahref(
                 f"{r.obj.execpath}:{r.nline}:{1+r.obj.spaces+m.start()}",
-                m.group(),
+                make_plain_text(m.group()),
                 color="#cccccc",
                 bg_color=get_bg_colors()[0],
             )
@@ -266,7 +274,7 @@ class FindTextResult:
 @dataclass
 class HTMLTableMaker:
     """
-    Make an html table.
+    Make an HTML table.
 
     Parameters
     ----------
@@ -292,7 +300,7 @@ class HTMLTableMaker:
         self.data[__key[0]][__key[1]] = __value
 
     def make(self) -> str:
-        """Make a string of the html table."""
+        """Make a string of the HTML table."""
         tclass = display_params.table_style
         if tclass == "classic":
             tstyle = """<style type="text/css">
@@ -464,7 +472,7 @@ class Replacer:
         return bool(self.editors)
 
     def to_html(self) -> str:
-        """Return an html string for representation."""
+        """Return an HTML string for representation."""
         return self.__find_text_result.to_html()
 
     def append(self, editor: FileEditor) -> None:
@@ -573,13 +581,17 @@ class Replacer:
         before = (
             ""
             if m.group() == ""
-            else make_ahref(url, m.group(), color="#cccccc", bg_color=bgc[1])
+            else make_ahref(
+                url, make_plain_text(m.group()), color="#cccccc", bg_color=bgc[1]
+            )
         )
         if (new := self.editors[r.order].counted_repl(m)) == "":
             return before
         if display_params.color_scheme == "no-color" and before != "":
             new = "/" + new
-        return before + make_ahref(url, new, color="#cccccc", bg_color=bgc[2])
+        return before + make_ahref(
+            url, make_plain_text(new), color="#cccccc", bg_color=bgc[2]
+        )
 
     def __repr(self, r: TextFinding, m: "Match[str]", /) -> str:
         new = self.editors[r.order].counted_repl(m)
@@ -604,7 +616,7 @@ class Replacer:
 
 def make_html_tree(pytext: "PyText") -> str:
     """
-    Make an html file-tree.
+    Make an HTML tree.
 
     Parameters
     ----------
@@ -780,6 +792,16 @@ def make_ahref(
     else:
         href = f'href="{url}" '
     return f'<a {href}style="{style}">{text}</a>'
+
+
+def make_plain_text(text: str) -> str:
+    """Turn HTML entities into plain text."""
+    return (
+        text.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+    )
 
 
 def get_bg_colors() -> Tuple[str, str, str]:
