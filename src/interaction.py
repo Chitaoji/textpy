@@ -736,8 +736,8 @@ def __get_li(pytext: "PyText", main: bool = True) -> str:
     if pytext.is_dir() and pytext.children:
         tchidren = "\n".join(__get_li(x) for x in pytext.children)
         return (
-            f'<li class="m"><details><summary>{triangle}{pytext.name}</summary>\n'
-            f'<ul class="m">\n{tchidren}\n</ul>\n</details></li>'
+            f'<li class="m"><details><summary>{triangle}{make_plain_text(pytext.name)}'
+            f'</summary>\n<ul class="m">\n{tchidren}\n</ul>\n</details></li>'
         )
 
     li_class = "m" if main else "s"
@@ -750,12 +750,12 @@ def __get_li(pytext: "PyText", main: bool = True) -> str:
             if x.name != NULL and __is_public(x.name)
         )
         if tchidren:
-            name = pytext.name + (".py" if pytext.is_file() else "")
+            name = make_plain_text(pytext.name) + (".py" if pytext.is_file() else "")
             return (
                 f'<li class="{li_class}"><details><summary>{triangle}{name}</summary>'
                 f'\n<ul class="{ul_class}">\n{tchidren}\n</ul>\n</details></li>'
             )
-    name = pytext.name + (".py" if pytext.is_file() else "")
+    name = make_plain_text(pytext.name) + (".py" if pytext.is_file() else "")
     return f'<li class="{li_class}"><span>{name}</span></li>'
 
 
