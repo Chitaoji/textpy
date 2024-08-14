@@ -10,9 +10,10 @@ $ pip install textpy
 ```txt
 lazyr>=0.0.16
 hintwith>=0.1.3
+typing_extensions
 black
 ```
-NOTE: *pandas*>=1.4.0 is recommended but not necessary.
+**NOTE:** *pandas*>=1.4.0 is recommended but not necessary.
 
 ## Quick Start
 To demonstrate the usage of this module, we put a file named `myfile.py` under `./examples/` (you can find it in the repository, or create a new file of your own):
