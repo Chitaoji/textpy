@@ -186,6 +186,10 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.29
+* Updated `PyText.check_format()`: now returns a boolean value instead of None.
+* Updated the `ignore=` parameter for `module()`: it now accepts a list of path-patterns; paths matching any of these patterns will be ignored when searching for files.
+
 ### v0.1.28
 * Fixed issue: can not display special characters in `*._repr_mimebundle_()`.
 

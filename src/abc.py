@@ -11,17 +11,7 @@ import re
 from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    Generic,
-    List,
-    Optional,
-    Set,
-    Union,
-    overload,
-)
+from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Union, overload
 
 import black
 from typing_extensions import ParamSpec, Self
@@ -79,7 +69,7 @@ class PyText(ABC, Generic[P]):
         start_line: Optional[int] = None,
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
-        ignore: Set[str] = ...,
+        ignore: List[str] = ...,
         mask: Optional[Self] = None,
     ) -> None:
         self.text: str = ""
@@ -88,6 +78,7 @@ class PyText(ABC, Generic[P]):
 
         self.parent = parent
         self.spaces = 0
+        self.ignore = ignore
 
         if start_line is None:
             self.start_line = 1 if parent is None else parent.start_line
@@ -97,11 +88,9 @@ class PyText(ABC, Generic[P]):
         if parent is None:
             self.home = as_path(Path(""), home=home)
             self.encoding = encoding
-            self.ignore = ignore
         else:
             self.home = parent.home
             self.encoding = parent.encoding
-            self.ignore = parent.ignore
 
         self._header: Optional[Any] = None
         self.__pytext_post_init__(path_or_text)
