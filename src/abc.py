@@ -312,20 +312,27 @@ class PyText(ABC, Generic[P]):
         """Returns whether self is an instance of `PyDir`."""
         return self.__class__.__name__ == "PyDir"
 
-    def check_format(self) -> None:
+    def check_format(self) -> bool:
         """
         Checks the format of files. Logs warning if a file does not comply
         with Black formatter's default rules.
 
+        Returns
+        -------
+        bool
+            Whether the module comply with Black formatter's default rules.
+
         """
         if self.is_dir():
-            for c in self.children:
-                c.check_format()
-        elif self.is_file() and black_format(self.text).strip() != self.text:
+            check_results = [c.check_format() for c in self.children]
+            return all(check_results)
+        if self.is_file() and black_format(self.text).strip() != self.text:
             logging.warning(
                 "file does not comply with Black formatter's default rules: '%s'",
                 self.path,
             )
+            return False
+        return True
 
     @overload
     def findall(
