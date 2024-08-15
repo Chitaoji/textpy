@@ -26,7 +26,7 @@ from typing import (
 import pandas as pd
 from typing_extensions import Self
 
-from .utils.re_extensions import real_findall, smart_split, smart_sub
+from .re_extensions.src import real_findall, smart_split, smart_sub
 from .utils.validator import SimpleValidator
 
 if TYPE_CHECKING:

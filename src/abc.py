@@ -26,7 +26,7 @@ from .interaction import (
     display_params,
     make_html_tree,
 )
-from .utils.re_extensions import SmartPattern, line_findall, pattern_inreg
+from .re_extensions.src import SmartPattern, line_findall, pattern_inreg
 
 if TYPE_CHECKING:
     from re import Pattern
