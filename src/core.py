@@ -71,11 +71,10 @@ def module(
 
     """
     path_or_text = as_path(path_or_text, home=home)
-    if ignore is None:
-        ignore = DEFAULT_IGNORE_PATHS
     if isinstance(path_or_text, str) or path_or_text.is_file():
         return PyFile(path_or_text, home=home, encoding=encoding)
     if path_or_text.is_dir():
+        ignore = DEFAULT_IGNORE_PATHS if ignore is None else ignore
         return PyDir(path_or_text, home=home, encoding=encoding, ignore=ignore)
     raise FileExistsError(f"file not exists: '{path_or_text}'")
 

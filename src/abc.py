@@ -69,7 +69,7 @@ class PyText(ABC, Generic[P]):
         start_line: Optional[int] = None,
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
-        ignore: List[str] = ...,
+        ignore: Optional[List[str]] = None,
         mask: Optional[Self] = None,
     ) -> None:
         self.text: str = ""
