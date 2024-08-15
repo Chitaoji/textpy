@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, NamedTuple, Optional, Union
 
 from typing_extensions import Self
 
-from .re_extensions.src import quote_collapse
+from .re_extensions import quote_collapse
 
 if TYPE_CHECKING:
     from ._typing import HistoryGroups, HistoryKey

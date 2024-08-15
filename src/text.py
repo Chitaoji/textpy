@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, List, Union
 from .abc import PyText, as_path
 from .doc import NumpyFormatDocstring
 from .interaction import NULL
-from .re_extensions.src import counted_strip, line_count, line_count_iter, rsplit
+from .re_extensions import counted_strip, line_count, line_count_iter, rsplit
 
 if TYPE_CHECKING:
     from .abc import Docstring

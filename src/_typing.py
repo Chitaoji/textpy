@@ -12,7 +12,9 @@ from typing import TYPE_CHECKING, Any, Dict, List, Literal, Union
 if TYPE_CHECKING:
 
     from .imports import ImportHistory
-    from .re_extensions.src._typing import PatternType, ReplType
+    from .re_extensions import _typing
+
+    PatternType, ReplType = _typing.PatternType, _typing.ReplType
 
 
 logging.warning(

@@ -36,6 +36,7 @@ REQUIRES: Final[List[str]] = yml["REQUIRES"]
 EXTRAS: Final[Dict] = yml["EXTRAS"]
 PACKAGE_DIR = "src"
 LICENSE = re.match(".*", (here / "LICENSE").read_text()).group()
+CLASSIFIERS: List[str] = yml["CLASSIFIERS"]
 
 # Import the README and use it as the long-description.
 readme_path = here / "README.md"
@@ -148,7 +149,8 @@ if __name__ == "__main__":
         readme_path.write_text(long_description.strip())
     except FileNotFoundError:
         pass
-
+    print(find_packages(exclude=["examples"]))
+    print(CLASSIFIERS)
     # Where the magic happens.
     setup(
         name=NAME,
@@ -169,18 +171,9 @@ if __name__ == "__main__":
         extras_require=EXTRAS,
         include_package_data=True,
         license="BSD",
-        classifiers=[
-            # Trove classifiers
-            # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
-            "License :: OSI Approved :: BSD License",
-            "Programming Language :: Python",
-            "Programming Language :: Python :: 3",
-            "Programming Language :: Python :: 3.8",
-            "Programming Language :: Python :: 3.9",
-            "Programming Language :: Python :: 3.10",
-            "Programming Language :: Python :: 3.11",
-            "Programming Language :: Python :: 3.12",
-        ],
+        # Trove classifiers
+        # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
+        classifiers=CLASSIFIERS,
         # $ setup.py publish support.
         cmdclass={"upload": UploadCommand},
     )

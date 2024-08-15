@@ -7,7 +7,7 @@ import re
 from typing import TYPE_CHECKING, List, Tuple
 
 from .interaction import Replacer
-from .re_extensions.src import SmartPattern
+from .re_extensions import SmartPattern
 
 if TYPE_CHECKING:
     from ._typing import ReplType
