@@ -510,7 +510,7 @@ class PyText(ABC, Generic[P]):
             p, f = pattern, 0
         else:
             raise TypeError(
-                f"'pattern' can not be instance of {p.__class__.__name__!r}"
+                f"'pattern' can not be an instance of {p.__class__.__name__!r}"
             )
         if not regex:
             p = pattern_inreg(p)
