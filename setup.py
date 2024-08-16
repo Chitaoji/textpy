@@ -34,9 +34,11 @@ AUTHOR_EMAIL: Final[str] = yml["AUTHOR_EMAIL"]
 REQUIRES_PYTHON: Final[str] = yml["REQUIRES_PYTHON"]
 REQUIRES: Final[List[str]] = yml["REQUIRES"]
 EXTRAS: Final[Dict] = yml["EXTRAS"]
-PACKAGE_DIR = "src"
+PACKAGE_DIR: str = yml["PACKAGE_DIR"]
 LICENSE = re.match(".*", (here / "LICENSE").read_text()).group()
 CLASSIFIERS: List[str] = yml["CLASSIFIERS"]
+SUBMODULES: List[str] = yml["SUBMODULES"]
+EXCLUDES: List[str] = yml["EXCLUDES"]
 
 # Import the README and use it as the long-description.
 readme_path = here / "README.md"
@@ -128,6 +130,36 @@ class ReadmeFormatError(Exception):
     """Raised when the README has a wrong format."""
 
 
+def wrap_packages() -> Tuple[List[str], Dict[str, str]]:
+    """Find and wrap all the packages."""
+    wrapped_name = NAME.replace("-", "_")
+    main_pkgs = find_packages(exclude=EXCLUDES + [x + "*" for x in SUBMODULES])
+    pkgs = [re.sub("^" + PACKAGE_DIR, wrapped_name, x) for x in main_pkgs]
+    pkg_dir = {wrapped_name: PACKAGE_DIR}
+    for sub_name in SUBMODULES:
+        sub_yaml: Dict[str, Any] = yaml.safe_load(
+            (here / sub_name.replace(".", "/") / "metadata.yml").read_text()
+        )
+        sub_excludes = sub_yaml["EXCLUDES"]
+        sub_package_dir = sub_yaml["PACKAGE_DIR"]
+        sub_pkgs = find_packages(
+            exclude=EXCLUDES
+            + main_pkgs
+            + [sub_name]
+            + [sub_name + "." + x for x in sub_excludes]
+        )
+        wrapped_pkgs = [
+            re.sub("^" + PACKAGE_DIR, wrapped_name, x).replace(
+                "." + sub_package_dir, ""
+            )
+            for x in sub_pkgs
+        ]
+        pkgs.extend(wrapped_pkgs)
+        for p, q in zip(wrapped_pkgs, sub_pkgs):
+            pkg_dir[p] = q.replace(".", "/")
+    return pkgs, pkg_dir
+
+
 if __name__ == "__main__":
     # Import the __init__.py and change the module docstring.
     try:
@@ -149,8 +181,8 @@ if __name__ == "__main__":
         readme_path.write_text(long_description.strip())
     except FileNotFoundError:
         pass
-    print(find_packages(exclude=["examples"]))
-    print(CLASSIFIERS)
+
+    packages, package_dir = wrap_packages()
     # Where the magic happens.
     setup(
         name=NAME,
@@ -162,14 +194,11 @@ if __name__ == "__main__":
         author_email=AUTHOR_EMAIL,
         python_requires=REQUIRES_PYTHON,
         url=HOMEPAGE,
-        packages=[
-            x.replace(PACKAGE_DIR, NAME.replace("-", "_"))
-            for x in find_packages(exclude=["examples"])
-        ],
-        package_dir={NAME.replace("-", "_"): PACKAGE_DIR},
+        packages=packages,
+        package_dir=package_dir,
         install_requires=REQUIRES,
         extras_require=EXTRAS,
-        include_package_data=True,
+        include_package_data=False,
         license="BSD",
         # Trove classifiers
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
