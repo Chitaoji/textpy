@@ -33,8 +33,12 @@ jobs:
         run: python -m pip install twine
       - name: Install wheel
         run: python -m pip install wheel
-      - name: Install textpy
-        run: python -m pip install textpy
+      - name: Install re-extensions
+        run: python -m pip install re-extensions
+      - name: Checkout all the submodules
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Build package
         run: python setup.py bdist_wheel --universal
       - name: Publish package
