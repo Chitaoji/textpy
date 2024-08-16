@@ -7,7 +7,7 @@ To use the full functionality of this file, you must:
 $ pip install pyyaml
 $ pip install twine
 $ pip install wheel
-$ pip install textpy
+$ pip install re-extensions
 ```
 """
 
@@ -18,8 +18,8 @@ from pathlib import Path
 from typing import Any, Dict, Final, List, Optional, Tuple
 
 import yaml
+from re_extensions import rsplit, word_wrap
 from setuptools import Command, find_packages, setup
-from textpy.utils.re_extensions import rsplit, word_wrap
 
 here = Path(__file__).parent
 
