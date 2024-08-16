@@ -14,7 +14,7 @@ REQUIRES:
 EXTRAS:
   test:
     - pandas>=1.4.0
-PACKAGE_DIR: src
+SOURCE: src
 SUBMODULES:
   - src.re_extensions
 EXCLUDES:
