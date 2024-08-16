@@ -1,0 +1,4 @@
+[submodule "src/re_extensions"]
+	path = src/re_extensions
+	url = git@github.com:Chitaoji/re-extensions.git
+	branch = develop

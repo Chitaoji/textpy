@@ -11,7 +11,7 @@ from functools import cached_property
 from typing import Dict
 
 from .abc import Docstring
-from .utils.re_extensions import rsplit
+from .re_extensions import rsplit
 
 __all__ = ["NumpyFormatDocstring"]
 

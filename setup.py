@@ -34,8 +34,11 @@ AUTHOR_EMAIL: Final[str] = yml["AUTHOR_EMAIL"]
 REQUIRES_PYTHON: Final[str] = yml["REQUIRES_PYTHON"]
 REQUIRES: Final[List[str]] = yml["REQUIRES"]
 EXTRAS: Final[Dict] = yml["EXTRAS"]
-PACKAGE_DIR = "src"
+SOURCE: str = yml["SOURCE"]
 LICENSE = re.match(".*", (here / "LICENSE").read_text()).group()
+CLASSIFIERS: List[str] = yml["CLASSIFIERS"]
+SUBMODULES: List[str] = yml["SUBMODULES"]
+EXCLUDES: List[str] = yml["EXCLUDES"]
 
 # Import the README and use it as the long-description.
 readme_path = here / "README.md"
@@ -50,7 +53,7 @@ about = {}
 python_exec = exec
 if not VERSION:
     try:
-        python_exec((here / PACKAGE_DIR / "__version__.py").read_text(), about)
+        python_exec((here / SOURCE / "__version__.py").read_text(), about)
     except FileNotFoundError:
         about["__version__"] = "0.0.0"
 else:
@@ -127,14 +130,50 @@ class ReadmeFormatError(Exception):
     """Raised when the README has a wrong format."""
 
 
+def _wrap_packages(
+    name: str = NAME,
+    src: str = SOURCE,
+    exclude: List[str] = EXCLUDES,
+    submodule: List[str] = SUBMODULES,
+    top: Path = here,
+) -> Tuple[List[str], Dict[str, str]]:
+    main_name = name.replace("-", "_")
+    main_pkgs = find_packages(exclude=exclude + [x + "*" for x in submodule])
+    pkgs = [re.sub(f"^{src}", main_name, x) for x in main_pkgs]
+    pkg_dir = {main_name: src}
+    for sub_name in submodule:
+        sub_yml: Dict[str, Any] = yaml.safe_load(
+            (top / sub_name.replace(".", "/") / "metadata.yml").read_text()
+        )
+        sub_excludes: List[str] = sub_yml["EXCLUDES"]
+        sub_src: str = sub_yml["SOURCE"]
+        sub_subm: List[str] = sub_yml["SUBMODULES"]
+        if sub_subm:
+            raise ValueError(
+                "can not build submodules of a submodule: "
+                + ", ".join(f"{sub_name}.{x}" for x in sub_subm)
+            )
+        sub_pkgs = find_packages(
+            exclude=exclude
+            + main_pkgs
+            + [sub_name]
+            + [f"{sub_name}.{x}" for x in sub_excludes]
+        )
+        wrapped_pkgs = [
+            re.sub(f"^{src}", main_name, x).replace(f".{sub_src}", "") for x in sub_pkgs
+        ]
+        pkgs.extend(wrapped_pkgs)
+        for p, q in zip(wrapped_pkgs, sub_pkgs):
+            pkg_dir[p] = q.replace(".", "/")
+    return pkgs, pkg_dir
+
+
 if __name__ == "__main__":
     # Import the __init__.py and change the module docstring.
     try:
-        init_path = here / PACKAGE_DIR / "__init__.py"
+        init_path = here / SOURCE / "__init__.py"
         module_file = init_path.read_text()
-        new_doc, long_description = _readme2doc(
-            long_description
-        )  # pylint: disable=invalid-name
+        new_doc, long_description = _readme2doc(long_description)
         if "'''" in new_doc and '"""' in new_doc:
             raise ReadmeFormatError("Both \"\"\" and ''' are found in the README")
         if '"""' in new_doc:
@@ -149,6 +188,7 @@ if __name__ == "__main__":
     except FileNotFoundError:
         pass
 
+    packages, package_dir = _wrap_packages()
     # Where the magic happens.
     setup(
         name=NAME,
@@ -160,27 +200,15 @@ if __name__ == "__main__":
         author_email=AUTHOR_EMAIL,
         python_requires=REQUIRES_PYTHON,
         url=HOMEPAGE,
-        packages=[
-            x.replace(PACKAGE_DIR, NAME.replace("-", "_"))
-            for x in find_packages(exclude=["examples"])
-        ],
-        package_dir={NAME.replace("-", "_"): PACKAGE_DIR},
+        packages=packages,
+        package_dir=package_dir,
         install_requires=REQUIRES,
         extras_require=EXTRAS,
-        include_package_data=True,
+        include_package_data=False,
         license="BSD",
-        classifiers=[
-            # Trove classifiers
-            # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
-            "License :: OSI Approved :: BSD License",
-            "Programming Language :: Python",
-            "Programming Language :: Python :: 3",
-            "Programming Language :: Python :: 3.8",
-            "Programming Language :: Python :: 3.9",
-            "Programming Language :: Python :: 3.10",
-            "Programming Language :: Python :: 3.11",
-            "Programming Language :: Python :: 3.12",
-        ],
+        # Trove classifiers
+        # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
+        classifiers=CLASSIFIERS,
         # $ setup.py publish support.
         cmdclass={"upload": UploadCommand},
     )

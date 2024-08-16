@@ -11,17 +11,7 @@ import re
 from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    Generic,
-    List,
-    Optional,
-    Set,
-    Union,
-    overload,
-)
+from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Union, overload
 
 import black
 from typing_extensions import ParamSpec, Self
@@ -36,7 +26,7 @@ from .interaction import (
     display_params,
     make_html_tree,
 )
-from .utils.re_extensions import SmartPattern, line_findall, pattern_inreg
+from .re_extensions import SmartPattern, line_findall, pattern_inreg
 
 if TYPE_CHECKING:
     from re import Pattern
@@ -79,7 +69,7 @@ class PyText(ABC, Generic[P]):
         start_line: Optional[int] = None,
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
-        ignore: Set[str] = ...,
+        ignore: Optional[List[str]] = None,
         mask: Optional[Self] = None,
     ) -> None:
         self.text: str = ""
@@ -88,6 +78,7 @@ class PyText(ABC, Generic[P]):
 
         self.parent = parent
         self.spaces = 0
+        self.ignore = ignore
 
         if start_line is None:
             self.start_line = 1 if parent is None else parent.start_line
@@ -97,11 +88,9 @@ class PyText(ABC, Generic[P]):
         if parent is None:
             self.home = as_path(Path(""), home=home)
             self.encoding = encoding
-            self.ignore = ignore
         else:
             self.home = parent.home
             self.encoding = parent.encoding
-            self.ignore = parent.ignore
 
         self._header: Optional[Any] = None
         self.__pytext_post_init__(path_or_text)
@@ -312,20 +301,27 @@ class PyText(ABC, Generic[P]):
         """Returns whether self is an instance of `PyDir`."""
         return self.__class__.__name__ == "PyDir"
 
-    def check_format(self) -> None:
+    def check_format(self) -> bool:
         """
         Checks the format of files. Logs warning if a file does not comply
         with Black formatter's default rules.
 
+        Returns
+        -------
+        bool
+            Whether the module comply with Black formatter's default rules.
+
         """
         if self.is_dir():
-            for c in self.children:
-                c.check_format()
-        elif self.is_file() and black_format(self.text).strip() != self.text:
+            check_results = [c.check_format() for c in self.children]
+            return all(check_results)
+        if self.is_file() and black_format(self.text).strip() != self.text:
             logging.warning(
                 "file does not comply with Black formatter's default rules: '%s'",
                 self.path,
             )
+            return False
+        return True
 
     @overload
     def findall(
@@ -514,7 +510,7 @@ class PyText(ABC, Generic[P]):
             p, f = pattern, 0
         else:
             raise TypeError(
-                f"'pattern' can not be instance of {p.__class__.__name__!r}"
+                f"'pattern' can not be an instance of {p.__class__.__name__!r}"
             )
         if not regex:
             p = pattern_inreg(p)

@@ -7,7 +7,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Optional, Set, Union
+from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
 from typing_extensions import deprecated
 
@@ -20,14 +20,14 @@ if TYPE_CHECKING:
 
 __all__ = ["module", "textpy", "DEFAULT_IGNORE_PATHS"]
 
-DEFAULT_IGNORE_PATHS = {"build", ".git", ".github"}
+DEFAULT_IGNORE_PATHS = ["build", ".git", ".github"]
 
 
 def module(
     path_or_text: Union[Path, str],
     home: Optional[Union[Path, str]] = None,
     encoding: Optional[str] = None,
-    ignore: Optional[Set[str]] = None,
+    ignore: Optional[List[str]] = None,
     *,
     _: Callable[P, None] = _defaults,
 ) -> "PyText[P]":
@@ -71,11 +71,10 @@ def module(
 
     """
     path_or_text = as_path(path_or_text, home=home)
-    if ignore is None:
-        ignore = DEFAULT_IGNORE_PATHS
     if isinstance(path_or_text, str) or path_or_text.is_file():
-        return PyFile(path_or_text, home=home, encoding=encoding, ignore=ignore)
+        return PyFile(path_or_text, home=home, encoding=encoding)
     if path_or_text.is_dir():
+        ignore = DEFAULT_IGNORE_PATHS if ignore is None else ignore
         return PyDir(path_or_text, home=home, encoding=encoding, ignore=ignore)
     raise FileExistsError(f"file not exists: '{path_or_text}'")
 

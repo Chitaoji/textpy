@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, List, Union
 from .abc import PyText, as_path
 from .doc import NumpyFormatDocstring
 from .interaction import NULL
-from .utils.re_extensions import counted_strip, line_count, line_count_iter, rsplit
+from .re_extensions import counted_strip, line_count, line_count_iter, rsplit
 
 if TYPE_CHECKING:
     from .abc import Docstring
@@ -60,14 +60,14 @@ class PyDir(PyText):
         children: List[PyText] = []
         self._header = ""
         for _path in sorted(self.path.iterdir()):
-            if _path.name in self.ignore:
+            if any(_path.match(x) for x in self.ignore):
                 continue
             if _path.suffix == ".py":
                 children.append(PyFile(_path, parent=self))
                 if _path.stem == "__init__":
                     self._header = children[-1]
             elif _path.is_dir():
-                _module = PyDir(_path, parent=self)
+                _module = PyDir(_path, parent=self, ignore=self.ignore)
                 if len(_module.children) > 0:
                     children.append(_module)
         return children

@@ -10,9 +10,10 @@ $ pip install textpy
 ```txt
 lazyr>=0.0.16
 hintwith>=0.1.3
+typing-extensions
 black
 ```
-NOTE: *pandas*>=1.4.0 is recommended. Lower versions of *pandas* are also valid, but some features of this package are not supported by them.
+**NOTE:** *pandas*>=1.4.0 is recommended but not necessary.
 
 ## Quick Start
 To demonstrate the usage of this module, we put a file named `myfile.py` under `./examples/` (you can find it in the repository, or create a new file of your own):
@@ -185,8 +186,12 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.29
+* Updated `PyText.check_format()`: now returns a boolean value instead of None.
+* Updated the `ignore=` parameter for `module()`: it now accepts a list of path-patterns; paths matching any of these patterns will be ignored when searching for files.
+
 ### v0.1.28
-* Fixed issue: can not display HTML entities as plain text in `*._repr_mimebundle_()`.
+* Fixed issue: can not display special characters in `*._repr_mimebundle_()`.
 
 ### v0.1.27
 * New gloabal parameters: `tree_style=`, `table_style=`, `use_mimebundle=`, and `skip_line_numbers=`; find them under `tx.display_params`.
@@ -247,7 +252,7 @@ This project falls under the BSD 3-Clause License.
 * Updated LICENSE.
 
 ### v0.1.17
-* Refactored README.
+* Refactored README.md.
 
 ### v0.1.16
 * Lazily imported *pandas* to reduce the time cost for importing.
@@ -274,7 +279,7 @@ This project falls under the BSD 3-Clause License.
 * More flexible presentation of output from `TextPy.findall()`.
 
 ### v0.1.4
-* Fixed a display issue of README on PyPI.
+* Fixed a display issue of README.md on PyPI.
 
 ### v0.1.3
 * Initial release.
