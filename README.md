@@ -188,16 +188,16 @@ This project falls under the BSD 3-Clause License.
 ## History
 ### v0.1.29
 * Updated `PyText.check_format()`: now returns a boolean value instead of None.
-* Updated the `ignore=` parameter for `module()`: it now accepts a list of path-patterns; paths matching any of these patterns will be ignored when searching for files.
+* Updated the `ignore=` parameter for `module()`: it now accepts a list of path-patterns. Paths matching any of these patterns will be ignored when searching for files.
 
 ### v0.1.28
 * Fixed issue: can not display special characters in `*._repr_mimebundle_()`.
 
 ### v0.1.27
-* New gloabal parameters: `tree_style=`, `table_style=`, `use_mimebundle=`, and `skip_line_numbers=`; find them under `tx.display_params`.
+* New gloabal parameters: `tree_style=`, `table_style=`, `use_mimebundle=`, and `skip_line_numbers=` - find them under `tx.display_params`.
 * Defined `display_params.defaults()` for users to get the default values of the parameters.
 * New subclass `PyProperty` inherited from `PyMethod`. Class properties will be stored in instances of `PyProperty` instead of `PyMethod` in the future.
-* Updated the method `PyText.jumpto()`; it now allows "/" as delimiters (in addition to "."); if a class or callable is defined more than once, jump to the last (previously first) place where it was defined. 
+* Updated the method `PyText.jumpto()`: it now allows "/" as delimiters (in addition to "."); if a class or callable is defined more than once, jump to the last (previously first) place where it was defined. 
 * `PyText` has a `_repr_mimebundle_()` method now.
 * New property `PyText.imports`.
 * Created a utility class `HTMLTableMaker` in place of  `Styler`; this significantly reduces the running overhead of `*._repr_mimebundle_()`.
