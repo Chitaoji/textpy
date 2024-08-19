@@ -72,6 +72,9 @@ class PyDir(PyText):
                     children.append(_module)
         return children
 
+    def is_dir(self) -> bool:
+        return True
+
 
 class PyFile(PyText):
     """Stores the code of a python file."""
@@ -165,6 +168,9 @@ class PyFile(PyText):
                 )
             )
         return children
+
+    def is_file(self) -> bool:
+        return True
 
 
 class PyClass(PyText):

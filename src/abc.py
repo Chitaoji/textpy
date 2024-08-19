@@ -295,11 +295,11 @@ class PyText(ABC, Generic[P]):
 
     def is_file(self) -> bool:
         """Returns whether self is an instance of `PyFile`."""
-        return self.__class__.__name__ == "PyFile"
+        return False
 
     def is_dir(self) -> bool:
         """Returns whether self is an instance of `PyDir`."""
-        return self.__class__.__name__ == "PyDir"
+        return False
 
     def check_format(self) -> bool:
         """
