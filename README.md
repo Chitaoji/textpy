@@ -96,12 +96,12 @@ Note that in the jupyter notebook case, the matched substrings are **clickable**
 
 ## Examples
 ### tx.module()
-The previous demonstration introduced the core function `tx.module()`. The return of `tx.module()` is a subinstance of the abstract class `PyText`, who supports various text manipulation methods:
+The previous demonstration introduced the core function `tx.module()`. The return value of `tx.module()` is a subinstance of the abstract class `PyText`, which supports various text manipulation methods:
 ```py
 >>> isinstance(myfile, tx.PyText)
 True
 ```
-Sometimes, your python module may contain not just one file, but don't worry, since `tx.module()` provides support for complex file hierarchies. If the path points to a single file, the return type will be `PyFile`; otherwise, the return type will be `PyDir` - both are subclasses of `PyText`.
+Sometimes, your python module may contain not just one file, but don't worry, since `tx.module()` provides support for complex file hierarchies. If the path points to a single file, the return type will be `PyFile`; otherwise, the return type will be `PyDir` - both of which are subclasses of `PyText`.
 
 In conclusion, once you've got a python package, you can simply give the package dirpath to `tx.module()`, and do things like before:
 
@@ -118,7 +118,7 @@ As mentioned before, user can use `.findall()` to find all non-overlapping match
 >>> myfile.findall("optional")
 examples/myfile.py:13: '    story : str, <optional>'
 ```
-The return object of `.findall()` has a `_repr_mimebundle_()` method to beautify the representation inside a jupyter notebook. However, you can compulsively disable this feature by setting `display_params.use_mimebundle` to False:
+The object returned by `.findall()` has a `_repr_mimebundle_()` method to beautify the representation inside a jupyter notebook. However, you can compulsively disable this feature by setting `display_params.use_mimebundle` to False:
 ```py
 >>> from textpy import display_params
 >>> display_params.use_mimebundle = False
@@ -187,8 +187,8 @@ This project falls under the BSD 3-Clause License.
 
 ## History
 ### v0.1.29
-* Updated `PyText.check_format()`: now returns a boolean value instead of None.
-* Updated the `ignore=` parameter for `module()`: it now accepts a list of path-patterns. Paths matching any of these patterns will be ignored when searching for files.
+* Updated `PyText.check_format()`, which now returns a boolean value instead of None.
+* Updated the `ignore=` parameter for `module()`, which now accepts a list of path-patterns. Paths matching any of these patterns will be ignored when searching for files.
 
 ### v0.1.28
 * Fixed issue: can not display special characters in `*._repr_mimebundle_()`.

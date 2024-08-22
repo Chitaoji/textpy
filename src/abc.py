@@ -26,7 +26,7 @@ from .interaction import (
     display_params,
     make_html_tree,
 )
-from .re_extensions import SmartPattern, line_findall, pattern_inreg
+from .re_extensions import SmartPattern, line_findall
 
 if TYPE_CHECKING:
     from re import Pattern
@@ -513,7 +513,7 @@ class PyText(ABC, Generic[P]):
                 f"'pattern' can not be an instance of {p.__class__.__name__!r}"
             )
         if not regex:
-            p = pattern_inreg(p)
+            p = re.escape(p)
         if not case_sensitive:
             f = f | re.I
         if whole_word:
@@ -522,7 +522,7 @@ class PyText(ABC, Generic[P]):
             f = f | re.DOTALL
         if isinstance(pattern, SmartPattern):
             return SmartPattern(
-                p, flags=f, ignore=pattern.ignore, mark_ignore=pattern.mark_ignore
+                p, flags=f, ignore=pattern.ignore, ignore_mark=pattern.ignore_mark
             )
         return re.compile(p, flags=f)
 
@@ -540,7 +540,7 @@ class PyText(ABC, Generic[P]):
             new_pattern,
             flags=pattern.flags,
             ignore=pattern.ignore,
-            mark_ignore=pattern.mark_ignore,
+            ignore_mark=pattern.ignore_mark,
         )
 
     def jumpto(self, target: str) -> "PyText":
