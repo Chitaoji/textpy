@@ -7,10 +7,11 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
 
 if TYPE_CHECKING:
 
+    from .abc import Replacer
     from .imports import ImportHistory
     from .re_extensions import _typing
 
@@ -24,3 +25,13 @@ logging.warning(
 
 HistoryKey = Literal["where", "fro", "name", "as_name", "type_checking"]
 HistoryGroups = Dict[Any, Union["HistoryGroups", List["ImportHistory"]]]
+
+
+# pylint: disable=unused-argument
+def _defaults(
+    whole_word: bool = False,
+    dotall: bool = False,
+    case_sensitive: bool = True,
+    regex: bool = True,
+    based_on: Optional["Replacer"] = None,
+) -> None: ...

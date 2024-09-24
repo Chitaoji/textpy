@@ -685,13 +685,3 @@ def as_path(
 def black_format(string: str) -> str:
     """Reformat a string using Black and return new contents."""
     return black.format_str(string, mode=black.FileMode())
-
-
-# pylint: disable=unused-argument
-def _defaults(
-    whole_word: bool = False,
-    dotall: bool = False,
-    case_sensitive: bool = True,
-    regex: bool = True,
-    based_on: Optional[Replacer] = None,
-) -> None: ...

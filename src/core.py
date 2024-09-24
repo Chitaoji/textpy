@@ -11,12 +11,14 @@ from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
 from typing_extensions import deprecated
 
-from .abc import P, _defaults, as_path
+from .abc import P, as_path
 from .text import PyDir, PyFile
 
 if TYPE_CHECKING:
+    from ._typing import _defaults
     from .abc import PyText
-
+else:
+    _defaults = ...  # pylint: disable=invalid-name
 
 __all__ = ["module", "textpy", "DEFAULT_IGNORE_PATHS"]
 
