@@ -328,7 +328,7 @@ class PyText(ABC, Generic[P]):
         self, pattern: "PatternType", /, *_: P.args, **kwargs: P.kwargs
     ) -> FindTextResult: ...
     def findall(
-        self, pattern, /, based_on: Replacer = None, **kwargs
+        self, pattern, *, based_on: Replacer = None, **kwargs
     ) -> FindTextResult:
         """
         Finds all non-overlapping matches of `pattern`.
@@ -388,8 +388,8 @@ class PyText(ABC, Generic[P]):
         self,
         pattern,
         repl,
-        /,
         overwrite=True,
+        *,
         based_on: Optional[Replacer] = None,
         **kwargs,
     ) -> "Replacer":
@@ -444,7 +444,7 @@ class PyText(ABC, Generic[P]):
                     c.replace(
                         pattern,
                         repl,
-                        overwrite=overwrite,
+                        overwrite,
                         based_on=based_on,
                         **kwargs,
                     )
@@ -460,7 +460,7 @@ class PyText(ABC, Generic[P]):
         *_: P.args,
         **kwargs: P.kwargs,
     ) -> "Replacer": ...
-    def delete(self, pattern, /, overwrite=True, based_on=None, **kwargs) -> "Replacer":
+    def delete(self, pattern, overwrite=True, *, based_on=None, **kwargs) -> "Replacer":
         """
         An alternative to `.replace(pattern, "", *args, **kwargs)`
 
