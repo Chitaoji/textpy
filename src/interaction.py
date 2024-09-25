@@ -26,7 +26,7 @@ from typing import (
 import pandas as pd
 from typing_extensions import Self
 
-from .re_extensions import real_findall, smart_split, smart_sub
+from .re_extensions import smart_finditer, smart_split, smart_sub
 from .utils.validator import SimpleValidator
 
 if TYPE_CHECKING:
@@ -210,7 +210,7 @@ class FindTextResult:
                 )
             splits = smart_split(p, _line)
             text = ""
-            for j, x in enumerate(real_findall(p, _line)):
+            for j, x in enumerate(smart_finditer(p, _line)):
                 text += make_plain_text(splits[j]) + self.stylfunc(res, x)
             df.iloc[i, 1] = text + make_plain_text(splits[-1])
         return df.style.hide(axis=0).set_table_styles(
@@ -236,7 +236,7 @@ class FindTextResult:
                 )
             splits = smart_split(p, _line)
             text = ""
-            for j, x in enumerate(real_findall(p, _line)):
+            for j, x in enumerate(smart_finditer(p, _line)):
                 text += make_plain_text(splits[j]) + self.stylfunc(res, x)
             html_maker[i, 1] = text + make_plain_text(splits[-1])
         return html_maker.make()
