@@ -15,7 +15,7 @@ from typing_extensions import Self
 from .re_extensions import quote_collapse
 
 if TYPE_CHECKING:
-    from ._typing import HistoryGroups, HistoryKey
+    from ._typing import HistoryField, HistoryGroups
     from .abc import PyText
 
 __all__ = []
@@ -28,7 +28,7 @@ class ImportHistory(NamedTuple):
     fro: Optional[str]
     name: str
     as_name: Optional[str]
-    type_checking: bool
+    type_check_only: bool
 
     def __eq__(self, __other: Self) -> bool:
         if self.fro.startswith("."):
@@ -96,7 +96,7 @@ class Imports:
         return hist
 
     def __text2hist(
-        self, pattern: str, text: str, type_checking: bool
+        self, pattern: str, text: str, type_check_only: bool
     ) -> List[ImportHistory]:
         hist = []
         for line in text.splitlines():
@@ -105,22 +105,22 @@ class Imports:
                 for names in re.split(" *, *", imported):
                     n, a = re.match("([.\\w]+)(?: +as +)?([.\\w]+)?", names).groups()
                     hist.append(
-                        ImportHistory(self.pymodule.absname, fro, n, a, type_checking)
+                        ImportHistory(self.pymodule.absname, fro, n, a, type_check_only)
                     )
         return hist
 
-    def groupby(self, *by: Union["HistoryKey", List["HistoryKey"]]) -> "HistoryGroups":
+    def groupby(self, *by: "HistoryField") -> "HistoryGroups":
         """
-        Group the import history by the key.
+        Group the import history by some field.
 
         Parameters
         ----------
-        *by : Union[str, List[str]]
-            Used to determine the groups for the groupby.
+        *by : HistoryGroups
+            Determines by which field(s) will the import history be grouped.
 
         Returns
         -------
-        Dict[Union[str, Tuple[str]], ...]
+        HistoryGroups
             Group results.
 
         """
@@ -133,7 +133,7 @@ class Imports:
 
     @staticmethod
     def __history_groupby(
-        history: Any, by: Union["HistoryKey", List["HistoryKey"]]
+        history: Any, by: Union["HistoryField", List["HistoryField"]]
     ) -> "HistoryGroups":
         if isinstance(history, dict):
             return {k: Imports.__history_groupby(v, by) for k, v in history.items()}

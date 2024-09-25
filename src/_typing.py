@@ -23,7 +23,7 @@ logging.warning(
     "therefore unexpected errors may occur"
 )
 
-HistoryKey = Literal["where", "fro", "name", "as_name", "type_checking"]
+HistoryField = Literal["where", "fro", "name", "as_name", "type_check_only"]
 HistoryGroups = Dict[Any, Union["HistoryGroups", List["ImportHistory"]]]
 
 
