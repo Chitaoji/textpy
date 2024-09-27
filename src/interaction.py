@@ -30,6 +30,7 @@ from .re_extensions import smart_finditer, smart_split, smart_sub
 from .utils.validator import SimpleValidator
 
 if TYPE_CHECKING:
+    from dataclasses import Field
     from re import Match
 
     from pandas.io.formats.style import Styler
@@ -65,8 +66,8 @@ class DisplayParams:
 
     def defaults(self) -> Dict[str, Any]:
         """Returns the default values as a dict."""
-        fields: Dict[str, Any] = getattr(self.__class__, "__dataclass_fields__")
-        return {k: v.default.default for k, v in fields.items()}
+        fields: Dict[str, "Field"] = getattr(self.__class__, "__dataclass_fields__")
+        return {k: getattr(v.default, "default") for k, v in fields.items()}
 
 
 display_params = DisplayParams()
