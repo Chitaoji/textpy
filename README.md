@@ -191,7 +191,7 @@ This project falls under the BSD 3-Clause License.
 * Updated the `ignore=` parameter for `module()`, which now accepts a list of path-patterns. Paths matching any of these patterns will be ignored when searching for files.
 
 ### v0.1.28
-* Fixed issue: can not display special characters in `*._repr_mimebundle_()`.
+* Fixed issue: failed to display special characters in `*._repr_mimebundle_()`.
 
 ### v0.1.27
 * New gloabal parameters: `tree_style=`, `table_style=`, `use_mimebundle=`, and `skip_line_numbers=` - find them under `tx.display_params`.

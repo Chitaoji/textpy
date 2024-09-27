@@ -115,7 +115,7 @@ class Imports:
 
         Parameters
         ----------
-        *by : HistoryGroups
+        *by : HistoryField
             Determines by which field(s) will the import history be grouped.
 
         Returns
