@@ -36,7 +36,7 @@ class PyDir(PyText):
     def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
         self.path = as_path(path_or_text, home=self.home)
         if not self.path.is_dir():
-            raise NotADirectoryError(f"not a dicretory: '{self.path}'")
+            raise NotADirectoryError(f"not a dicretory: {self.path}")
         self.name = self.path.stem
 
     @cached_property
