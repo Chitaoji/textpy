@@ -13,9 +13,7 @@ if TYPE_CHECKING:
 
     from .abc import Replacer
     from .imports import ImportHistory
-    from .re_extensions import _typing
-
-    PatternType, ReplType = _typing.PatternType, _typing.ReplType
+    from .re_extensions._typing import PatternType, ReplType
 
 
 logging.warning(
