@@ -43,7 +43,8 @@ P = ParamSpec("P")
 
 class PyText(ABC, Generic[P]):
     """
-    Could be a python module, file, function, class, method or property.
+    Could store the text of a python module, file, function, class, method
+    or property.
 
     Parameters
     ----------
