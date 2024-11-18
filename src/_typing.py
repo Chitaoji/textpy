@@ -23,7 +23,7 @@ logging.warning(
     "therefore unexpected errors may occur"
 )
 
-HistoryField = Literal["where", "fro", "name", "as_name", "type_check_only"]
+HistoryField = Literal["where", "frm", "name", "as_name", "type_check_only"]
 HistoryGroups = Dict[Any, Union["HistoryGroups", List["ImportHistory"]]]
 PyModule = PyDir | PyFile
 

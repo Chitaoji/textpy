@@ -25,15 +25,15 @@ class ImportHistory(NamedTuple):
     """Import history."""
 
     where: str
-    fro: Optional[str]
+    frm: Optional[str]
     name: str
     as_name: Optional[str]
     type_check_only: bool
 
     def __eq__(self, __other: Self) -> bool:
-        if self.fro.startswith("."):
+        if self.frm.startswith("."):
             return False
-        return self.fro == __other.fro and self.name == __other.name
+        return self.frm == __other.frm and self.name == __other.name
 
     def __gt__(self, __other: Self) -> bool:
         raise TypeError(
@@ -101,11 +101,11 @@ class Imports:
         hist = []
         for line in text.splitlines():
             if matched := re.match(pattern, line):
-                fro, imported = matched.groups()
+                frm, imported = matched.groups()
                 for names in re.split(" *, *", imported):
                     n, a = re.match("([.\\w]+)(?: +as +)?([.\\w]+)?", names).groups()
                     hist.append(
-                        ImportHistory(self.pymodule.absname, fro, n, a, type_check_only)
+                        ImportHistory(self.pymodule.absname, frm, n, a, type_check_only)
                     )
         return hist
 
