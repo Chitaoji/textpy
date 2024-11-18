@@ -9,6 +9,8 @@ NOTE: this module is private. All functions and objects are available in the mai
 import logging
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
 
+from .text import PyDir, PyFile
+
 if TYPE_CHECKING:
 
     from .abc import Replacer
@@ -23,6 +25,7 @@ logging.warning(
 
 HistoryField = Literal["where", "fro", "name", "as_name", "type_check_only"]
 HistoryGroups = Dict[Any, Union["HistoryGroups", List["ImportHistory"]]]
+PyModule = PyDir | PyFile
 
 
 # pylint: disable=unused-argument

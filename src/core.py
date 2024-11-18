@@ -64,6 +64,7 @@ def module(
     --------
     PyDir : Stores a directory.
     PyFile : Stores a python file.
+    PyModule : PyDIr | PyFile.
     PyFunc : Stores the code and docstring of a function.
     PyClass : Stores the code and docstring of a class.
     PyMethod : Stores the code and docstring of a class method.
