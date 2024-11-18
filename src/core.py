@@ -52,7 +52,7 @@ def module(
 
     Returns
     -------
-    TextPy
+    PyText
         A class written for python code analysis.
 
     Raises
