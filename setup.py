@@ -143,7 +143,7 @@ def _wrap_packages(
     pkg_dir = {main_name: src}
     for sub_name in submodule:
         if not (ymlpath := top / sub_name.replace(".", "/") / "metadata.yml").exists():
-            print(repr(list(top.iterdir())))
+            print(ymlpath.parent.parent, repr(list(ymlpath.parent.parent.iterdir())))
             raise FileNotFoundError(
                 "No yaml file found among: " + repr(list(ymlpath.parent.iterdir()))
             )
