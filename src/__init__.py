@@ -66,16 +66,16 @@ linking to where the patterns were found.
 ## Examples
 ### tx.module()
 The previous demonstration introduced the core function `tx.module()`. The return of
-`tx.module()` is a subinstance of the abstract class `PyText`, who supports various text
+`tx.module()` is a subinstance of the abstract class `TextTree`, who supports various text
 manipulation methods:
 ```py
->>> isinstance(myfile, tx.PyText)
+>>> isinstance(myfile, tx.TextTree)
 True
 ```
 Sometimes, your python module may contain not just one file, but don't worry, since
 `tx.module()` provides support for complex file hierarchies. If the path points to a
 single file, the return type will be `PyFile`; otherwise, the return type will be
-`PyDir` - both are subclasses of `PyText`.
+`PyDir` - both are subclasses of `TextTree`.
 
 In conclusion, once you've got a python package, you can simply give the package dirpath
 to `tx.module()`, and do things like before:
@@ -87,7 +87,7 @@ to `tx.module()`, and do things like before:
 >>> res = tx.module(pkg_dir).findall(pattern)
 ```
 
-### tx.PyText.findall()
+### tx.TextTree.findall()
 As mentioned before, user can use `.findall()` to find all non-overlapping matches of
 some pattern in a python module.
 ```py
@@ -110,7 +110,7 @@ examples/myfile.py:24: 'def print_my_book(book: <MyBook>) -> None:'
 examples/myfile.py:30: '    book : <MyBook>'
 ```
 
-### tx.PyText.replace()
+### tx.TextTree.replace()
 Use `.replace()` to find all non-overlapping matches of some pattern, and replace them
 with another string:
 ```py
@@ -136,7 +136,7 @@ If you want to rollback the changes, run:
 {'successful': ['examples/myfile.py'], 'failed': []}
 ```
 
-### tx.PyText.delete()
+### tx.TextTree.delete()
 Use `.delete()` to find all non-overlapping matches of some pattern, and delete them:
 ```py
 >>> deleter = myfile.delete("book")

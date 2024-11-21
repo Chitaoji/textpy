@@ -16,7 +16,7 @@ from .re_extensions import quote_collapse
 
 if TYPE_CHECKING:
     from ._typing import HistoryField, HistoryGroups
-    from .abc import PyText
+    from .abc import TextTree
 
 __all__ = []
 
@@ -54,12 +54,12 @@ class Imports:
 
     Parameters
     ----------
-    pymodule : PyText
+    pymodule : TextTree
         A python module.
 
     """
 
-    def __init__(self, pymodule: "PyText") -> None:
+    def __init__(self, pymodule: "TextTree") -> None:
         self.pymodule = pymodule
 
     def __repr__(self) -> str:

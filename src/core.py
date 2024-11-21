@@ -16,7 +16,7 @@ from .text import PyDir, PyFile
 
 if TYPE_CHECKING:
     from ._typing import _defaults
-    from .abc import PyText
+    from .abc import TextTree
 else:
     _defaults = ...  # pylint: disable=invalid-name
 
@@ -33,7 +33,7 @@ def module(
     include: Optional[List[str]] = None,
     *,
     _: Callable[P, None] = _defaults,
-) -> "PyText[P]":
+) -> "TextTree[P]":
     """
     Statically analyzes a python file or a python module. Each python file
     is recommended to be formatted with `PEP-8`, otherwise the analyzing
@@ -56,7 +56,7 @@ def module(
 
     Returns
     -------
-    PyText
+    TextTree
         A class written for python code analysis.
 
     Raises
@@ -74,6 +74,7 @@ def module(
     PyMethod : Stores the code and docstring of a class method.
     PyProperty : Stores the code and docstring of a class property.
     PyContent : Stores other infomation.
+    NonPyFile : Stores a non-python file.
     NumpyFormatDocstring : Stores a numpy-formatted docstring.
 
     """

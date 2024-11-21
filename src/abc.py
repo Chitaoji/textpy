@@ -1,5 +1,5 @@
 """
-Contains abstract classes: PyText and Docstring.
+Contains abstract classes: TextTree and Docstring.
 
 NOTE: this module is private. All functions and objects are available in the main
 `textpy` namespace - use that instead.
@@ -35,22 +35,22 @@ if TYPE_CHECKING:
     from .text import PyContent
 
 
-__all__ = ["PyText", "Docstring"]
+__all__ = ["TextTree", "Docstring"]
 
 
 P = ParamSpec("P")
 
 
-class PyText(ABC, Generic[P]):
+class TextTree(ABC, Generic[P]):
     """
     Could store the text tree of a python module, file, function, class,
-    method or property.
+    method or non-python file.
 
     Parameters
     ----------
     path_or_text : Union[Path, str]
         File path, module path or file text.
-    parent : PyText, optional
+    parent : TextTree, optional
         Parent node (if exists), by default None.
     start_line : int, optional
         Starting line number, by default None.
@@ -70,7 +70,7 @@ class PyText(ABC, Generic[P]):
         self,
         path_or_text: Union[Path, str],
         *,
-        parent: Optional["PyText"] = None,
+        parent: Optional["TextTree"] = None,
         start_line: Optional[int] = None,
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
@@ -99,7 +99,7 @@ class PyText(ABC, Generic[P]):
             self.encoding = parent.encoding
 
         self._header: Optional[Any] = None
-        self.__pytext_post_init__(path_or_text)
+        self.__texttree_post_init__(path_or_text)
 
         if mask:
             self.path = mask.path
@@ -114,11 +114,11 @@ class PyText(ABC, Generic[P]):
         if display_params.use_mimebundle:
             return {"text/html": self.to_html()}
 
-    def __truediv__(self, __value: "str") -> "PyText":
+    def __truediv__(self, __value: "str") -> "TextTree":
         return self.jumpto(__value)
 
     @abstractmethod
-    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
+    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
         """
         Post init.
 
@@ -163,19 +163,19 @@ class PyText(ABC, Generic[P]):
 
         Returns
         -------
-        PyText
-            An instance of `PyText`.
+        TextTree
+            An instance of `TextTree`.
 
         """
 
     @cached_property
-    def children(self) -> List["PyText"]:
+    def children(self) -> List["TextTree"]:
         """
         Children nodes.
 
         Returns
         -------
-        List[PyText]
+        List[TextTree]
             List of the children nodes.
 
         """
@@ -197,7 +197,7 @@ class PyText(ABC, Generic[P]):
         return [x.name for x in self.children]
 
     @cached_property
-    def children_dict(self) -> Dict[str, "PyText"]:
+    def children_dict(self) -> Dict[str, "TextTree"]:
         """
         Dictionary of children nodes.
 
@@ -205,11 +205,11 @@ class PyText(ABC, Generic[P]):
 
         Returns
         -------
-        Dict[str, PyText]
+        Dict[str, TextTree]
             Dictionary of children nodes.
 
         """
-        children_dict: Dict[str, "PyText"] = {}
+        children_dict: Dict[str, "TextTree"] = {}
         null_cnt: int = 0
         for child, childname in zip(self.children, self.children_names):
             if childname == NULL:
@@ -555,9 +555,9 @@ class PyText(ABC, Generic[P]):
             ignore_mark=pattern.ignore_mark,
         )
 
-    def jumpto(self, target: str) -> "PyText":
+    def jumpto(self, target: str) -> "TextTree":
         """
-        Jump to another `PyText` instance.
+        Jump to another `TextTree` instance.
 
         Parameters
         ----------
@@ -566,8 +566,8 @@ class PyText(ABC, Generic[P]):
 
         Returns
         -------
-        PyText
-            An instance of `PyText`.
+        TextTree
+            An instance of `TextTree`.
 
         Raises
         ------
@@ -597,18 +597,18 @@ class PyText(ABC, Generic[P]):
             return self.jumpto(b)
         raise ValueError(f"{a!r} is not a child of {self.absname!r}")
 
-    def track(self) -> List["PyText"]:
+    def track(self) -> List["TextTree"]:
         """
         Returns a list of all the parents and `self`.
 
         Returns
         -------
-        List[PyText]
-            List of `PyText` instances.
+        List[TextTree]
+            List of `TextTree` instances.
 
         """
-        tracks: List["PyText"] = []
-        obj: Optional["PyText"] = self
+        tracks: List["TextTree"] = []
+        obj: Optional["TextTree"] = self
         while obj is not None:
             tracks.append(obj)
             obj = obj.parent
@@ -625,12 +625,12 @@ class Docstring(ABC):
     ----------
     text : str
         Docstring text.
-    parent : PyText, optional
+    parent : TextTree, optional
         Parent node (if exists), by default None.
 
     """
 
-    def __init__(self, text: str, parent: Optional[PyText] = None) -> None:
+    def __init__(self, text: str, parent: Optional[TextTree] = None) -> None:
         self.text = text.strip()
         self.parent = parent
 
