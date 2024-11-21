@@ -60,7 +60,7 @@ class PyDir(TextTree):
         children: List[TextTree] = []
         self._header = ""
         for _path in sorted(self.path.iterdir()):
-            if any(_path.match(x) for x in self.ignore):
+            if self.ignore and any(_path.match(x) for x in self.ignore):
                 continue
             if _path.suffix == ".py":
                 children.append(PyFile(_path, parent=self))
@@ -72,7 +72,7 @@ class PyDir(TextTree):
                 )
                 if len(_module.children) > 0:
                     children.append(_module)
-            elif any(_path.match(y) for y in self.include):
+            elif self.include and any(_path.match(y) for y in self.include):
                 children.append(NonPyFile(_path, parent=self))
         return children
 
