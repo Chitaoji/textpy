@@ -344,7 +344,7 @@ class FileEditor:
     overwrite : bool, optional
         Determines whether to overwrite the original file, by default True.
     based_on : Self, optional
-        Specifies another editor to base on.
+        Editor to be based on.
 
     Raises
     ------

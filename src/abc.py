@@ -43,8 +43,8 @@ P = ParamSpec("P")
 
 class PyText(ABC, Generic[P]):
     """
-    Could store the text of a python module, file, function, class, method
-    or property.
+    Could store the text tree of a python module, file, function, class,
+    method or property.
 
     Parameters
     ----------
@@ -347,6 +347,8 @@ class PyText(ABC, Generic[P]):
             Specifies case sensitivity, by default True.
         regex : bool, optional
             Whether to enable regular expressions, by default True.
+        based_on: Replacer, optional
+            Replacer to be based on, by default None.
 
         Returns
         -------
@@ -420,6 +422,8 @@ class PyText(ABC, Generic[P]):
             Specifies case sensitivity, by default True.
         regex : bool, optional
             Whether to enable regular expressions, by default True.
+        based_on: Replacer, optional
+            Replacer to be based on, by default None.
 
         Returns
         -------
@@ -481,6 +485,8 @@ class PyText(ABC, Generic[P]):
             Specifies case sensitivity, by default True.
         regex : bool, optional
             Whether to enable regular expressions, by default True.
+        based_on: Replacer, optional
+            Replacer to be based on, by default None.
 
         Returns
         -------
