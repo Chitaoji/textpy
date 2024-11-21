@@ -67,9 +67,13 @@ class PyDir(PyText):
                 if _path.stem == "__init__":
                     self._header = children[-1]
             elif _path.is_dir():
-                _module = PyDir(_path, parent=self, ignore=self.ignore)
+                _module = PyDir(
+                    _path, parent=self, ignore=self.ignore, include=self.include
+                )
                 if len(_module.children) > 0:
                     children.append(_module)
+            elif any(_path.match(y) for y in self.include):
+                children.append(NonPyFile(_path, parent=self))
         return children
 
     def is_dir(self) -> bool:
@@ -271,6 +275,28 @@ class PyContent(PyText):
         self.text, n, _ = counted_strip(path_or_text)
         self.start_line += n
         self.name = NULL
+
+    @cached_property
+    def doc(self) -> "Docstring":
+        return NumpyFormatDocstring("", parent=self)
+
+    @cached_property
+    def header(self) -> "PyContent":
+        return self
+
+
+class NonPyFile(PyText):
+    """Stores a non-python file."""
+
+    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
+        if isinstance(path_or_text, Path):
+            self.path = as_path(path_or_text, home=self.home)
+            self.text, n, _ = counted_strip(self.path.read_text(encoding=self.encoding))
+        else:
+            self.text, n, _ = counted_strip(path_or_text)
+
+        self.start_line += n
+        self.name = self.path.name
 
     @cached_property
     def doc(self) -> "Docstring":

@@ -59,6 +59,10 @@ class PyText(ABC, Generic[P]):
         relative; by default None.
     encoding : str, optional
         Specifies encoding, by default None.
+    ignore : List[str], optional
+        Subpaths to ignore, by default `DEFAULT_IGNORE_PATHS`.
+    include : List[str], optional
+        Non-python files to include, by default None.
 
     """
 
@@ -71,6 +75,7 @@ class PyText(ABC, Generic[P]):
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
         ignore: Optional[List[str]] = None,
+        include: Optional[List[str]] = None,
         mask: Optional[Self] = None,
     ) -> None:
         self.text: str = ""
@@ -79,7 +84,7 @@ class PyText(ABC, Generic[P]):
 
         self.parent = parent
         self.spaces = 0
-        self.ignore = ignore
+        self.ignore, self.include = ignore, include
 
         if start_line is None:
             self.start_line = 1 if parent is None else parent.start_line

@@ -30,6 +30,7 @@ def module(
     home: Optional[Union[Path, str]] = None,
     encoding: Optional[str] = None,
     ignore: Optional[List[str]] = None,
+    include: Optional[List[str]] = None,
     *,
     _: Callable[P, None] = _defaults,
 ) -> "PyText[P]":
@@ -47,8 +48,11 @@ def module(
         None.
     encoding : str, optional
         Specifies encoding, by default None.
-    ignore : Set[str], optional
-        Subpaths to ignore, by default `DEFAULT_IGNORE_PATHS`.
+    ignore : List[str], optional
+        Subpaths to ignore (prior to `include`), by default
+        `DEFAULT_IGNORE_PATHS`.
+    include : List[str], optional
+        Non-python files to include, by default None.
 
     Returns
     -------
@@ -78,7 +82,9 @@ def module(
         return PyFile(path_or_text, home=home, encoding=encoding)
     if path_or_text.is_dir():
         ignore = DEFAULT_IGNORE_PATHS if ignore is None else ignore
-        return PyDir(path_or_text, home=home, encoding=encoding, ignore=ignore)
+        return PyDir(
+            path_or_text, home=home, encoding=encoding, ignore=ignore, include=include
+        )
     raise FileExistsError(f"file not exists: '{path_or_text}'")
 
 
