@@ -11,20 +11,20 @@ from .re_extensions import SmartPattern
 
 if TYPE_CHECKING:
     from ._typing import ReplType
-    from .abc import PyText
+    from .abc import TextTree
 
 __all__ = ["back_to_py38"]
 
 
-def back_to_py38(module: "PyText") -> Replacer:
+def back_to_py38(module: "TextTree") -> Replacer:
     """
     Try to make a module executable in py38 by rolling back the features that
     only make sense in py39 or later.
 
     Parameters
     ----------
-    module : PyText
-        PyText object.
+    module : TextTree
+        TextTree object.
 
     """
     features_to_rollback = [__union_types, __type_hint_generics]
@@ -34,7 +34,7 @@ def back_to_py38(module: "PyText") -> Replacer:
     return replacer
 
 
-def __union_types(module: "PyText", replacer: Replacer) -> Replacer:
+def __union_types(module: "TextTree", replacer: Replacer) -> Replacer:
     """See PEP 604."""
     new_replacer = module.replace(
         SmartPattern('[^:=>\\[\\]()"\\{\\}\n,|]*{}\\s*\\|[^:=>\\[\\]()\\{\\}"\n,]*{}'),
@@ -45,7 +45,7 @@ def __union_types(module: "PyText", replacer: Replacer) -> Replacer:
     return replacer
 
 
-def __type_hint_generics(module: "PyText", replacer: Replacer) -> Replacer:
+def __type_hint_generics(module: "TextTree", replacer: Replacer) -> Replacer:
     """See PEP 585."""
     pairs: List[Tuple[str, str]] = [
         ("list", "List"),

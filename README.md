@@ -96,12 +96,12 @@ Note that in the jupyter notebook case, the matched substrings are **clickable**
 
 ## Examples
 ### tx.module()
-The previous demonstration introduced the core function `tx.module()`. The return of `tx.module()` is a subinstance of the abstract class `PyText`, who supports various text manipulation methods:
+The previous demonstration introduced the core function `tx.module()`. The return value of `tx.module()` is a subinstance of the abstract class `tx.TextTree`, which supports various text manipulation methods:
 ```py
->>> isinstance(myfile, tx.PyText)
+>>> isinstance(myfile, tx.TextTree)
 True
 ```
-Sometimes, your python module may contain not just one file, but don't worry, since `tx.module()` provides support for complex file hierarchies. If the path points to a single file, the return type will be `PyFile`; otherwise, the return type will be `PyDir` - both are subclasses of `PyText`.
+Sometimes, your python module may contain not just one file, but don't worry, since `tx.module()` provides support for complex file hierarchies. If the path points to a single file, the return type will be `PyFile`; otherwise, the return type will be `PyDir` - both of which are subclasses of `tx.TextTree`.
 
 In conclusion, once you've got a python package, you can simply give the package dirpath to `tx.module()`, and do things like before:
 
@@ -112,13 +112,13 @@ In conclusion, once you've got a python package, you can simply give the package
 >>> res = tx.module(pkg_dir).findall(pattern)
 ```
 
-### tx.PyText.findall()
+### tx.TextTree.findall()
 As mentioned before, user can use `.findall()` to find all non-overlapping matches of some pattern in a python module.
 ```py
 >>> myfile.findall("optional")
 examples/myfile.py:13: '    story : str, <optional>'
 ```
-The return object of `.findall()` has a `_repr_mimebundle_()` method to beautify the representation inside a jupyter notebook. However, you can compulsively disable this feature by setting `display_params.use_mimebundle` to False:
+The object returned by `.findall()` has a `_repr_mimebundle_()` method to beautify the representation inside a jupyter notebook. However, you can compulsively disable this feature by setting `display_params.use_mimebundle` to False:
 ```py
 >>> from textpy import display_params
 >>> display_params.use_mimebundle = False
@@ -131,7 +131,7 @@ examples/myfile.py:24: 'def print_my_book(book: <MyBook>) -> None:'
 examples/myfile.py:30: '    book : <MyBook>'
 ```
 
-### tx.PyText.replace()
+### tx.TextTree.replace()
 Use `.replace()` to find all non-overlapping matches of some pattern, and replace them with another string:
 ```py
 >>> replacer = myfile.replace("book", "magazine")
@@ -155,7 +155,7 @@ If you want to rollback the changes, run:
 {'successful': ['examples/myfile.py'], 'failed': []}
 ```
 
-### tx.PyText.delete()
+### tx.TextTree.delete()
 Use `.delete()` to find all non-overlapping matches of some pattern, and delete them:
 ```py
 >>> deleter = myfile.delete("book")
@@ -186,18 +186,22 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.30
+* New optional paramter `include=` for `module()`.
+* Rename `tx.PyText` to `tx.TextTree`; the name `PyText` will be deprecated.
+
 ### v0.1.29
-* Updated `PyText.check_format()`: now returns a boolean value instead of None.
-* Updated the `ignore=` parameter for `module()`: it now accepts a list of path-patterns; paths matching any of these patterns will be ignored when searching for files.
+* Updated `PyText.check_format()`, which now returns a boolean value instead of None.
+* Updated the `ignore=` parameter for `module()`, which now accepts a list of path-patterns. Paths matching any of these patterns will be ignored when searching for files.
 
 ### v0.1.28
-* Fixed issue: can not display special characters in `*._repr_mimebundle_()`.
+* Fixed issue: failed to display special characters in `*._repr_mimebundle_()`.
 
 ### v0.1.27
-* New gloabal parameters: `tree_style=`, `table_style=`, `use_mimebundle=`, and `skip_line_numbers=`; find them under `tx.display_params`.
+* New gloabal parameters: `tree_style=`, `table_style=`, `use_mimebundle=`, and `skip_line_numbers=` - find them under `tx.display_params`.
 * Defined `display_params.defaults()` for users to get the default values of the parameters.
 * New subclass `PyProperty` inherited from `PyMethod`. Class properties will be stored in instances of `PyProperty` instead of `PyMethod` in the future.
-* Updated the method `PyText.jumpto()`; it now allows "/" as delimiters (in addition to "."); if a class or callable is defined more than once, jump to the last (previously first) place where it was defined. 
+* Updated the method `PyText.jumpto()`: it now allows "/" as delimiters (in addition to "."); if a class or callable is defined more than once, jump to the last (previously first) place where it was defined. 
 * `PyText` has a `_repr_mimebundle_()` method now.
 * New property `PyText.imports`.
 * Created a utility class `HTMLTableMaker` in place of  `Styler`; this significantly reduces the running overhead of `*._repr_mimebundle_()`.

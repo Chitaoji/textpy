@@ -35,7 +35,7 @@ REQUIRES_PYTHON: Final[str] = yml["REQUIRES_PYTHON"]
 REQUIRES: Final[List[str]] = yml["REQUIRES"]
 EXTRAS: Final[Dict] = yml["EXTRAS"]
 SOURCE: str = yml["SOURCE"]
-LICENSE = re.match(".*", (here / "LICENSE").read_text()).group()
+LICENSE = (here / "LICENSE").read_text().partition("\n")[0]
 CLASSIFIERS: List[str] = yml["CLASSIFIERS"]
 SUBMODULES: List[str] = yml["SUBMODULES"]
 EXCLUDES: List[str] = yml["EXCLUDES"]
@@ -205,7 +205,7 @@ if __name__ == "__main__":
         install_requires=REQUIRES,
         extras_require=EXTRAS,
         include_package_data=False,
-        license="BSD",
+        license=LICENSE.partition(" ")[0],
         # Trove classifiers
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
         classifiers=CLASSIFIERS,

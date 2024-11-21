@@ -26,17 +26,18 @@ from typing import (
 import pandas as pd
 from typing_extensions import Self
 
-from .re_extensions import real_findall, smart_split, smart_sub
+from .re_extensions import smart_finditer, smart_split, smart_sub
 from .utils.validator import SimpleValidator
 
 if TYPE_CHECKING:
+    from dataclasses import Field
     from re import Match
 
     from pandas.io.formats.style import Styler
 
     from ._typing import PatternType, ReplType
-    from .abc import PyText
-    from .text import PyFile
+    from .abc import TextTree
+    from .texttree import PyFile
 
 
 __all__ = ["display_params"]
@@ -65,8 +66,8 @@ class DisplayParams:
 
     def defaults(self) -> Dict[str, Any]:
         """Returns the default values as a dict."""
-        fields: Dict[str, Any] = getattr(self.__class__, "__dataclass_fields__")
-        return {k: v.default.default for k, v in fields.items()}
+        fields: Dict[str, "Field"] = getattr(self.__class__, "__dataclass_fields__")
+        return {k: getattr(v.default, "default") for k, v in fields.items()}
 
 
 display_params = DisplayParams()
@@ -76,7 +77,7 @@ display_params = DisplayParams()
 class TextFinding:
     """Finding of text."""
 
-    obj: "PyText"
+    obj: "TextTree"
     pattern: "PatternType"
     nline: int
     linestr: str
@@ -102,13 +103,13 @@ class TextFinding:
     def __ge__(self, __other: Self) -> bool:
         return self == __other or self > __other
 
-    def astuple(self) -> Tuple["PyText", "PatternType", int, str]:
+    def astuple(self) -> Tuple["TextTree", "PatternType", int, str]:
         """Converts `self` to a tuple."""
         return self.obj, self.pattern, self.nline, self.linestr
 
 
 class FindTextResult:
-    """Result of text finding, only as a return of `PyText.findall()`."""
+    """Result of text finding, only as a return of `TextTree.findall()`."""
 
     def __init__(
         self,
@@ -210,7 +211,7 @@ class FindTextResult:
                 )
             splits = smart_split(p, _line)
             text = ""
-            for j, x in enumerate(real_findall(p, _line)):
+            for j, x in enumerate(smart_finditer(p, _line)):
                 text += make_plain_text(splits[j]) + self.stylfunc(res, x)
             df.iloc[i, 1] = text + make_plain_text(splits[-1])
         return df.style.hide(axis=0).set_table_styles(
@@ -236,7 +237,7 @@ class FindTextResult:
                 )
             splits = smart_split(p, _line)
             text = ""
-            for j, x in enumerate(real_findall(p, _line)):
+            for j, x in enumerate(smart_finditer(p, _line)):
                 text += make_plain_text(splits[j]) + self.stylfunc(res, x)
             html_maker[i, 1] = text + make_plain_text(splits[-1])
         return html_maker.make()
@@ -248,7 +249,7 @@ class FindTextResult:
         return f"\033[100m{m.group()}\033[0m"
 
     @staticmethod
-    def __style_source(x: "PyText", /) -> str:
+    def __style_source(x: "TextTree", /) -> str:
         return (
             NULL
             if x.name == NULL
@@ -343,7 +344,7 @@ class FileEditor:
     overwrite : bool, optional
         Determines whether to overwrite the original file, by default True.
     based_on : Self, optional
-        Specifies another editor to base on.
+        Editor to be based on.
 
     Raises
     ------
@@ -455,7 +456,7 @@ class FileEditor:
 
 
 class Replacer:
-    """Text replacer, only as a return of `PyText.replace()`."""
+    """Text replacer, only as a return of `TextTree.replace()`."""
 
     def __init__(self):
         self.editors: List[FileEditor] = []
@@ -614,13 +615,13 @@ class Replacer:
         return res
 
 
-def make_html_tree(pytext: "PyText") -> str:
+def make_html_tree(tree: "TextTree") -> str:
     """
     Make an HTML tree.
 
     Parameters
     ----------
-    pytext : PyText
+    tree : TextTree
         A python module / class / function / method.
 
     Returns
@@ -724,38 +725,38 @@ def make_html_tree(pytext: "PyText") -> str:
 }
 </style>
 <ul class="tree-vertical">"""
-    return f"{tstyle}\n{__get_li(pytext)}\n</ul>"
+    return f"{tstyle}\n{__get_li(tree)}\n</ul>"
 
 
-def __get_li(pytext: "PyText", main: bool = True) -> str:
+def __get_li(tree: "TextTree", main: bool = True) -> str:
     triangle = (
         ""
         if display_params.tree_style == "plain"
         else '<span class="open">▼ </span><span class="closed">▶ </span>'
     )
-    if pytext.is_dir() and pytext.children:
-        tchidren = "\n".join(__get_li(x) for x in pytext.children)
+    if tree.is_dir() and tree.children:
+        tchidren = "\n".join(__get_li(x) for x in tree.children)
         return (
-            f'<li class="m"><details><summary>{triangle}{make_plain_text(pytext.name)}'
+            f'<li class="m"><details><summary>{triangle}{make_plain_text(tree.name)}'
             f'</summary>\n<ul class="m">\n{tchidren}\n</ul>\n</details></li>'
         )
 
     li_class = "m" if main else "s"
     ul_class = "m" if display_params.tree_style == "vertical" else "s"
     triangle = triangle if main else ""
-    if pytext.children:
+    if tree.children:
         tchidren = "\n".join(
             __get_li(x, main=ul_class == "m")
-            for x in pytext.children
+            for x in tree.children
             if x.name != NULL and __is_public(x.name)
         )
         if tchidren:
-            name = make_plain_text(pytext.name) + (".py" if pytext.is_file() else "")
+            name = make_plain_text(tree.name) + (".py" if tree.is_file() else "")
             return (
                 f'<li class="{li_class}"><details><summary>{triangle}{name}</summary>'
                 f'\n<ul class="{ul_class}">\n{tchidren}\n</ul>\n</details></li>'
             )
-    name = make_plain_text(pytext.name) + (".py" if pytext.is_file() else "")
+    name = make_plain_text(tree.name) + (".py" if tree.is_file() else "")
     return f'<li class="{li_class}"><span>{name}</span></li>'
 
 

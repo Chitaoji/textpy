@@ -1,5 +1,5 @@
 """
-Contains abstract classes: PyText and Docstring.
+Contains abstract classes: TextTree and Docstring.
 
 NOTE: this module is private. All functions and objects are available in the main
 `textpy` namespace - use that instead.
@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Union, overload
 
 import black
-from typing_extensions import ParamSpec, Self
+from typing_extensions import ParamSpec, Self, deprecated
 
 from .imports import Imports
 from .interaction import (
@@ -26,30 +26,31 @@ from .interaction import (
     display_params,
     make_html_tree,
 )
-from .re_extensions import SmartPattern, line_findall, pattern_inreg
+from .re_extensions import SmartPattern, line_findall
 
 if TYPE_CHECKING:
     from re import Pattern
 
     from ._typing import PatternType, ReplType
-    from .text import PyContent
+    from .texttree import PyContent
 
 
-__all__ = ["PyText", "Docstring"]
+__all__ = ["TextTree", "PyText", "Docstring"]
 
 
 P = ParamSpec("P")
 
 
-class PyText(ABC, Generic[P]):
+class TextTree(ABC, Generic[P]):
     """
-    Could be a python module, file, function, class, method or property.
+    Could store the text tree of a python module, file, function, class,
+    method or non-python file.
 
     Parameters
     ----------
     path_or_text : Union[Path, str]
         File path, module path or file text.
-    parent : PyText, optional
+    parent : TextTree, optional
         Parent node (if exists), by default None.
     start_line : int, optional
         Starting line number, by default None.
@@ -58,6 +59,10 @@ class PyText(ABC, Generic[P]):
         relative; by default None.
     encoding : str, optional
         Specifies encoding, by default None.
+    ignore : List[str], optional
+        Subpaths to ignore, by default `DEFAULT_IGNORE_PATHS`.
+    include : List[str], optional
+        Non-python files to include, by default None.
 
     """
 
@@ -65,11 +70,12 @@ class PyText(ABC, Generic[P]):
         self,
         path_or_text: Union[Path, str],
         *,
-        parent: Optional["PyText"] = None,
+        parent: Optional["TextTree"] = None,
         start_line: Optional[int] = None,
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
         ignore: Optional[List[str]] = None,
+        include: Optional[List[str]] = None,
         mask: Optional[Self] = None,
     ) -> None:
         self.text: str = ""
@@ -78,7 +84,7 @@ class PyText(ABC, Generic[P]):
 
         self.parent = parent
         self.spaces = 0
-        self.ignore = ignore
+        self.ignore, self.include = ignore, include
 
         if start_line is None:
             self.start_line = 1 if parent is None else parent.start_line
@@ -93,7 +99,7 @@ class PyText(ABC, Generic[P]):
             self.encoding = parent.encoding
 
         self._header: Optional[Any] = None
-        self.__pytext_post_init__(path_or_text)
+        self.__texttree_post_init__(path_or_text)
 
         if mask:
             self.path = mask.path
@@ -108,11 +114,11 @@ class PyText(ABC, Generic[P]):
         if display_params.use_mimebundle:
             return {"text/html": self.to_html()}
 
-    def __truediv__(self, __value: "str") -> "PyText":
+    def __truediv__(self, __value: "str") -> "TextTree":
         return self.jumpto(__value)
 
     @abstractmethod
-    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
+    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
         """
         Post init.
 
@@ -157,19 +163,19 @@ class PyText(ABC, Generic[P]):
 
         Returns
         -------
-        PyText
-            An instance of `PyText`.
+        TextTree
+            An instance of `TextTree`.
 
         """
 
     @cached_property
-    def children(self) -> List["PyText"]:
+    def children(self) -> List["TextTree"]:
         """
         Children nodes.
 
         Returns
         -------
-        List[PyText]
+        List[TextTree]
             List of the children nodes.
 
         """
@@ -191,7 +197,7 @@ class PyText(ABC, Generic[P]):
         return [x.name for x in self.children]
 
     @cached_property
-    def children_dict(self) -> Dict[str, "PyText"]:
+    def children_dict(self) -> Dict[str, "TextTree"]:
         """
         Dictionary of children nodes.
 
@@ -199,11 +205,11 @@ class PyText(ABC, Generic[P]):
 
         Returns
         -------
-        Dict[str, PyText]
+        Dict[str, TextTree]
             Dictionary of children nodes.
 
         """
-        children_dict: Dict[str, "PyText"] = {}
+        children_dict: Dict[str, "TextTree"] = {}
         null_cnt: int = 0
         for child, childname in zip(self.children, self.children_names):
             if childname == NULL:
@@ -295,11 +301,11 @@ class PyText(ABC, Generic[P]):
 
     def is_file(self) -> bool:
         """Returns whether self is an instance of `PyFile`."""
-        return self.__class__.__name__ == "PyFile"
+        return False
 
     def is_dir(self) -> bool:
         """Returns whether self is an instance of `PyDir`."""
-        return self.__class__.__name__ == "PyDir"
+        return False
 
     def check_format(self) -> bool:
         """
@@ -328,7 +334,7 @@ class PyText(ABC, Generic[P]):
         self, pattern: "PatternType", /, *_: P.args, **kwargs: P.kwargs
     ) -> FindTextResult: ...
     def findall(
-        self, pattern, /, based_on: Replacer = None, **kwargs
+        self, pattern, *, based_on: Replacer = None, **kwargs
     ) -> FindTextResult:
         """
         Finds all non-overlapping matches of `pattern`.
@@ -346,6 +352,8 @@ class PyText(ABC, Generic[P]):
             Specifies case sensitivity, by default True.
         regex : bool, optional
             Whether to enable regular expressions, by default True.
+        based_on: Replacer, optional
+            Replacer to be based on, by default None.
 
         Returns
         -------
@@ -388,8 +396,8 @@ class PyText(ABC, Generic[P]):
         self,
         pattern,
         repl,
-        /,
         overwrite=True,
+        *,
         based_on: Optional[Replacer] = None,
         **kwargs,
     ) -> "Replacer":
@@ -419,6 +427,8 @@ class PyText(ABC, Generic[P]):
             Specifies case sensitivity, by default True.
         regex : bool, optional
             Whether to enable regular expressions, by default True.
+        based_on: Replacer, optional
+            Replacer to be based on, by default None.
 
         Returns
         -------
@@ -444,7 +454,7 @@ class PyText(ABC, Generic[P]):
                     c.replace(
                         pattern,
                         repl,
-                        overwrite=overwrite,
+                        overwrite,
                         based_on=based_on,
                         **kwargs,
                     )
@@ -460,7 +470,7 @@ class PyText(ABC, Generic[P]):
         *_: P.args,
         **kwargs: P.kwargs,
     ) -> "Replacer": ...
-    def delete(self, pattern, /, overwrite=True, based_on=None, **kwargs) -> "Replacer":
+    def delete(self, pattern, overwrite=True, *, based_on=None, **kwargs) -> "Replacer":
         """
         An alternative to `.replace(pattern, "", *args, **kwargs)`
 
@@ -480,6 +490,8 @@ class PyText(ABC, Generic[P]):
             Specifies case sensitivity, by default True.
         regex : bool, optional
             Whether to enable regular expressions, by default True.
+        based_on: Replacer, optional
+            Replacer to be based on, by default None.
 
         Returns
         -------
@@ -513,7 +525,7 @@ class PyText(ABC, Generic[P]):
                 f"'pattern' can not be an instance of {p.__class__.__name__!r}"
             )
         if not regex:
-            p = pattern_inreg(p)
+            p = re.escape(p)
         if not case_sensitive:
             f = f | re.I
         if whole_word:
@@ -522,7 +534,7 @@ class PyText(ABC, Generic[P]):
             f = f | re.DOTALL
         if isinstance(pattern, SmartPattern):
             return SmartPattern(
-                p, flags=f, ignore=pattern.ignore, mark_ignore=pattern.mark_ignore
+                p, flags=f, ignore=pattern.ignore, ignore_mark=pattern.ignore_mark
             )
         return re.compile(p, flags=f)
 
@@ -540,12 +552,12 @@ class PyText(ABC, Generic[P]):
             new_pattern,
             flags=pattern.flags,
             ignore=pattern.ignore,
-            mark_ignore=pattern.mark_ignore,
+            ignore_mark=pattern.ignore_mark,
         )
 
-    def jumpto(self, target: str) -> "PyText":
+    def jumpto(self, target: str) -> "TextTree":
         """
-        Jump to another `PyText` instance.
+        Jump to another `TextTree` instance.
 
         Parameters
         ----------
@@ -554,8 +566,8 @@ class PyText(ABC, Generic[P]):
 
         Returns
         -------
-        PyText
-            An instance of `PyText`.
+        TextTree
+            An instance of `TextTree`.
 
         Raises
         ------
@@ -585,18 +597,18 @@ class PyText(ABC, Generic[P]):
             return self.jumpto(b)
         raise ValueError(f"{a!r} is not a child of {self.absname!r}")
 
-    def track(self) -> List["PyText"]:
+    def track(self) -> List["TextTree"]:
         """
         Returns a list of all the parents and `self`.
 
         Returns
         -------
-        List[PyText]
-            List of `PyText` instances.
+        List[TextTree]
+            List of `TextTree` instances.
 
         """
-        tracks: List["PyText"] = []
-        obj: Optional["PyText"] = self
+        tracks: List["TextTree"] = []
+        obj: Optional["TextTree"] = self
         while obj is not None:
             tracks.append(obj)
             obj = obj.parent
@@ -613,12 +625,12 @@ class Docstring(ABC):
     ----------
     text : str
         Docstring text.
-    parent : PyText, optional
+    parent : TextTree, optional
         Parent node (if exists), by default None.
 
     """
 
-    def __init__(self, text: str, parent: Optional[PyText] = None) -> None:
+    def __init__(self, text: str, parent: Optional[TextTree] = None) -> None:
         self.text = text.strip()
         self.parent = parent
 
@@ -687,11 +699,7 @@ def black_format(string: str) -> str:
     return black.format_str(string, mode=black.FileMode())
 
 
-# pylint: disable=unused-argument
-def _defaults(
-    whole_word: bool = False,
-    dotall: bool = False,
-    case_sensitive: bool = True,
-    regex: bool = True,
-    based_on: Optional[Replacer] = None,
-) -> None: ...
+PyText = deprecated(
+    "tx.PyText is deprecated and will be removed in a future version "
+    "- use tx.TextTree instead"
+)(TextTree)

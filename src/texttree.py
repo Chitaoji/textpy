@@ -1,5 +1,5 @@
 """
-Contains subclasses of PyText: PyDir, PyFile, PyClass, etc.
+Contains subclasses of TextTree: PyDir, PyFile, PyClass, etc.
 
 NOTE: this module is private. All functions and objects are available in the main
 `textpy` namespace - use that instead.
@@ -11,7 +11,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Union
 
-from .abc import PyText, as_path
+from .abc import TextTree, as_path
 from .doc import NumpyFormatDocstring
 from .interaction import NULL
 from .re_extensions import counted_strip, line_count, line_count_iter, rsplit
@@ -30,13 +30,13 @@ __all__ = [
 ]
 
 
-class PyDir(PyText):
+class PyDir(TextTree):
     """Stores a directory of python files."""
 
-    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
+    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
         self.path = as_path(path_or_text, home=self.home)
         if not self.path.is_dir():
-            raise NotADirectoryError(f"not a dicretory: '{self.path}'")
+            raise NotADirectoryError(f"not a dicretory: {self.path}")
         self.name = self.path.stem
 
     @cached_property
@@ -56,27 +56,34 @@ class PyDir(PyText):
         return PyContent("", parent=self)
 
     @cached_property
-    def children(self) -> List[PyText]:
-        children: List[PyText] = []
+    def children(self) -> List[TextTree]:
+        children: List[TextTree] = []
         self._header = ""
         for _path in sorted(self.path.iterdir()):
-            if any(_path.match(x) for x in self.ignore):
+            if self.ignore and any(_path.match(x) for x in self.ignore):
                 continue
             if _path.suffix == ".py":
                 children.append(PyFile(_path, parent=self))
                 if _path.stem == "__init__":
                     self._header = children[-1]
             elif _path.is_dir():
-                _module = PyDir(_path, parent=self, ignore=self.ignore)
+                _module = PyDir(
+                    _path, parent=self, ignore=self.ignore, include=self.include
+                )
                 if len(_module.children) > 0:
                     children.append(_module)
+            elif self.include and any(_path.match(y) for y in self.include):
+                children.append(NonPyFile(_path, parent=self))
         return children
 
+    def is_dir(self) -> bool:
+        return True
 
-class PyFile(PyText):
+
+class PyFile(TextTree):
     """Stores the code of a python file."""
 
-    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
+    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
         if isinstance(path_or_text, Path):
             self.path = as_path(path_or_text, home=self.home)
             self.text, n, _ = counted_strip(self.path.read_text(encoding=self.encoding))
@@ -103,8 +110,8 @@ class PyFile(PyText):
         return PyContent(self._header, parent=self)
 
     @cached_property
-    def children(self) -> List[PyText]:
-        children: List[PyText] = []
+    def children(self) -> List[TextTree]:
+        children: List[TextTree] = []
 
         matched = re.match('""".*?"""', self.text, re.DOTALL)
         if not matched:
@@ -166,11 +173,14 @@ class PyFile(PyText):
             )
         return children
 
+    def is_file(self) -> bool:
+        return True
 
-class PyClass(PyText):
+
+class PyClass(TextTree):
     """Stores the code and docstring of a class."""
 
-    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
+    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
         self.text, n, _ = counted_strip(path_or_text)
         self.start_line += n
         self.name = re.search("class .*?[(:]", self.text).group()[6:-1]
@@ -196,8 +206,8 @@ class PyClass(PyText):
         return PyContent(self._header, parent=self)
 
     @cached_property
-    def children(self) -> List[PyText]:
-        children: List[PyText] = []
+    def children(self) -> List[TextTree]:
+        children: List[TextTree] = []
         sub_text = re.sub("\n    ", "\n", self.text)
         _cnt: int = 0
         for i, _str in line_count_iter(rsplit("(?:\n@.*)*\ndef ", sub_text)):
@@ -215,10 +225,10 @@ class PyClass(PyText):
         return children
 
 
-class PyFunc(PyText):
+class PyFunc(TextTree):
     """Stores the code and docstring of a function."""
 
-    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
+    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
         self.text, n, _ = counted_strip(path_or_text)
         self.start_line += n
         self.name = re.search("def .*?\\(", self.text).group()[4:-1] + "()"
@@ -241,30 +251,52 @@ class PyFunc(PyText):
 class PyMethod(PyFunc):
     """Stores the code and docstring of a class method."""
 
-    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
-        super().__pytext_post_init__(path_or_text=path_or_text)
+    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
+        super().__texttree_post_init__(path_or_text=path_or_text)
         self.spaces = 4
 
 
 class PyProperty(PyMethod):
     """Stores the code and docstring of a class property."""
 
-    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
-        super().__pytext_post_init__(path_or_text=path_or_text)
+    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
+        super().__texttree_post_init__(path_or_text=path_or_text)
         self.name = self.name[:-2]
 
 
-class PyContent(PyText):
+class PyContent(TextTree):
     """
     Stores a part of a file that is not storable by instances of other
     subclasses.
 
     """
 
-    def __pytext_post_init__(self, path_or_text: Union[Path, str]) -> None:
+    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
         self.text, n, _ = counted_strip(path_or_text)
         self.start_line += n
         self.name = NULL
+
+    @cached_property
+    def doc(self) -> "Docstring":
+        return NumpyFormatDocstring("", parent=self)
+
+    @cached_property
+    def header(self) -> "PyContent":
+        return self
+
+
+class NonPyFile(TextTree):
+    """Stores a non-python file."""
+
+    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
+        if isinstance(path_or_text, Path):
+            self.path = as_path(path_or_text, home=self.home)
+            self.text, n, _ = counted_strip(self.path.read_text(encoding=self.encoding))
+        else:
+            self.text, n, _ = counted_strip(path_or_text)
+
+        self.start_line += n
+        self.name = self.path.name
 
     @cached_property
     def doc(self) -> "Docstring":
