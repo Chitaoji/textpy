@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 
     from ._typing import PatternType, ReplType
     from .abc import TextTree
-    from .text import PyFile
+    from .texttree import PyFile
 
 
 __all__ = ["display_params"]

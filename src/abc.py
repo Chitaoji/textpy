@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from re import Pattern
 
     from ._typing import PatternType, ReplType
-    from .text import PyContent
+    from .texttree import PyContent
 
 
 __all__ = ["TextTree", "Docstring"]

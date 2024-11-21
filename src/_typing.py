@@ -9,7 +9,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 import logging
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
 
-from .text import PyDir, PyFile
+from .texttree import PyDir, PyFile
 
 if TYPE_CHECKING:
 

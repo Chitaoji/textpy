@@ -176,17 +176,17 @@ lazyr.register("pandas", verbose=VERBOSE)
 lazyr.register("black", verbose=VERBOSE)
 
 # pylint: disable=wrong-import-position
-from . import abc, core, doc, interaction, text, utils
+from . import abc, core, doc, interaction, texttree, utils
 from .__version__ import __version__
 from .abc import *
 from .core import *
 from .doc import *
 from .interaction import *
-from .text import *
+from .texttree import *
 
 __all__ = ["utils"]
 __all__.extend(abc.__all__)
 __all__.extend(core.__all__)
 __all__.extend(interaction.__all__)
 __all__.extend(doc.__all__)
-__all__.extend(text.__all__)
+__all__.extend(texttree.__all__)

@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Callable, List, Optional, Union
 from typing_extensions import deprecated
 
 from .abc import P, as_path
-from .text import PyDir, PyFile
+from .texttree import PyDir, PyFile
 
 if TYPE_CHECKING:
     from ._typing import _defaults
