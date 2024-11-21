@@ -6,6 +6,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
@@ -79,6 +80,8 @@ def module(
 
     """
     path_or_text = as_path(path_or_text, home=home)
+    if encoding is None:
+        encoding = sys.getdefaultencoding()
     if isinstance(path_or_text, str) or path_or_text.is_file():
         return PyFile(path_or_text, home=home, encoding=encoding)
     if path_or_text.is_dir():
