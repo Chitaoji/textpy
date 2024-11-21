@@ -142,9 +142,11 @@ def _wrap_packages(
     pkgs = [re.sub(f"^{src}", main_name, x) for x in main_pkgs]
     pkg_dir = {main_name: src}
     for sub_name in submodule:
-        sub_yml: Dict[str, Any] = yaml.safe_load(
-            (top / sub_name.replace(".", "/") / "metadata.yml").read_text()
-        )
+        if not (ymlpath := top / sub_name.replace(".", "/") / "metadata.yml").exists():
+            raise FileNotFoundError(
+                "No yaml file found among: " + repr(list(ymlpath.parent.iterdir()))
+            )
+        sub_yml: Dict[str, Any] = yaml.safe_load(ymlpath.read_text())
         sub_excludes: List[str] = sub_yml["EXCLUDES"]
         sub_src: str = sub_yml["SOURCE"]
         sub_subm: List[str] = sub_yml["SUBMODULES"]
