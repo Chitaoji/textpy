@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Union, overload
 
 import black
-from typing_extensions import ParamSpec, Self
+from typing_extensions import ParamSpec, Self, deprecated
 
 from .imports import Imports
 from .interaction import (
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from .texttree import PyContent
 
 
-__all__ = ["TextTree", "Docstring"]
+__all__ = ["TextTree", "PyText", "Docstring"]
 
 
 P = ParamSpec("P")
@@ -697,3 +697,9 @@ def as_path(
 def black_format(string: str) -> str:
     """Reformat a string using Black and return new contents."""
     return black.format_str(string, mode=black.FileMode())
+
+
+PyText = deprecated(
+    "tx.PyText is deprecated and will be removed in a future version "
+    "- use tx.TextTree instead"
+)(TextTree)
