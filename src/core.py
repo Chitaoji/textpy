@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
+from colorama import just_fix_windows_console
 from typing_extensions import deprecated
 
 from .abc import P, as_path
@@ -24,6 +25,8 @@ else:
 __all__ = ["module", "textpy", "DEFAULT_IGNORE_PATHS"]
 
 DEFAULT_IGNORE_PATHS = ["build", ".git", ".github"]
+
+just_fix_windows_console()
 
 
 def module(
