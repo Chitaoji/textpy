@@ -186,9 +186,12 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.31
+* Got ANSI escapes to work on Windows.
+
 ### v0.1.30
 * New optional paramter `include=` for `module()`.
-* Rename `tx.PyText` to `tx.TextTree`; the name `PyText` will be deprecated.
+* Renamed `tx.PyText` to `tx.TextTree`; the name `PyText` will be deprecated.
 
 ### v0.1.29
 * Updated `PyText.check_format()`, which now returns a boolean value instead of None.
@@ -204,7 +207,7 @@ This project falls under the BSD 3-Clause License.
 * Updated the method `PyText.jumpto()`: it now allows "/" as delimiters (in addition to "."); if a class or callable is defined more than once, jump to the last (previously first) place where it was defined. 
 * `PyText` has a `_repr_mimebundle_()` method now.
 * New property `PyText.imports`.
-* Created a utility class `HTMLTableMaker` in place of  `Styler`; this significantly reduces the running overhead of `*._repr_mimebundle_()`.
+* Created a utility class `HTMLTableMaker` in place of `Styler`; this significantly reduces the running overhead of `*._repr_mimebundle_()`.
 
 ### v0.1.26
 * Updated `utils.re_extensions`: 

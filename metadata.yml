@@ -11,6 +11,7 @@ REQUIRES:
   - hintwith>=0.1.3
   - typing-extensions
   - black
+  - colorama
 EXTRAS:
   test:
     - pandas>=1.4.0
