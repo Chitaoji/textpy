@@ -186,9 +186,12 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.31
+* Got ANSI escapes to work on Windows.
+
 ### v0.1.30
 * New optional paramter `include=` for `module()`.
-* Rename `tx.PyText` to `tx.TextTree`; the name `PyText` will be deprecated.
+* Renamed `tx.PyText` to `tx.TextTree`; the name `PyText` will be deprecated.
 
 ### v0.1.29
 * Updated `PyText.check_format()`, which now returns a boolean value instead of None.
