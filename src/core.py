@@ -24,7 +24,7 @@ else:
 
 __all__ = ["module", "textpy", "DEFAULT_IGNORE_PATHS"]
 
-DEFAULT_IGNORE_PATHS = ["build", ".git", ".github"]
+DEFAULT_IGNORE_PATHS = ["build", "dist", ".git", ".github"]
 
 just_fix_windows_console()
 
