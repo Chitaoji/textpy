@@ -465,7 +465,7 @@ class Replacer:
     def __repr__(self) -> str:
         return repr(self.__find_text_result)
 
-    def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
+    def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, str]]:
         if display_params.use_mimebundle:
             return {"text/html": self.to_html()}
 
