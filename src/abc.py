@@ -139,7 +139,7 @@ class TextTree(ABC, Generic[P]):
         return self.abspath >= __other.abspath
 
     def to_html(self) -> str:
-        """Return an html string for representation."""
+        """Return an HTML text for representing self."""
         return make_html_tree(self)
 
     @cached_property
@@ -540,7 +540,7 @@ class TextTree(ABC, Generic[P]):
 
     @staticmethod
     def __pattern_expand(
-        pattern: Union["Pattern[str]", SmartPattern[str]]
+        pattern: Union["Pattern[str]", SmartPattern[str]],
     ) -> Union["Pattern[str]", SmartPattern[str]]:
         if pattern.flags & re.DOTALL:
             new_pattern = "[^\n]*" + pattern.pattern + "[^\n]*"

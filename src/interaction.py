@@ -222,7 +222,7 @@ class FindTextResult:
         )
 
     def to_html(self) -> str:
-        """Return an HTML string for representation."""
+        """Return an HTML text for representing self."""
         html_maker = HTMLTableMaker(
             index=range(len(self.res)), columns=["source", "match"]
         )
@@ -473,7 +473,7 @@ class Replacer:
         return bool(self.editors)
 
     def to_html(self) -> str:
-        """Return an HTML string for representation."""
+        """Return an HTML text for representing self."""
         return self.__find_text_result.to_html()
 
     def append(self, editor: FileEditor) -> None:
