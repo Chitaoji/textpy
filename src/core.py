@@ -54,7 +54,7 @@ def module(
         Specifies encoding, by default None.
     ignore : List[str], optional
         Subpaths to ignore (prior to `include`), by default
-        `DEFAULT_IGNORE_PATHS`.
+        `DEFAULT_IGNORED_PATHS`.
     include : List[str], optional
         Non-python files to include, by default None.
 
