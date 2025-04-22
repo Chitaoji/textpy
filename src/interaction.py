@@ -305,14 +305,14 @@ class HTMLTableMaker:
         tclass = display_params.table_style
         if tclass == "classic":
             tstyle = """<style type="text/css">
-.table-classic th {
+.textpy-table-classic th {
   text-align: center;
 }
-.table-classic td {
+.textpy-table-classic td {
   text-align: left;
 }
 </style>
-<table class="table-classic">"""
+<table class="textpy-table-classic">"""
         else:
             tstyle = "<table>"
         thead = "\n      ".join(f"<th>{x}</th>" for x in self.columns)
@@ -634,34 +634,34 @@ def make_html_tree(tree: "TextTree") -> str:
         tstyle = "<ul>"
     else:
         tstyle = """<style type="text/css">
-.tree-vertical,
-.tree-vertical ul.m,
-.tree-vertical li.m {
+.textpy-tree-vertical,
+.textpy-tree-vertical ul.m,
+.textpy-tree-vertical li.m {
     margin: 0;
     padding: 0;
     position: relative;
 }
-.tree-vertical {
+.textpy-tree-vertical {
     margin: 0 0 1em;
     text-align: center;
 }
-.tree-vertical,
-.tree-vertical ul.m {
+.textpy-tree-vertical,
+.textpy-tree-vertical ul.m {
     display: table;
 }
-.tree-vertical ul.m {
+.textpy-tree-vertical ul.m {
     width: 100%;
 }
-.tree-vertical li.m {
+.textpy-tree-vertical li.m {
     display: table-cell;
     padding: .5em 0;
     vertical-align: top;
 }
-.tree-vertical ul.s,
-.tree-vertical li.s {
+.textpy-tree-vertical ul.s,
+.textpy-tree-vertical li.s {
     text-align: left;
 }
-.tree-vertical li.m:before {
+.textpy-tree-vertical li.m:before {
     outline: solid 1px #666;
     content: "";
     left: 0;
@@ -669,14 +669,14 @@ def make_html_tree(tree: "TextTree") -> str:
     right: 0;
     top: 0;
 }
-.tree-vertical li.m:first-child:before {
+.textpy-tree-vertical li.m:first-child:before {
     left: 50%;
 }
-.tree-vertical li.m:last-child:before {
+.textpy-tree-vertical li.m:last-child:before {
     right: 50%;
 }
-.tree-vertical li.m>details>summary,
-.tree-vertical li.m>span {
+.textpy-tree-vertical li.m>details>summary,
+.textpy-tree-vertical li.m>span {
     border: solid .1em #666;
     border-radius: .2em;
     display: inline-block;
@@ -684,47 +684,47 @@ def make_html_tree(tree: "TextTree") -> str:
     padding: .2em .5em;
     position: relative;
 }
-.tree-vertical li>details>summary { 
+.textpy-tree-vertical li>details>summary { 
     white-space: nowrap;
 }
-.tree-vertical li.m>details>summary {
+.textpy-tree-vertical li.m>details>summary {
     cursor: pointer;
 }
-.tree-vertical li.m>details>summary>span.open,
-.tree-vertical li.m>details[open]>summary>span.closed {
+.textpy-tree-vertical li.m>details>summary>span.open,
+.textpy-tree-vertical li.m>details[open]>summary>span.closed {
     display: none;
 }
-.tree-vertical li.m>details[open]>summary>span.open {
+.textpy-tree-vertical li.m>details[open]>summary>span.open {
     display: inline;
 }
-.tree-vertical ul.m:before,
-.tree-vertical li.m>details>summary:before,
-.tree-vertical li.m>span:before {
+.textpy-tree-vertical ul.m:before,
+.textpy-tree-vertical li.m>details>summary:before,
+.textpy-tree-vertical li.m>span:before {
     outline: solid 1px #666;
     content: "";
     height: .5em;
     left: 50%;
     position: absolute;
 }
-.tree-vertical ul.m:before {
+.textpy-tree-vertical ul.m:before {
     top: -.5em;
 }
-.tree-vertical li.m>details>summary:before,
-.tree-vertical li.m>span:before {
+.textpy-tree-vertical li.m>details>summary:before,
+.textpy-tree-vertical li.m>span:before {
     top: -.56em;
     height: .45em;
 }
-.tree-vertical>li.m {
+.textpy-tree-vertical>li.m {
     margin-top: 0;
 }
-.tree-vertical>li.m:before,
-.tree-vertical>li.m:after,
-.tree-vertical>li.m>details>summary:before,
-.tree-vertical>li.m>span:before {
+.textpy-tree-vertical>li.m:before,
+.textpy-tree-vertical>li.m:after,
+.textpy-tree-vertical>li.m>details>summary:before,
+.textpy-tree-vertical>li.m>span:before {
     outline: none;
 }
 </style>
-<ul class="tree-vertical">"""
+<ul class="textpy-tree-vertical">"""
     return f"{tstyle}\n{__get_li(tree)}\n</ul>"
 
 
