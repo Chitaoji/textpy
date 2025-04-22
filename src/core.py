@@ -22,9 +22,9 @@ if TYPE_CHECKING:
 else:
     _defaults = ...  # pylint: disable=invalid-name
 
-__all__ = ["module", "textpy", "DEFAULT_IGNORE_PATHS"]
+__all__ = ["module", "textpy", "DEFAULT_IGNORED_PATHS"]
 
-DEFAULT_IGNORE_PATHS = ["build", "dist", ".git", ".github"]
+DEFAULT_IGNORED_PATHS = ["build", "dist", ".git", ".github"]
 
 just_fix_windows_console()
 
@@ -88,7 +88,7 @@ def module(
     if isinstance(path_or_text, str) or path_or_text.is_file():
         return PyFile(path_or_text, home=home, encoding=encoding)
     if path_or_text.is_dir():
-        ignore = DEFAULT_IGNORE_PATHS if ignore is None else ignore
+        ignore = DEFAULT_IGNORED_PATHS if ignore is None else ignore
         return PyDir(
             path_or_text, home=home, encoding=encoding, ignore=ignore, include=include
         )

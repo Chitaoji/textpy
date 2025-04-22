@@ -187,7 +187,7 @@ This project falls under the BSD 3-Clause License.
 
 ## History
 ### v0.1.32
-* Added `dist` in `DEFAULT_IGNORE_PATHS`.
+* Added `dist` in `DEFAULT_IGNORED_PATHS`.
 
 ### v0.1.31
 * Got ANSI escapes to work on Windows.
