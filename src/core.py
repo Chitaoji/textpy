@@ -88,7 +88,10 @@ def module(
     if isinstance(path_or_text, str) or path_or_text.is_file():
         return PyFile(path_or_text, home=home, encoding=encoding)
     if path_or_text.is_dir():
-        ignore = DEFAULT_IGNORED_PATHS if ignore is None else ignore
+        if ignore is None:
+            ignore = getattr(
+                sys.modules[__name__.rpartition(".")[0]], "DEFAULT_IGNORED_PATHS"
+            )
         return PyDir(
             path_or_text, home=home, encoding=encoding, ignore=ignore, include=include
         )

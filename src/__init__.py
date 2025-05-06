@@ -170,10 +170,10 @@ This project falls under the BSD 3-Clause License.
 
 import lazyr
 
-VERBOSE = 0
+lazyr.VERBOSE = 0
 
-lazyr.register("pandas", verbose=VERBOSE)
-lazyr.register("black", verbose=VERBOSE)
+lazyr.register("pandas")
+lazyr.register("black")
 
 # pylint: disable=wrong-import-position
 from . import abc, core, doc, interaction, texttree, utils
