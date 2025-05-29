@@ -94,7 +94,7 @@ If you are using a jupyter notebook, you can run a cell like this:
 
 Note that in the jupyter notebook case, the matched substrings are **clickable**, linking to where the patterns were found.
 
-## Examples
+## Usage
 ### tx.module()
 The previous demonstration introduced the core function `tx.module()`. The return value of `tx.module()` is a subinstance of the abstract class `tx.TextTree`, which supports various text manipulation methods:
 ```py
