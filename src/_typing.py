@@ -1,13 +1,13 @@
 """
 Contains typing classes.
 
-NOTE: this module is private. All functions and objects are available in the main
-`textpy` namespace - use that instead.
+NOTE: this module is not intended to be imported at runtime.
 
 """
 
-import logging
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
+
+import loggings
 
 from .texttree import PyDir, PyFile
 
@@ -18,10 +18,7 @@ if TYPE_CHECKING:
     from .re_extensions._typing import PatternType, ReplType
 
 
-logging.warning(
-    "importing from '._typing' - this module is not intended for direct import, "
-    "therefore unexpected errors may occur"
-)
+loggings.warning("this module is not intended to be imported at runtime")
 
 HistoryField = Literal["where", "frm", "name", "as_name", "type_check_only"]
 HistoryGroups = Dict[Any, Union["HistoryGroups", List["ImportHistory"]]]
