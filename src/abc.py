@@ -48,14 +48,14 @@ class TextTree(ABC, Generic[P]):
 
     Parameters
     ----------
-    path_or_text : Union[Path, str]
+    path_or_str : Union[Path, str]
         File path, module path or file text.
     parent : TextTree, optional
         Parent node (if exists), by default None.
     start_line : int, optional
         Starting line number, by default None.
     home : Union[Path, str, None], optional
-        Specifies the home path; only takes effect when `path_or_text` is
+        Specifies the home path; only takes effect when `path_or_str` is
         relative; by default None.
     encoding : str, optional
         Specifies encoding, by default None.
@@ -68,7 +68,7 @@ class TextTree(ABC, Generic[P]):
 
     def __init__(
         self,
-        path_or_text: Union[Path, str],
+        path_or_str: Union[Path, str],
         *,
         parent: Optional["TextTree"] = None,
         start_line: Optional[int] = None,
@@ -99,7 +99,7 @@ class TextTree(ABC, Generic[P]):
             self.encoding = parent.encoding
 
         self._header: Optional[Any] = None
-        self.__texttree_post_init__(path_or_text)
+        self.__texttree_post_init__(path_or_str)
 
         if mask:
             self.path = mask.path
@@ -118,13 +118,13 @@ class TextTree(ABC, Generic[P]):
         return self.jumpto(__value)
 
     @abstractmethod
-    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
+    def __texttree_post_init__(self, path_or_str: Union[Path, str]) -> None:
         """
         Post init.
 
         Parameters
         ----------
-        path_or_text : Union[Path, str]
+        path_or_str : Union[Path, str]
             File path, module path or file text.
 
         """
@@ -654,44 +654,44 @@ class Docstring(ABC):
 
 
 @overload
-def as_path(path_or_text: Path, home: Union[Path, str, None] = None) -> Path: ...
+def as_path(path_or_str: Path, home: Union[Path, str, None] = None) -> Path: ...
 @overload
 def as_path(
-    path_or_text: str, home: Union[Path, str, None] = None
-) -> Union[Path, str]: ...
+    path_or_str: str, home: Union[Path, str, None] = None
+) -> Union[Path, None]: ...
 def as_path(
-    path_or_text: Union[Path, str], home: Union[Path, str, None] = None
-) -> Union[Path, str]:
+    path_or_str: Union[Path, str], home: Union[Path, str, None] = None
+) -> Union[Path, None]:
     """
     If the input is a string, check if it represents an existing
-    path. If it does, convert it to a `Path` object, otherwise return
-    itself. If the input is already a `Path` object, return itself
+    path - if it does, convert it to a `Path` object, otherwise return
+    None. If the input is already a `Path` object, return itself
     directly.
 
     Parameters
     ----------
-    path_or_text : Union[Path, str]
+    path_or_str : Union[Path, str]
         An instance of `Path` or a string.
     home : Union[Path, str, None], optional
-        Specifies the home path if `path_or_text` is relative, by
+        Specifies the home path if `path_or_str` is relative, by
         default None.
 
     Returns
     -------
-    Union[Path, str]
-        A path or a string.
+    Union[Path, None]
+        May be a path.
 
     """
     home = Path("").cwd() if home is None else Path(home).absolute()
-    if isinstance(path_or_text, str):
-        if len(path_or_text) < 256 and (home / path_or_text).exists():
-            path_or_text = Path(path_or_text)
+    if isinstance(path_or_str, str):
+        if (home / path_or_str).exists():
+            path_or_str = Path(path_or_str)
         else:
-            return path_or_text
+            return None
 
-    if not path_or_text.is_absolute():
-        path_or_text = home / path_or_text
-    return path_or_text
+    if not path_or_str.is_absolute():
+        path_or_str = home / path_or_str
+    return path_or_str
 
 
 def black_format(string: str) -> str:

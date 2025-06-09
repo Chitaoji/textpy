@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
 from colorama import just_fix_windows_console
-from typing_extensions import deprecated
 
 from .abc import P, as_path
 from .texttree import PyDir, PyFile
@@ -22,7 +21,7 @@ if TYPE_CHECKING:
 else:
     _defaults = ...  # pylint: disable=invalid-name
 
-__all__ = ["module", "textpy", "DEFAULT_IGNORED_PATHS"]
+__all__ = ["module", "file", "fromstr", "DEFAULT_IGNORED_PATHS"]
 
 DEFAULT_IGNORED_PATHS = ["build", "dist", ".git", ".github"]
 
@@ -30,7 +29,7 @@ just_fix_windows_console()
 
 
 def module(
-    path_or_text: Union[Path, str],
+    path_or_str: Union[Path, str],
     home: Optional[Union[Path, str]] = None,
     encoding: Optional[str] = None,
     ignore: Optional[List[str]] = None,
@@ -45,10 +44,10 @@ def module(
 
     Parameters
     ----------
-    path_or_text : Union[Path, str]
-        File path, module path or file text.
+    path_or_str : Union[Path, str]
+        File path, module path or file string.
     home : Union[Path, str], optional
-        Specifies the home path when `path_or_text` is relative, by default
+        Specifies the home path when `path_or_str` is relative, by default
         None.
     encoding : str, optional
         Specifies encoding, by default None.
@@ -65,7 +64,7 @@ def module(
 
     Raises
     ------
-    ValueError
+    FileNotFoundError
         Raised when `path` is not found.
 
     See Also
@@ -82,26 +81,116 @@ def module(
     NumpyFormatDocstring : Stores a numpy-formatted docstring.
 
     """
-    path_or_text = as_path(path_or_text, home=home)
+    path = as_path(path_or_str, home=home)
     if encoding is None:
         encoding = sys.getdefaultencoding()
-    if isinstance(path_or_text, str) or path_or_text.is_file():
-        return PyFile(path_or_text, home=home, encoding=encoding)
-    if path_or_text.is_dir():
-        if ignore is None:
-            ignore = getattr(
-                sys.modules[__name__.rpartition(".")[0]], "DEFAULT_IGNORED_PATHS"
-            )
-        return PyDir(
-            path_or_text, home=home, encoding=encoding, ignore=ignore, include=include
+    if path is None or not path.exists():
+        raise FileNotFoundError(f"file not found: '{path}'")
+    if path.is_file():
+        return PyFile(path, home=home, encoding=encoding)
+    if ignore is None:
+        ignore = getattr(
+            sys.modules[__name__.rpartition(".")[0]], "DEFAULT_IGNORED_PATHS"
         )
-    raise FileExistsError(f"file not exists: '{path_or_text}'")
+    return PyDir(path, home=home, encoding=encoding, ignore=ignore, include=include)
 
 
-textpy = deprecated(
-    "tx.textpy() is deprecated and will be removed in a future version "
-    "- use tx.module() instead"
-)(module)
+def file(
+    path_or_str: Union[Path, str],
+    home: Optional[Union[Path, str]] = None,
+    encoding: Optional[str] = None,
+    *,
+    _: Callable[P, None] = _defaults,
+) -> "TextTree[P]":
+    """
+    Statically analyzes a python file. The file is recommended to be
+    formatted with `PEP-8`, otherwise the analyzing result could be
+    surprising.
+
+    Parameters
+    ----------
+    path_or_str : Union[Path, str]
+        File path, module path or file string.
+    home : Union[Path, str], optional
+        Specifies the home path when `path_or_str` is relative, by default
+        None.
+    encoding : str, optional
+        Specifies encoding, by default None.
+
+    Returns
+    -------
+    TextTree
+        A class written for python code analysis.
+
+    Raises
+    ------
+    FileNotFoundError
+        Raised when `path` is not found.
+    NotADirectoryError
+
+    See Also
+    --------
+    PyDir : Stores a directory.
+    PyFile : Stores a python file.
+    PyModule : PyDIr | PyFile.
+    PyFunc : Stores the code and docstring of a function.
+    PyClass : Stores the code and docstring of a class.
+    PyMethod : Stores the code and docstring of a class method.
+    PyProperty : Stores the code and docstring of a class property.
+    PyContent : Stores other infomation.
+    NonPyFile : Stores a non-python file.
+    NumpyFormatDocstring : Stores a numpy-formatted docstring.
+
+    """
+    path = as_path(path_or_str, home=home)
+    if encoding is None:
+        encoding = sys.getdefaultencoding()
+    if path is None or not path.exists():
+        raise FileNotFoundError(f"file not found: '{path}'")
+    if path.is_file():
+        return PyFile(path, home=home, encoding=encoding)
+    raise IsADirectoryError(f"is a directory: '{path}'")
+
+
+def fromstr(
+    string: Union[Path, str], *, _: Callable[P, None] = _defaults
+) -> "TextTree[P]":
+    """
+    Statically analyzes a python file from string. The file is
+    recommended to be formatted with `PEP-8`, otherwise the analyzing
+    result could be surprising.
+
+    Parameters
+    ----------
+    string : Union[Path, str]
+        File string.
+
+    Returns
+    -------
+    TextTree
+        A class written for python code analysis.
+
+    Raises
+    ------
+    FileNotFoundError
+        Raised when `path` is not found.
+    NotADirectoryError
+
+    See Also
+    --------
+    PyDir : Stores a directory.
+    PyFile : Stores a python file.
+    PyModule : PyDIr | PyFile.
+    PyFunc : Stores the code and docstring of a function.
+    PyClass : Stores the code and docstring of a class.
+    PyMethod : Stores the code and docstring of a class method.
+    PyProperty : Stores the code and docstring of a class property.
+    PyContent : Stores other infomation.
+    NonPyFile : Stores a non-python file.
+    NumpyFormatDocstring : Stores a numpy-formatted docstring.
+
+    """
+    return PyFile(string)
 
 
 # def type_of_script() -> Literal["jupyter", "ipython", "terminal"]:

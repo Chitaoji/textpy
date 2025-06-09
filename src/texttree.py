@@ -33,8 +33,8 @@ __all__ = [
 class PyDir(TextTree):
     """Stores a directory of python files."""
 
-    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
-        self.path = as_path(path_or_text, home=self.home)
+    def __texttree_post_init__(self, path_or_str: Union[Path, str]) -> None:
+        self.path = as_path(path_or_str, home=self.home)
         if not self.path.is_dir():
             raise NotADirectoryError(f"not a dicretory: {self.path}")
         self.name = self.path.stem
@@ -83,13 +83,13 @@ class PyDir(TextTree):
 class PyFile(TextTree):
     """Stores the code of a python file."""
 
-    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
-        if isinstance(path_or_text, Path):
-            self.path = as_path(path_or_text, home=self.home)
+    def __texttree_post_init__(self, path_or_str: Union[Path, str]) -> None:
+        if isinstance(path_or_str, Path):
+            self.path = as_path(path_or_str, home=self.home)
             self.text, n, _ = counted_strip(self.path.read_text(encoding=self.encoding))
         else:
-            self.text, n, _ = counted_strip(path_or_text)  # in this situation, once
-            # argument 'path_or_text' is str, it will be regarded as text content even
+            self.text, n, _ = counted_strip(path_or_str)  # in this situation, once
+            # argument 'path_or_str' is str, it will be regarded as text content even
             # if can represent an existing path
 
         self.start_line += n
@@ -180,8 +180,8 @@ class PyFile(TextTree):
 class PyClass(TextTree):
     """Stores the code and docstring of a class."""
 
-    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
-        self.text, n, _ = counted_strip(path_or_text)
+    def __texttree_post_init__(self, path_or_str: Union[Path, str]) -> None:
+        self.text, n, _ = counted_strip(path_or_str)
         self.start_line += n
         self.name = re.search("class .*?[(:]", self.text).group()[6:-1]
 
@@ -228,8 +228,8 @@ class PyClass(TextTree):
 class PyFunc(TextTree):
     """Stores the code and docstring of a function."""
 
-    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
-        self.text, n, _ = counted_strip(path_or_text)
+    def __texttree_post_init__(self, path_or_str: Union[Path, str]) -> None:
+        self.text, n, _ = counted_strip(path_or_str)
         self.start_line += n
         self.name = re.search("def .*?\\(", self.text).group()[4:-1] + "()"
 
@@ -251,16 +251,16 @@ class PyFunc(TextTree):
 class PyMethod(PyFunc):
     """Stores the code and docstring of a class method."""
 
-    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
-        super().__texttree_post_init__(path_or_text=path_or_text)
+    def __texttree_post_init__(self, path_or_str: Union[Path, str]) -> None:
+        super().__texttree_post_init__(path_or_str=path_or_str)
         self.spaces = 4
 
 
 class PyProperty(PyMethod):
     """Stores the code and docstring of a class property."""
 
-    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
-        super().__texttree_post_init__(path_or_text=path_or_text)
+    def __texttree_post_init__(self, path_or_str: Union[Path, str]) -> None:
+        super().__texttree_post_init__(path_or_str=path_or_str)
         self.name = self.name[:-2]
 
 
@@ -271,8 +271,8 @@ class PyContent(TextTree):
 
     """
 
-    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
-        self.text, n, _ = counted_strip(path_or_text)
+    def __texttree_post_init__(self, path_or_str: Union[Path, str]) -> None:
+        self.text, n, _ = counted_strip(path_or_str)
         self.start_line += n
         self.name = NULL
 
@@ -288,12 +288,12 @@ class PyContent(TextTree):
 class NonPyFile(TextTree):
     """Stores a non-python file."""
 
-    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
-        if isinstance(path_or_text, Path):
-            self.path = as_path(path_or_text, home=self.home)
+    def __texttree_post_init__(self, path_or_str: Union[Path, str]) -> None:
+        if isinstance(path_or_str, Path):
+            self.path = as_path(path_or_str, home=self.home)
             self.text, n, _ = counted_strip(self.path.read_text(encoding=self.encoding))
         else:
-            self.text, n, _ = counted_strip(path_or_text)
+            self.text, n, _ = counted_strip(path_or_str)
 
         self.start_line += n
         self.name = self.path.name
