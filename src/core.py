@@ -69,16 +69,16 @@ def module(
 
     See Also
     --------
-    PyDir : Stores a directory.
-    PyFile : Stores a python file.
+    PyDir : reads a directory containing python files.
+    PyFile : reads a python file.
     PyModule : PyDIr | PyFile.
-    PyFunc : Stores the code and docstring of a function.
-    PyClass : Stores the code and docstring of a class.
-    PyMethod : Stores the code and docstring of a class method.
-    PyProperty : Stores the code and docstring of a class property.
-    PyContent : Stores other infomation.
-    NonPyFile : Stores a non-python file.
-    NumpyFormatDocstring : Stores a numpy-formatted docstring.
+    PyFunc : reads the code and docstring of a function.
+    PyClass : reads the code and docstring of a class.
+    PyMethod : reads the code and docstring of a class method.
+    PyProperty : reads the code and docstring of a class property.
+    PyContent : contains other infomation.
+    NonPyFile : reads a non-python file.
+    NumpyFormatDocstring : reads a numpy-formatted docstring.
 
     """
     if encoding is None:
@@ -125,20 +125,21 @@ def file(
     ------
     FileNotFoundError
         Raised when `path` is not found.
-    NotADirectoryError
+    IsADirectoryError
+        Raised when `path` is a directory.
 
     See Also
     --------
-    PyDir : Stores a directory.
-    PyFile : Stores a python file.
+    PyDir : reads a directory containing python files.
+    PyFile : reads a python file.
     PyModule : PyDIr | PyFile.
-    PyFunc : Stores the code and docstring of a function.
-    PyClass : Stores the code and docstring of a class.
-    PyMethod : Stores the code and docstring of a class method.
-    PyProperty : Stores the code and docstring of a class property.
-    PyContent : Stores other infomation.
-    NonPyFile : Stores a non-python file.
-    NumpyFormatDocstring : Stores a numpy-formatted docstring.
+    PyFunc : reads the code and docstring of a function.
+    PyClass : reads the code and docstring of a class.
+    PyMethod : reads the code and docstring of a class method.
+    PyProperty : reads the code and docstring of a class property.
+    PyContent : contains other infomation.
+    NonPyFile : reads a non-python file.
+    NumpyFormatDocstring : reads a numpy-formatted docstring.
 
     """
     if encoding is None:
@@ -176,16 +177,16 @@ def fromstr(
 
     See Also
     --------
-    PyDir : Stores a directory.
-    PyFile : Stores a python file.
+    PyDir : reads a directory containing python files.
+    PyFile : reads a python file.
     PyModule : PyDIr | PyFile.
-    PyFunc : Stores the code and docstring of a function.
-    PyClass : Stores the code and docstring of a class.
-    PyMethod : Stores the code and docstring of a class method.
-    PyProperty : Stores the code and docstring of a class property.
-    PyContent : Stores other infomation.
-    NonPyFile : Stores a non-python file.
-    NumpyFormatDocstring : Stores a numpy-formatted docstring.
+    PyFunc : reads the code and docstring of a function.
+    PyClass : reads the code and docstring of a class.
+    PyMethod : reads the code and docstring of a class method.
+    PyProperty : reads the code and docstring of a class property.
+    PyContent : contains other infomation.
+    NonPyFile : reads a non-python file.
+    NumpyFormatDocstring : reads a numpy-formatted docstring.
 
     """
     return PyFile(string)
