@@ -653,20 +653,10 @@ class Docstring(ABC):
         return {}
 
 
-@overload
-def as_path(path_or_str: Path, home: Union[Path, str, None] = None) -> Path: ...
-@overload
-def as_path(
-    path_or_str: str, home: Union[Path, str, None] = None
-) -> Union[Path, None]: ...
-def as_path(
-    path_or_str: Union[Path, str], home: Union[Path, str, None] = None
-) -> Union[Path, None]:
+def as_path(path_or_str: Union[Path, str], home: Union[Path, str, None] = None) -> Path:
     """
-    If the input is a string, check if it represents an existing
-    path - if it does, convert it to a `Path` object, otherwise return
-    None. If the input is already a `Path` object, return itself
-    directly.
+    If the input is a string, convert it to a `Path` object. If the
+    input is a `Path` object, return itself.
 
     Parameters
     ----------
@@ -682,13 +672,9 @@ def as_path(
         May be a path.
 
     """
-    home = Path("").cwd() if home is None else Path(home).absolute()
     if isinstance(path_or_str, str):
-        if (home / path_or_str).exists():
-            path_or_str = Path(path_or_str)
-        else:
-            return None
-
+        path_or_str = Path(path_or_str)
+    home = Path("").cwd() if home is None else Path(home).absolute()
     if not path_or_str.is_absolute():
         path_or_str = home / path_or_str
     return path_or_str

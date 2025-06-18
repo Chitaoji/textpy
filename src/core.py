@@ -81,10 +81,9 @@ def module(
     NumpyFormatDocstring : Stores a numpy-formatted docstring.
 
     """
-    path = as_path(path_or_str, home=home)
     if encoding is None:
         encoding = sys.getdefaultencoding()
-    if path is None or not path.exists():
+    if not (path := as_path(path_or_str, home=home)).exists():
         raise FileNotFoundError(f"file not found: '{path}'")
     if path.is_file():
         return PyFile(path, home=home, encoding=encoding)
@@ -142,10 +141,9 @@ def file(
     NumpyFormatDocstring : Stores a numpy-formatted docstring.
 
     """
-    path = as_path(path_or_str, home=home)
     if encoding is None:
         encoding = sys.getdefaultencoding()
-    if path is None or not path.exists():
+    if not (path := as_path(path_or_str, home=home)).exists():
         raise FileNotFoundError(f"file not found: '{path}'")
     if path.is_file():
         return PyFile(path, home=home, encoding=encoding)
