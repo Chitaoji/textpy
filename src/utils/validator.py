@@ -9,9 +9,9 @@ class SimpleValidator:
 
     Parameters
     ----------
-    _type : Union[type, Tuple[type, ...]], optional
+    _type : Union[type, tuple[type, ...]], optional
         Legal type(s), by default object.
-    literal : Optional[Union[Any, Tuple[Any, ...]]], optional
+    literal : Optional[Union[Any, tuple[Any, ...]]], optional
         Legal literal value(s), by default None.
     valuer : Optional[Callable[[Any], bool]], optional
         Value checker, by default None.
@@ -22,9 +22,9 @@ class SimpleValidator:
 
     def __init__(
         self,
-        _type: Union[type, Tuple[type, ...]] = object,
+        _type: Union[type, tuple[type, ...]] = object,
         /,
-        literal: Optional[Union[Any, Tuple[Any, ...]]] = ...,
+        literal: Optional[Union[Any, tuple[Any, ...]]] = ...,
         valuer: Optional[Callable[[Any], bool]] = ...,
         default: Optional[Any] = ...,
     ) -> None:
@@ -73,13 +73,13 @@ class SimpleValidator:
         del instance.__dict__[self.name]
 
 
-def tuple_repr(maybe_tuple: Union[Any, Tuple[Any, ...]], is_type: bool = False) -> str:
+def tuple_repr(maybe_tuple: Union[Any, tuple[Any, ...]], is_type: bool = False) -> str:
     """
     Returns the representational string of a tuple.
 
     Parameters
     ----------
-    maybe_tuple : Union[Any, Tuple[Any, ...]]
+    maybe_tuple : Union[Any, tuple[Any, ...]]
         May be a tuple.
 
     Returns

@@ -9,7 +9,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 import re
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, Union
 
 from .abc import TextTree, as_path
 from .doc import NumpyFormatDocstring
@@ -56,8 +56,8 @@ class PyDir(TextTree):
         return PyContent("", parent=self)
 
     @cached_property
-    def children(self) -> List[TextTree]:
-        children: List[TextTree] = []
+    def children(self) -> list[TextTree]:
+        children: list[TextTree] = []
         self._header = ""
         for _path in sorted(self.path.iterdir()):
             if self.ignore and any(_path.match(x) for x in self.ignore):
@@ -110,8 +110,8 @@ class PyFile(TextTree):
         return PyContent(self._header, parent=self)
 
     @cached_property
-    def children(self) -> List[TextTree]:
-        children: List[TextTree] = []
+    def children(self) -> list[TextTree]:
+        children: list[TextTree] = []
 
         matched = re.match('""".*?"""', self.text, re.DOTALL)
         if not matched:
@@ -206,8 +206,8 @@ class PyClass(TextTree):
         return PyContent(self._header, parent=self)
 
     @cached_property
-    def children(self) -> List[TextTree]:
-        children: List[TextTree] = []
+    def children(self) -> list[TextTree]:
+        children: list[TextTree] = []
         sub_text = re.sub("\n    ", "\n", self.text)
         _cnt: int = 0
         for i, _str in line_count_iter(rsplit("(?:\n@.*)*\ndef ", sub_text)):

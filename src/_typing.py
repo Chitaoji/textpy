@@ -5,7 +5,7 @@ NOTE: this module is not intended to be imported at runtime.
 
 """
 
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Union
+from typing import TYPE_CHECKING, Any, Literal
 
 import loggings
 
@@ -21,5 +21,5 @@ if TYPE_CHECKING:
 loggings.warning("this module is not intended to be imported at runtime")
 
 HistoryField = Literal["where", "frm", "name", "as_name", "type_check_only"]
-HistoryGroups = Dict[Any, Union["HistoryGroups", List["ImportHistory"]]]
+HistoryGroups = dict[Any, "HistoryGroups | list[ImportHistory]"]
 PyModule = PyDir | PyFile

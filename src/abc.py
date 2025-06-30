@@ -11,7 +11,7 @@ import re
 from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import black
 from typing_extensions import Self
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from .texttree import PyContent
 
 
-__all__ = ["TextTree", "PyText", "Docstring"]
+__all__ = ["TextTree", "Docstring"]
 
 
 class TextTree(ABC):
@@ -56,9 +56,9 @@ class TextTree(ABC):
         relative; by default None.
     encoding : str, optional
         Specifies encoding, by default None.
-    ignore : List[str], optional
+    ignore : list[str], optional
         Subpaths to ignore, by default `DEFAULT_IGNORE_PATHS`.
-    include : List[str], optional
+    include : list[str], optional
         Non-python files to include, by default None.
 
     """
@@ -71,8 +71,8 @@ class TextTree(ABC):
         start_line: Optional[int] = None,
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
-        ignore: Optional[List[str]] = None,
-        include: Optional[List[str]] = None,
+        ignore: Optional[list[str]] = None,
+        include: Optional[list[str]] = None,
         mask: Optional[Self] = None,
     ) -> None:
         self.text: str = ""
@@ -107,7 +107,7 @@ class TextTree(ABC):
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}({self.absname!r})"
 
-    def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
+    def _repr_mimebundle_(self, *_, **__) -> Optional[dict[str, Any]]:
         if display_params.use_mimebundle:
             return {"text/html": self.to_html()}
 
@@ -166,20 +166,20 @@ class TextTree(ABC):
         """
 
     @cached_property
-    def children(self) -> List["TextTree"]:
+    def children(self) -> list["TextTree"]:
         """
         Children nodes.
 
         Returns
         -------
-        List[TextTree]
+        list[TextTree]
             List of the children nodes.
 
         """
         return []
 
     @cached_property
-    def children_names(self) -> List[str]:
+    def children_names(self) -> list[str]:
         """
         Children names.
 
@@ -187,14 +187,14 @@ class TextTree(ABC):
 
         Returns
         -------
-        List[str]
+        list[str]
             List of the children nodes' names.
 
         """
         return [x.name for x in self.children]
 
     @cached_property
-    def children_dict(self) -> Dict[str, "TextTree"]:
+    def children_dict(self) -> dict[str, "TextTree"]:
         """
         Dictionary of children nodes.
 
@@ -202,11 +202,11 @@ class TextTree(ABC):
 
         Returns
         -------
-        Dict[str, TextTree]
+        dict[str, TextTree]
             Dictionary of children nodes.
 
         """
-        children_dict: Dict[str, "TextTree"] = {}
+        children_dict: dict[str, "TextTree"] = {}
         null_cnt: int = 0
         for child, childname in zip(self.children, self.children_names):
             if childname == NULL:
@@ -328,7 +328,7 @@ class TextTree(ABC):
 
     def findall(
         self,
-        pattern,
+        pattern: "PatternType",
         /,
         *,
         whole_word: bool = False,
@@ -342,7 +342,7 @@ class TextTree(ABC):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str], SmartPattern[str]]
+        pattern : PatternType
             String pattern.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
@@ -387,11 +387,11 @@ class TextTree(ABC):
 
     def replace(
         self,
-        pattern,
-        repl,
+        pattern: "PatternType",
+        repl: "ReplType",
         /,
         *,
-        overwrite=True,
+        overwrite: bool = True,
         whole_word: bool = False,
         dotall: bool = False,
         case_sensitive: bool = True,
@@ -406,7 +406,7 @@ class TextTree(ABC):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str], SmartPattern[str]]
+        pattern : PatternType
             String pattern.
         repl : ReplType
             Speficies the string to replace the patterns. If Callable, should
@@ -450,25 +450,16 @@ class TextTree(ABC):
         else:
             for c in self.children:
                 replacer.join(
-                    c.replace(
-                        pattern,
-                        repl,
-                        overwrite=overwrite,
-                        whole_word=whole_word,
-                        dotall=dotall,
-                        case_sensitive=case_sensitive,
-                        regex=regex,
-                        based_on=based_on,
-                    )
+                    c.replace(pattern, repl, overwrite=overwrite, based_on=based_on)
                 )
         return replacer
 
     def delete(
         self,
-        pattern,
+        pattern: "PatternType",
         /,
         *,
-        overwrite=True,
+        overwrite: bool = True,
         whole_word: bool = False,
         dotall: bool = False,
         case_sensitive: bool = True,
@@ -480,7 +471,7 @@ class TextTree(ABC):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str], SmartPattern[str]]
+        pattern : PatternType
             String pattern.
         overwrite : bool, optional
             Determines whether to overwrite the original files. If False, the
@@ -610,17 +601,17 @@ class TextTree(ABC):
             return self.jumpto(b)
         raise ValueError(f"{a!r} is not a child of {self.absname!r}")
 
-    def track(self) -> List["TextTree"]:
+    def track(self) -> list["TextTree"]:
         """
         Returns a list of all the parents and `self`.
 
         Returns
         -------
-        List[TextTree]
+        list[TextTree]
             List of `TextTree` instances.
 
         """
-        tracks: List["TextTree"] = []
+        tracks: list["TextTree"] = []
         obj: Optional["TextTree"] = self
         while obj is not None:
             tracks.append(obj)
@@ -652,14 +643,14 @@ class Docstring(ABC):
 
     @property
     @abstractmethod
-    def sections(self) -> Dict[str, str]:
+    def sections(self) -> dict[str, str]:
         """
         Returns the details of the docstring, each title corresponds to a
         paragraph of description.
 
         Returns
         -------
-        Dict[str, str]
+        dict[str, str]
             Dict of titles and descriptions.
 
         """

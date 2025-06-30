@@ -11,17 +11,7 @@ import re
 from dataclasses import dataclass
 from functools import cached_property, partial
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Tuple,
-    get_args,
-)
+from typing import TYPE_CHECKING, Any, Callable, Literal, Optional, get_args
 
 import pandas as pd
 from typing_extensions import Self
@@ -64,9 +54,9 @@ class DisplayParams:
     use_mimebundle: bool = SimpleValidator(bool, default=True)
     skip_line_numbers: bool = SimpleValidator(bool, default=False)
 
-    def defaults(self) -> Dict[str, Any]:
+    def defaults(self) -> dict[str, Any]:
         """Returns the default values as a dict."""
-        fields: Dict[str, "Field"] = getattr(self.__class__, "__dataclass_fields__")
+        fields: dict[str, "Field"] = getattr(self.__class__, "__dataclass_fields__")
         return {k: getattr(v.default, "default") for k, v in fields.items()}
 
 
@@ -103,7 +93,7 @@ class TextFinding:
     def __ge__(self, __other: Self) -> bool:
         return self == __other or self > __other
 
-    def astuple(self) -> Tuple["TextTree", "PatternType", int, str]:
+    def astuple(self) -> tuple["TextTree", "PatternType", int, str]:
         """Converts `self` to a tuple."""
         return self.obj, self.pattern, self.nline, self.linestr
 
@@ -117,7 +107,7 @@ class FindTextResult:
         stylfunc: Optional[Callable] = None,
         reprfunc: Optional[Callable] = None,
     ) -> None:
-        self.res: List[TextFinding] = []
+        self.res: list[TextFinding] = []
         self.stylfunc = stylfunc if stylfunc else self.__style_match
         self.reprfunc = reprfunc if reprfunc else self.__default_repr
 
@@ -133,7 +123,7 @@ class FindTextResult:
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
 
-    def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
+    def _repr_mimebundle_(self, *_, **__) -> Optional[dict[str, Any]]:
         if display_params.use_mimebundle:
             return {"text/html": self.to_html()}
         return None
@@ -153,7 +143,7 @@ class FindTextResult:
         """
         self.res.append(finding)
 
-    def extend(self, findings: List[TextFinding]) -> None:
+    def extend(self, findings: list[TextFinding]) -> None:
         """
         Extend a few new findings.
 
@@ -295,10 +285,10 @@ class HTMLTableMaker:
             ["" for _ in range(len(self.columns))] for _ in range(len(self.index))
         ]
 
-    def __getitem__(self, __key: Tuple[int, int]) -> str:
+    def __getitem__(self, __key: tuple[int, int]) -> str:
         return self.data[__key[0]][__key[1]]
 
-    def __setitem__(self, __key: Tuple[int, int], __value: str) -> None:
+    def __setitem__(self, __key: tuple[int, int], __value: str) -> None:
         self.data[__key[0]][__key[1]] = __value
 
     def make(self) -> str:
@@ -460,13 +450,13 @@ class Replacer:
     """Text replacer, only as a return of `TextTree.replace()`."""
 
     def __init__(self):
-        self.editors: List[FileEditor] = []
+        self.editors: list[FileEditor] = []
         self.__confirmed = False
 
     def __repr__(self) -> str:
         return repr(self.__find_text_result)
 
-    def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, str]]:
+    def _repr_mimebundle_(self, *_, **__) -> Optional[dict[str, str]]:
         if display_params.use_mimebundle:
             return {"text/html": self.to_html()}
 
@@ -501,7 +491,7 @@ class Replacer:
         """
         self.editors.extend(other.editors)
 
-    def confirm(self) -> Dict[str, List[str]]:
+    def confirm(self) -> dict[str, list[str]]:
         """
         Confirm the replacement.
 
@@ -509,7 +499,7 @@ class Replacer:
 
         Returns
         -------
-        Dict[str, List[str]]
+        dict[str, list[str]]
             Infomation dictionary.
 
         Raises
@@ -525,7 +515,7 @@ class Replacer:
             log="\nTry running 'tx.module(...).replace(...)' again."
         )
 
-    def rollback(self, force: bool = False) -> Dict[str, List[str]]:
+    def rollback(self, force: bool = False) -> dict[str, list[str]]:
         """
         Rollback the replacement.
 
@@ -537,7 +527,7 @@ class Replacer:
 
         Returns
         -------
-        Dict[str, List[str]]
+        dict[str, list[str]]
             Infomation dictionary.
 
         Raises
@@ -558,8 +548,8 @@ class Replacer:
 
     def __overwrite(
         self, rb: bool = False, fc: bool = False, log: str = ""
-    ) -> Dict[str, List[str]]:
-        info: Dict[str, List[str]] = {"successful": [], "failed": []}
+    ) -> dict[str, list[str]]:
+        info: dict[str, list[str]] = {"successful": [], "failed": []}
         for e in self.editors:
             if e.is_based_on:
                 continue
@@ -806,13 +796,13 @@ def make_plain_text(text: str) -> str:
     )
 
 
-def get_bg_colors() -> Tuple[str, str, str]:
+def get_bg_colors() -> tuple[str, str, str]:
     """
     Get background colors.
 
     Returns
     -------
-    Tuple[str,str,str]
+    tuple[str,str,str]
         Background colors.
 
     """

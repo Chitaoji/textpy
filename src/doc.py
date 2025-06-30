@@ -8,7 +8,6 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 import re
 from functools import cached_property
-from typing import Dict
 
 from .abc import Docstring
 from .re_extensions import rsplit
@@ -23,8 +22,8 @@ class NumpyFormatDocstring(Docstring):
     """
 
     @cached_property
-    def sections(self) -> Dict[str, str]:
-        details: Dict[str, str] = {}
+    def sections(self) -> dict[str, str]:
+        details: dict[str, str] = {}
         for i, _str in enumerate(rsplit(".*\n-+\n", self.text)):
             if i == 0:
                 details["_header_"] = _str.strip()

@@ -8,7 +8,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from colorama import just_fix_windows_console
 
@@ -31,8 +31,8 @@ def module(
     /,
     home: Optional[Union[Path, str]] = None,
     encoding: Optional[str] = None,
-    ignore: Optional[List[str]] = None,
-    include: Optional[List[str]] = None,
+    ignore: Optional[list[str]] = None,
+    include: Optional[list[str]] = None,
 ) -> "TextTree":
     """
     Statically analyzes a python file or a python module. Each python file
@@ -48,10 +48,10 @@ def module(
         None.
     encoding : str, optional
         Specifies encoding, by default None.
-    ignore : List[str], optional
+    ignore : list[str], optional
         Subpaths to ignore (prior to `include`), by default
         `DEFAULT_IGNORED_PATHS`.
-    include : List[str], optional
+    include : list[str], optional
         Non-python files to include, by default None.
 
     Returns
