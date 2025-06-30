@@ -5,10 +5,10 @@ SUMMARY: Reads a python module and statically analyzes it.
 HOMEPAGE: https://github.com/Chitaoji/textpy/
 AUTHOR: Chitaoji
 AUTHOR_EMAIL: 2360742040@qq.com
-REQUIRES_PYTHON: ">=3.8.13"
+REQUIRES_PYTHON: ">=3.12.7"
 REQUIRES: 
-  - lazyr>=0.0.16
-  - hintwith>=0.1.3
+  - lazyr
+  - hintwith
   - typing-extensions
   - black
   - colorama

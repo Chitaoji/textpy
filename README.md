@@ -186,9 +186,10 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
-### v0.1.33
+### v0.2.1
 * New module-level functions `tx.file()` and `tx.fromstr()`.
 * Removed the deprecated function `tx.textpy()`.
+* After this version, the required Python version is updated to >=3.12.7. Download and install v0.1.32 if the user is under lower Python version (>=3.8.13).
 
 ### v0.1.32
 * Added `dist` in `DEFAULT_IGNORED_PATHS`.
