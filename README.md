@@ -187,7 +187,8 @@ This project falls under the BSD 3-Clause License.
 
 ## History
 ### v0.1.33
-* New function `tx.file()` and `tx.fromstr()`.
+* New module-level functions `tx.file()` and `tx.fromstr()`.
+* Removed the deprecated function `tx.textpy()`.
 
 ### v0.1.32
 * Added `dist` in `DEFAULT_IGNORED_PATHS`.
@@ -246,7 +247,7 @@ This project falls under the BSD 3-Clause License.
 * Various improvements.
 
 ### v0.1.22
-* The module-level function `textpy()` is going to be deprecated to avoid conflicts with the package name `textpy`. Please use `tx.module()` insead.
+* The module-level function `tx.textpy()` is going to be deprecated to avoid conflicts with the package name `textpy`. Please use `tx.module()` insead.
 * New methods `PyText.replace()` and `PyText.delete()`.
 * New class `Replacer` as the return type of `PyText.replace()`, with public methods `.confirm()`, `.rollback()`, etc.
 * Added a dunder method `PyText.__truediv__()` as an alternative to `PyText.jumpto()`.
