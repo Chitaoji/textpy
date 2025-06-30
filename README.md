@@ -186,6 +186,9 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.1.33
+* New function `tx.file()` and `tx.fromstr()`.
+
 ### v0.1.32
 * Added `dist` in `DEFAULT_IGNORED_PATHS`.
 
@@ -193,12 +196,12 @@ This project falls under the BSD 3-Clause License.
 * Got ANSI escapes to work on Windows.
 
 ### v0.1.30
-* New optional paramter `include=` for `module()`.
+* New optional paramter `include=` for `tx.module()`.
 * Renamed `tx.PyText` to `tx.TextTree`; the name `PyText` will be deprecated.
 
 ### v0.1.29
 * Updated `PyText.check_format()`, which now returns a boolean value instead of None.
-* Updated the `ignore=` parameter for `module()`, which now accepts a list of path-patterns. Paths matching any of these patterns will be ignored when searching for files.
+* Updated the `ignore=` parameter for `tx.module()`, which now accepts a list of path-patterns. Paths matching any of these patterns will be ignored when searching for files.
 
 ### v0.1.28
 * Fixed issue: failed to display special characters in `*._repr_mimebundle_()`.
@@ -243,7 +246,7 @@ This project falls under the BSD 3-Clause License.
 * Various improvements.
 
 ### v0.1.22
-* The module-level function `textpy()` is going to be deprecated to avoid conflicts with the package name `textpy`. Please use `module()` insead.
+* The module-level function `textpy()` is going to be deprecated to avoid conflicts with the package name `textpy`. Please use `tx.module()` insead.
 * New methods `PyText.replace()` and `PyText.delete()`.
 * New class `Replacer` as the return type of `PyText.replace()`, with public methods `.confirm()`, `.rollback()`, etc.
 * Added a dunder method `PyText.__truediv__()` as an alternative to `PyText.jumpto()`.

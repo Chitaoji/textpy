@@ -5,7 +5,7 @@ NOTE: this module is not intended to be imported at runtime.
 
 """
 
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Union
 
 import loggings
 
@@ -23,13 +23,3 @@ loggings.warning("this module is not intended to be imported at runtime")
 HistoryField = Literal["where", "frm", "name", "as_name", "type_check_only"]
 HistoryGroups = Dict[Any, Union["HistoryGroups", List["ImportHistory"]]]
 PyModule = PyDir | PyFile
-
-
-# pylint: disable=unused-argument
-def _defaults(
-    whole_word: bool = False,
-    dotall: bool = False,
-    case_sensitive: bool = True,
-    regex: bool = True,
-    based_on: Optional["Replacer"] = None,
-) -> None: ...

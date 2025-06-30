@@ -136,6 +136,7 @@ class FindTextResult:
     def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
         if display_params.use_mimebundle:
             return {"text/html": self.to_html()}
+        return None
 
     def __bool__(self) -> bool:
         return bool(self.res)

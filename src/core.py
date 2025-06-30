@@ -8,18 +8,16 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from colorama import just_fix_windows_console
 
-from .abc import P, as_path
+from .abc import as_path
 from .texttree import PyDir, PyFile
 
 if TYPE_CHECKING:
-    from ._typing import _defaults
     from .abc import TextTree
-else:
-    _defaults = ...  # pylint: disable=invalid-name
+
 
 __all__ = ["module", "file", "fromstr", "DEFAULT_IGNORED_PATHS"]
 
@@ -30,13 +28,12 @@ just_fix_windows_console()
 
 def module(
     path_or_str: Union[Path, str],
+    /,
     home: Optional[Union[Path, str]] = None,
     encoding: Optional[str] = None,
     ignore: Optional[List[str]] = None,
     include: Optional[List[str]] = None,
-    *,
-    _: Callable[P, None] = _defaults,
-) -> "TextTree[P]":
+) -> "TextTree":
     """
     Statically analyzes a python file or a python module. Each python file
     is recommended to be formatted with `PEP-8`, otherwise the analyzing
@@ -96,11 +93,10 @@ def module(
 
 def file(
     path_or_str: Union[Path, str],
+    /,
     home: Optional[Union[Path, str]] = None,
     encoding: Optional[str] = None,
-    *,
-    _: Callable[P, None] = _defaults,
-) -> "TextTree[P]":
+) -> "TextTree":
     """
     Statically analyzes a python file. The file is recommended to be
     formatted with `PEP-8`, otherwise the analyzing result could be
@@ -151,9 +147,7 @@ def file(
     raise IsADirectoryError(f"is a directory: '{path}'")
 
 
-def fromstr(
-    string: Union[Path, str], *, _: Callable[P, None] = _defaults
-) -> "TextTree[P]":
+def fromstr(string: Union[Path, str], /) -> "TextTree":
     """
     Statically analyzes a python file from string. The file is
     recommended to be formatted with `PEP-8`, otherwise the analyzing

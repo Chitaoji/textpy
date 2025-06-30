@@ -11,10 +11,10 @@ import re
 from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Union, overload
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import black
-from typing_extensions import ParamSpec, Self, deprecated
+from typing_extensions import Self
 
 from .imports import Imports
 from .interaction import (
@@ -38,10 +38,7 @@ if TYPE_CHECKING:
 __all__ = ["TextTree", "PyText", "Docstring"]
 
 
-P = ParamSpec("P")
-
-
-class TextTree(ABC, Generic[P]):
+class TextTree(ABC):
     """
     Could store the text tree of a python module, file, function, class,
     method or non-python file.
@@ -329,12 +326,16 @@ class TextTree(ABC, Generic[P]):
             return False
         return True
 
-    @overload
     def findall(
-        self, pattern: "PatternType", /, *_: P.args, **kwargs: P.kwargs
-    ) -> FindTextResult: ...
-    def findall(
-        self, pattern, *, based_on: Replacer = None, **kwargs
+        self,
+        pattern,
+        /,
+        *,
+        whole_word: bool = False,
+        dotall: bool = False,
+        case_sensitive: bool = True,
+        regex: bool = True,
+        based_on: Optional[Replacer] = None,
     ) -> FindTextResult:
         """
         Finds all non-overlapping matches of `pattern`.
@@ -361,7 +362,9 @@ class TextTree(ABC, Generic[P]):
             Searching result.
 
         """
-        pattern = self.__pattern_trans(pattern, **kwargs)
+        pattern = self.__pattern_trans(
+            pattern, whole_word, dotall, case_sensitive, regex
+        )
         res = FindTextResult()
         if based_on and self.is_file():
             latest = self
@@ -382,24 +385,18 @@ class TextTree(ABC, Generic[P]):
                 res.join(c.findall(pattern, based_on=based_on))
         return res
 
-    @overload
-    def replace(
-        self,
-        pattern: "PatternType",
-        repl: "ReplType",
-        overwrite: bool = True,
-        /,
-        *_: P.args,
-        **kwargs: P.kwargs,
-    ) -> "Replacer": ...
     def replace(
         self,
         pattern,
         repl,
-        overwrite=True,
+        /,
         *,
+        overwrite=True,
+        whole_word: bool = False,
+        dotall: bool = False,
+        case_sensitive: bool = True,
+        regex: bool = True,
         based_on: Optional[Replacer] = None,
-        **kwargs,
     ) -> "Replacer":
         """
         Finds all non-overlapping matches of `pattern`, and replace them with
@@ -436,7 +433,9 @@ class TextTree(ABC, Generic[P]):
             Text replacer.
 
         """
-        pattern = self.__pattern_trans(pattern, **kwargs)
+        pattern = self.__pattern_trans(
+            pattern, whole_word, dotall, case_sensitive, regex
+        )
         replacer = Replacer()
         if self.path.suffix == ".py":
             old = None
@@ -454,23 +453,28 @@ class TextTree(ABC, Generic[P]):
                     c.replace(
                         pattern,
                         repl,
-                        overwrite,
+                        overwrite=overwrite,
+                        whole_word=whole_word,
+                        dotall=dotall,
+                        case_sensitive=case_sensitive,
+                        regex=regex,
                         based_on=based_on,
-                        **kwargs,
                     )
                 )
         return replacer
 
-    @overload
     def delete(
         self,
-        pattern: "PatternType",
-        overwrite: bool = True,
+        pattern,
         /,
-        *_: P.args,
-        **kwargs: P.kwargs,
-    ) -> "Replacer": ...
-    def delete(self, pattern, overwrite=True, *, based_on=None, **kwargs) -> "Replacer":
+        *,
+        overwrite=True,
+        whole_word: bool = False,
+        dotall: bool = False,
+        case_sensitive: bool = True,
+        regex: bool = True,
+        based_on: Optional[Replacer] = None,
+    ) -> "Replacer":
         """
         An alternative to `.replace(pattern, "", *args, **kwargs)`
 
@@ -499,7 +503,16 @@ class TextTree(ABC, Generic[P]):
             Text replacer.
 
         """
-        return self.replace(pattern, "", overwrite, based_on=based_on, **kwargs)
+        return self.replace(
+            pattern,
+            "",
+            overwrite=overwrite,
+            whole_word=whole_word,
+            dotall=dotall,
+            case_sensitive=case_sensitive,
+            regex=regex,
+            based_on=based_on,
+        )
 
     @cached_property
     def imports(self) -> Imports:
@@ -683,9 +696,3 @@ def as_path(path_or_str: Union[Path, str], home: Union[Path, str, None] = None) 
 def black_format(string: str) -> str:
     """Reformat a string using Black and return new contents."""
     return black.format_str(string, mode=black.FileMode())
-
-
-PyText = deprecated(
-    "tx.PyText is deprecated and will be removed in a future version "
-    "- use tx.TextTree instead"
-)(TextTree)
