@@ -68,7 +68,6 @@ If you are using a jupyter notebook, you can run a cell like this:
 >>> myfile.findall("MyBook")
 ```
 
-<!--html-->
 <table class="textpy-table-classic">
 <thead>
 <tr>
@@ -91,7 +90,6 @@ If you are using a jupyter notebook, you can run a cell like this:
 </tr>
 </tbody>
 </table>
-<!--/html-->
 
 In this case, the matched substrings are **clickable**, linking to where the patterns were found.
 
