@@ -12,6 +12,7 @@ REQUIRES:
   - typing-extensions
   - black
   - colorama
+  - htmlmaster
 EXTRAS:
   test:
     - pandas>=1.4.0

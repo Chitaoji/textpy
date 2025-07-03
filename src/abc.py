@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 import black
+from htmlmaster import HTMLTreeMaker
 from typing_extensions import Self
 
 from .imports import Imports
@@ -107,9 +108,10 @@ class TextTree(ABC):
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}({self.absname!r})"
 
-    def _repr_mimebundle_(self, *_, **__) -> Optional[dict[str, Any]]:
+    def _repr_mimebundle_(self, *_, **__) -> Optional[dict[str, str]]:
         if display_params.use_mimebundle:
-            return {"text/html": self.to_html()}
+            return {"text/html": self.to_html().make()}
+        return None
 
     def __truediv__(self, __value: "str") -> "TextTree":
         return self.jumpto(__value)
@@ -135,8 +137,8 @@ class TextTree(ABC):
     def __ge__(self, __other: Self) -> bool:
         return self.abspath >= __other.abspath
 
-    def to_html(self) -> str:
-        """Return an HTML text for representing self."""
+    def to_html(self) -> HTMLTreeMaker:
+        """Return an HTMLTreeMaker object for representing self."""
         return make_html_tree(self)
 
     @cached_property

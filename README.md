@@ -92,7 +92,7 @@ If you are using a jupyter notebook, you can run a cell like this:
 </table>
 <!--/html-->
 
-Note that in the jupyter notebook case, the matched substrings are **clickable**, linking to where the patterns were found.
+In this case, the matched substrings are **clickable**, linking to where the patterns were found.
 
 ## Usage
 ### tx.module()

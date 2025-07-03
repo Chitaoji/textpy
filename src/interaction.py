@@ -14,8 +14,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Literal, Optional, get_args
 
 import pandas as pd
+from htmlmaster import HTMLTableMaker, HTMLTreeMaker
 from typing_extensions import Self
 
+from .css import TABLE_CSS_STYLE, TREE_CSS_STYLE
 from .re_extensions import smart_finditer, smart_split, smart_sub
 from .utils.validator import SimpleValidator
 
@@ -123,9 +125,9 @@ class FindTextResult:
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
 
-    def _repr_mimebundle_(self, *_, **__) -> Optional[dict[str, Any]]:
+    def _repr_mimebundle_(self, *_, **__) -> Optional[dict[str, str]]:
         if display_params.use_mimebundle:
-            return {"text/html": self.to_html()}
+            return {"text/html": self.to_html().make()}
         return None
 
     def __bool__(self) -> bool:
@@ -212,10 +214,19 @@ class FindTextResult:
             ]
         )
 
-    def to_html(self) -> str:
+    def to_html(self) -> HTMLTableMaker:
         """Return an HTML text for representing self."""
+        tclass = (
+            "textpy-table-classic"
+            if display_params.table_style == "classic"
+            else "textpy-table-plain"
+        )
+        style = TABLE_CSS_STYLE if display_params.table_style == "classic" else ""
         html_maker = HTMLTableMaker(
-            index=range(len(self.res)), columns=["source", "match"]
+            index=range(len(self.res)),
+            columns=["source", "match"],
+            maincls=tclass,
+            style=style,
         )
         for i, res in enumerate(sorted(self.res)):
             t, p, n, _line = res.astuple()
@@ -231,7 +242,7 @@ class FindTextResult:
             for j, x in enumerate(smart_finditer(p, _line)):
                 text += make_plain_text(splits[j]) + self.stylfunc(res, x)
             html_maker[i, 1] = text + make_plain_text(splits[-1])
-        return html_maker.make()
+        return html_maker
 
     @staticmethod
     def __default_repr(_: TextFinding, m: "Match[str]", /) -> str:
@@ -261,67 +272,6 @@ class FindTextResult:
                 bg_color=get_bg_colors()[0],
             )
         )
-
-
-@dataclass
-class HTMLTableMaker:
-    """
-    Make an HTML table.
-
-    Parameters
-    ----------
-    index : list
-        Table index.
-    columns : list
-        Table columns.
-
-    """
-
-    index: list
-    columns: list
-
-    def __post_init__(self):
-        self.data = [
-            ["" for _ in range(len(self.columns))] for _ in range(len(self.index))
-        ]
-
-    def __getitem__(self, __key: tuple[int, int]) -> str:
-        return self.data[__key[0]][__key[1]]
-
-    def __setitem__(self, __key: tuple[int, int], __value: str) -> None:
-        self.data[__key[0]][__key[1]] = __value
-
-    def make(self) -> str:
-        """Make a string of the HTML table."""
-        tclass = display_params.table_style
-        if tclass == "classic":
-            tstyle = """<style type="text/css">
-.textpy-table-classic th {
-  text-align: center;
-}
-.textpy-table-classic td {
-  text-align: left;
-}
-</style>
-<table class="textpy-table-classic">"""
-        else:
-            tstyle = "<table>"
-        thead = "\n      ".join(f"<th>{x}</th>" for x in self.columns)
-        rows = []
-        for x in self.data:
-            row = "</td>\n      <td>".join(x)
-            rows.append("    <tr>\n      <td>" + row + "</td>\n    </tr>\n")
-        tbody = "".join(rows)
-        return f"""{tstyle}
-  <thead>
-    <tr>
-      {thead}
-    </tr>
-  </thead>
-  <tbody>
-{tbody}  </tbody>
-</table>
-"""
 
 
 class FileEditor:
@@ -458,12 +408,13 @@ class Replacer:
 
     def _repr_mimebundle_(self, *_, **__) -> Optional[dict[str, str]]:
         if display_params.use_mimebundle:
-            return {"text/html": self.to_html()}
+            return {"text/html": self.to_html().make()}
+        return None
 
     def __bool__(self) -> bool:
         return bool(self.editors)
 
-    def to_html(self) -> str:
+    def to_html(self) -> HTMLTableMaker:
         """Return an HTML text for representing self."""
         return self.__find_text_result.to_html()
 
@@ -606,7 +557,7 @@ class Replacer:
         return res
 
 
-def make_html_tree(tree: "TextTree") -> str:
+def make_html_tree(tree: "TextTree") -> HTMLTreeMaker:
     """
     Make an HTML tree.
 
@@ -621,134 +572,41 @@ def make_html_tree(tree: "TextTree") -> str:
         Html string.
 
     """
+    maker = __make_node(tree)
     if display_params.tree_style == "plain":
-        tstyle = "<ul>"
+        maker.set_maincls("textpy-tree-plain")
     else:
-        tstyle = """<style type="text/css">
-.textpy-tree-vertical,
-.textpy-tree-vertical ul.m,
-.textpy-tree-vertical li.m {
-    margin: 0;
-    padding: 0;
-    position: relative;
-}
-.textpy-tree-vertical {
-    margin: 0 0 1em;
-    text-align: center;
-}
-.textpy-tree-vertical,
-.textpy-tree-vertical ul.m {
-    display: table;
-}
-.textpy-tree-vertical ul.m {
-    width: 100%;
-}
-.textpy-tree-vertical li.m {
-    display: table-cell;
-    padding: .5em 0;
-    vertical-align: top;
-}
-.textpy-tree-vertical ul.s,
-.textpy-tree-vertical li.s {
-    text-align: left;
-}
-.textpy-tree-vertical li.m:before {
-    outline: solid 1px #666;
-    content: "";
-    left: 0;
-    position: absolute;
-    right: 0;
-    top: 0;
-}
-.textpy-tree-vertical li.m:first-child:before {
-    left: 50%;
-}
-.textpy-tree-vertical li.m:last-child:before {
-    right: 50%;
-}
-.textpy-tree-vertical li.m>details>summary,
-.textpy-tree-vertical li.m>span {
-    border: solid .1em #666;
-    border-radius: .2em;
-    display: inline-block;
-    margin: 0 .2em .5em;
-    padding: .2em .5em;
-    position: relative;
-}
-.textpy-tree-vertical li>details>summary { 
-    white-space: nowrap;
-}
-.textpy-tree-vertical li.m>details>summary {
-    cursor: pointer;
-}
-.textpy-tree-vertical li.m>details>summary>span.open,
-.textpy-tree-vertical li.m>details[open]>summary>span.closed {
-    display: none;
-}
-.textpy-tree-vertical li.m>details[open]>summary>span.open {
-    display: inline;
-}
-.textpy-tree-vertical ul.m:before,
-.textpy-tree-vertical li.m>details>summary:before,
-.textpy-tree-vertical li.m>span:before {
-    outline: solid 1px #666;
-    content: "";
-    height: .5em;
-    left: 50%;
-    position: absolute;
-}
-.textpy-tree-vertical ul.m:before {
-    top: -.5em;
-}
-.textpy-tree-vertical li.m>details>summary:before,
-.textpy-tree-vertical li.m>span:before {
-    top: -.56em;
-    height: .45em;
-}
-.textpy-tree-vertical>li.m {
-    margin-top: 0;
-}
-.textpy-tree-vertical>li.m:before,
-.textpy-tree-vertical>li.m:after,
-.textpy-tree-vertical>li.m>details>summary:before,
-.textpy-tree-vertical>li.m>span:before {
-    outline: none;
-}
-</style>
-<ul class="textpy-tree-vertical">"""
-    return f"{tstyle}\n{__get_li(tree)}\n</ul>"
+        maker.set_maincls("textpy-tree-vertical")
+        maker.setstyle(TREE_CSS_STYLE)
+    return maker
 
 
-def __get_li(tree: "TextTree", main: bool = True) -> str:
+def __make_node(tree: "TextTree", main: bool = True) -> HTMLTreeMaker:
     triangle = (
         ""
         if display_params.tree_style == "plain"
         else '<span class="open">▼ </span><span class="closed">▶ </span>'
     )
     if tree.is_dir() and tree.children:
-        tchidren = "\n".join(__get_li(x) for x in tree.children)
-        return (
-            f'<li class="m"><details><summary>{triangle}{make_plain_text(tree.name)}'
-            f'</summary>\n<ul class="m">\n{tchidren}\n</ul>\n</details></li>'
-        )
+        maker = HTMLTreeMaker(f"{triangle}{make_plain_text(tree.name)}", level_open=0)
+        for x in tree.children:
+            maker.add(__make_node(x))
+        return maker
 
     li_class = "m" if main else "s"
     ul_class = "m" if display_params.tree_style == "vertical" else "s"
     triangle = triangle if main else ""
     if tree.children:
-        tchidren = "\n".join(
-            __get_li(x, main=ul_class == "m")
-            for x in tree.children
-            if x.name != NULL and __is_public(x.name)
-        )
-        if tchidren:
+        maker = HTMLTreeMaker(licls=li_class, ulcls=ul_class, level_open=0)
+        for x in tree.children:
+            if x.name != NULL and __is_public(x.name):
+                maker.add(__make_node(x, main=ul_class == "m"))
+        if maker.has_child():
             name = make_plain_text(tree.name) + (".py" if tree.is_file() else "")
-            return (
-                f'<li class="{li_class}"><details><summary>{triangle}{name}</summary>'
-                f'\n<ul class="{ul_class}">\n{tchidren}\n</ul>\n</details></li>'
-            )
+            maker.setval(f"{triangle}{name}")
+            return maker
     name = make_plain_text(tree.name) + (".py" if tree.is_file() else "")
-    return f'<li class="{li_class}"><span>{name}</span></li>'
+    return HTMLTreeMaker(name, li_class, level_open=0)
 
 
 def make_ahref(
