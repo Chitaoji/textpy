@@ -65,30 +65,31 @@ examples/myfile.py:30: '    book : <MyBook>'
 ```
 If you are using a jupyter notebook, you can run a cell like this:
 ```py
->>> myfile.findall("content")
+>>> myfile.findall("MyBook")
 ```
+
 <!--html-->
-<table id="T_19b39">
-  <thead>
-    <tr>
-      <th id="T_19b39_level0_col0" class="col_heading level0 col0" >source</th>
-      <th id="T_19b39_level0_col1" class="col_heading level0 col1" >match</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td id="T_19b39_row0_col0" class="data row0 col0" ><a href='examples/myfile.py#L7' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py#L7' style='text-decoration:none;color:inherit'>MyBook</a>:<a href='examples/myfile.py#L7' style='text-decoration:none;color:inherit'>7</a></td>
-      <td id="T_19b39_row0_col1" class="data row0 col1" >class <a href='examples/myfile.py#L7' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a>:</td>
-    </tr>
-    <tr>
-      <td id="T_19b39_row1_col0" class="data row1 col0" ><a href='examples/myfile.py#L24' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py#L24' style='text-decoration:none;color:inherit'>print_my_book()</a>:<a href='examples/myfile.py#L24' style='text-decoration:none;color:inherit'>24</a></td>
-      <td id="T_19b39_row1_col1" class="data row1 col1" >def print_my_book(book: <a href='examples/myfile.py#L24' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a>) -> None:</td>
-    </tr>
-    <tr>
-      <td id="T_19b39_row2_col0" class="data row2 col0" ><a href='examples/myfile.py#L30' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py#L30' style='text-decoration:none;color:inherit'>print_my_book()</a>:<a href='examples/myfile.py#L30' style='text-decoration:none;color:inherit'>30</a></td>
-      <td id="T_19b39_row2_col1" class="data row2 col1" >    book : <a href='examples/myfile.py#L30' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a></td>
-    </tr>
-  </tbody>
+<table class="textpy-table-classic">
+<thead>
+<tr>
+<th>source</th>
+<th>match</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="examples\myfile.py#L1" style="text-decoration:none;color:inherit">myfile</a>.<a href="examples\myfile.py#L7" style="text-decoration:none;color:inherit">MyBook</a>:<a href="examples\myfile.py#L7" style="text-decoration:none;color:inherit">7</a></td>
+<td>class <a href="examples\myfile.py#L7" style="text-decoration:none;color:#cccccc;background-color:#505050">MyBook</a>:</td>
+</tr>
+<tr>
+<td><a href="examples\myfile.py#L1" style="text-decoration:none;color:inherit">myfile</a>.<a href="examples\myfile.py#L24" style="text-decoration:none;color:inherit">print_my_book()</a>:<a href="examples\myfile.py#L24" style="text-decoration:none;color:inherit">24</a></td>
+<td>def print_my_book(book: <a href="examples\myfile.py#L24" style="text-decoration:none;color:#cccccc;background-color:#505050">MyBook</a>) -&gt; None:</td>
+</tr>
+<tr>
+<td><a href="examples\myfile.py#L1" style="text-decoration:none;color:inherit">myfile</a>.<a href="examples\myfile.py#L24" style="text-decoration:none;color:inherit">print_my_book()</a>:<a href="examples\myfile.py#L30" style="text-decoration:none;color:inherit">30</a></td>
+<td>    book : <a href="examples\myfile.py#L30" style="text-decoration:none;color:#cccccc;background-color:#505050">MyBook</a></td>
+</tr>
+</tbody>
 </table>
 <!--/html-->
 
