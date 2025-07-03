@@ -8,10 +8,12 @@ $ pip install textpy
 
 ## Requirements
 ```txt
-lazyr>=0.0.16
-hintwith>=0.1.3
+lazyr
+hintwith
 typing-extensions
 black
+colorama
+htmlmaster
 ```
 **NOTE:** *pandas*>=1.4.0 is recommended but not necessary.
 
@@ -77,16 +79,16 @@ If you are using a jupyter notebook, you can run a cell like this:
 </thead>
 <tbody>
 <tr>
-<td><a href="examples\myfile.py#L1" style="text-decoration:none;color:inherit">myfile</a>.<a href="examples\myfile.py#L7" style="text-decoration:none;color:inherit">MyBook</a>:<a href="examples\myfile.py#L7" style="text-decoration:none;color:inherit">7</a></td>
-<td>class <a href="examples\myfile.py#L7" style="text-decoration:none;color:#cccccc;background-color:#505050">MyBook</a>:</td>
+<td><a href="examples/myfile.py#L1" style="text-decoration:none;color:inherit">myfile</a>.<a href="examples/myfile.py#L7" style="text-decoration:none;color:inherit">MyBook</a>:<a href="examples/myfile.py#L7" style="text-decoration:none;color:inherit">7</a></td>
+<td>class <a href="examples/myfile.py#L7" style="text-decoration:none;color:#cccccc;background-color:#505050">MyBook</a>:</td>
 </tr>
 <tr>
-<td><a href="examples\myfile.py#L1" style="text-decoration:none;color:inherit">myfile</a>.<a href="examples\myfile.py#L24" style="text-decoration:none;color:inherit">print_my_book()</a>:<a href="examples\myfile.py#L24" style="text-decoration:none;color:inherit">24</a></td>
-<td>def print_my_book(book: <a href="examples\myfile.py#L24" style="text-decoration:none;color:#cccccc;background-color:#505050">MyBook</a>) -&gt; None:</td>
+<td><a href="examples/myfile.py#L1" style="text-decoration:none;color:inherit">myfile</a>.<a href="examples/myfile.py#L24" style="text-decoration:none;color:inherit">print_my_book()</a>:<a href="examples/myfile.py#L24" style="text-decoration:none;color:inherit">24</a></td>
+<td>def print_my_book(book: <a href="examples/myfile.py#L24" style="text-decoration:none;color:#cccccc;background-color:#505050">MyBook</a>) -&gt; None:</td>
 </tr>
 <tr>
-<td><a href="examples\myfile.py#L1" style="text-decoration:none;color:inherit">myfile</a>.<a href="examples\myfile.py#L24" style="text-decoration:none;color:inherit">print_my_book()</a>:<a href="examples\myfile.py#L30" style="text-decoration:none;color:inherit">30</a></td>
-<td>    book : <a href="examples\myfile.py#L30" style="text-decoration:none;color:#cccccc;background-color:#505050">MyBook</a></td>
+<td><a href="examples/myfile.py#L1" style="text-decoration:none;color:inherit">myfile</a>.<a href="examples/myfile.py#L24" style="text-decoration:none;color:inherit">print_my_book()</a>:<a href="examples/myfile.py#L30" style="text-decoration:none;color:inherit">30</a></td>
+<td>    book : <a href="examples/myfile.py#L30" style="text-decoration:none;color:#cccccc;background-color:#505050">MyBook</a></td>
 </tr>
 </tbody>
 </table>
