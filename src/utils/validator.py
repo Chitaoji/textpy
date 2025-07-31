@@ -1,6 +1,6 @@
 """Simple validator."""
 
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Union
 
 
 class SimpleValidator:
