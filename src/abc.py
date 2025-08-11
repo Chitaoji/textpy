@@ -519,7 +519,7 @@ class TextTree(ABC):
         dotall: bool = False,
         case_sensitive: bool = True,
         regex: bool = True,
-    ) -> Union["Pattern[str]", SmartPattern[str]]:
+    ) -> Union["Pattern[str]", SmartPattern]:
         if isinstance(pattern, re.Pattern):
             p, f = pattern.pattern, pattern.flags
         elif isinstance(pattern, SmartPattern):
@@ -539,27 +539,20 @@ class TextTree(ABC):
         if dotall:
             f = f | re.DOTALL
         if isinstance(pattern, SmartPattern):
-            return SmartPattern(
-                p, flags=f, ignore=pattern.ignore, ignore_mark=pattern.ignore_mark
-            )
+            return SmartPattern(p, flags=f)
         return re.compile(p, flags=f)
 
     @staticmethod
     def __pattern_expand(
-        pattern: Union["Pattern[str]", SmartPattern[str]],
-    ) -> Union["Pattern[str]", SmartPattern[str]]:
+        pattern: Union["Pattern", SmartPattern],
+    ) -> Union["Pattern", SmartPattern]:
         if pattern.flags & re.DOTALL:
             new_pattern = "[^\n]*" + pattern.pattern + "[^\n]*"
         else:
             new_pattern = ".*" + pattern.pattern + ".*"
         if isinstance(pattern, re.Pattern):
             return re.compile(new_pattern, flags=pattern.flags)
-        return SmartPattern(
-            new_pattern,
-            flags=pattern.flags,
-            ignore=pattern.ignore,
-            ignore_mark=pattern.ignore_mark,
-        )
+        return SmartPattern(new_pattern, flags=pattern.flags)
 
     def jumpto(self, target: str) -> "TextTree":
         """
