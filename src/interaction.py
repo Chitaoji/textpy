@@ -18,7 +18,7 @@ from htmlmaster import HTMLTableMaker, HTMLTreeMaker
 from typing_extensions import Self
 
 from .css import TABLE_CSS_STYLE, TREE_CSS_STYLE
-from .re_extensions import finditer, split, sub
+from .re_extensions import smart
 from .utils.validator import SimpleValidator
 
 if TYPE_CHECKING:
@@ -121,7 +121,7 @@ class FindTextResult:
                 string += f"\n{t.relpath}: "
             else:
                 string += f"\n{t.relpath}:{n}: "
-            new = sub(p, partial(self.reprfunc, res), " " * t.spaces + _line)
+            new = smart.sub(p, partial(self.reprfunc, res), " " * t.spaces + _line)
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
 
@@ -202,9 +202,9 @@ class FindTextResult:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
-            splits = split(p, _line)
+            splits = smart.split(p, _line)
             text = ""
-            for j, x in enumerate(finditer(p, _line)):
+            for j, x in enumerate(smart.finditer(p, _line)):
                 text += make_plain_text(splits[j]) + self.stylfunc(res, x)
             df.iloc[i, 1] = text + make_plain_text(splits[-1])
         return df.style.hide(axis=0).set_table_styles(
@@ -237,9 +237,9 @@ class FindTextResult:
                 html_maker[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
-            splits = split(p, _line)
+            splits = smart.split(p, _line)
             text = ""
-            for j, x in enumerate(finditer(p, _line)):
+            for j, x in enumerate(smart.finditer(p, _line)):
                 text += make_plain_text(splits[j]) + self.stylfunc(res, x)
             html_maker[i, 1] = text + make_plain_text(splits[-1])
         return html_maker
@@ -380,7 +380,7 @@ class FileEditor:
         """
         self.__count = 0
         self.__repl = repl
-        self.new_text = sub(
+        self.new_text = smart.sub(
             pattern,
             self.counted_repl,
             self.based_on.new_text if self.based_on else self.pyfile.text,
