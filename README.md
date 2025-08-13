@@ -9,11 +9,11 @@ $ pip install textpy
 ## Requirements
 ```txt
 lazyr
-hintwith
 typing-extensions
 black
 colorama
 htmlmaster
+re_extensions
 ```
 **NOTE:** *pandas*>=1.4.0 is recommended but not necessary.
 
