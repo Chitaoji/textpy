@@ -190,6 +190,7 @@ This project falls under the BSD 3-Clause License.
 ### v0.2.1
 * New module-level functions `tx.file()` and `tx.fromstr()`.
 * Removed the deprecated function `tx.textpy()`.
+* Removed `utils.re_extensions` as a submodule, related utils are now directly import from the package `re_extensions`. User can use an instance of `re_extensions.SmartPattern` as the pattern for `TextTree.findall()`, `TextTree.replace()`, and `TextTree.delete()`.
 * After this version, the required Python version is updated to >=3.12.7. Download and install v0.1.32 if the user is under lower Python version (>=3.8.13).
 
 ### v0.1.32
@@ -219,7 +220,7 @@ This project falls under the BSD 3-Clause License.
 * Created a utility class `HTMLTableMaker` in place of `Styler`; this significantly reduces the running overhead of `*._repr_mimebundle_()`.
 
 ### v0.1.26
-* Updated `utils.re_extensions`: 
+* Updated with the package `re_extensions`: 
   * bugfix for `rsplit()`;
   * new string operation `quote_collapse()`.
 

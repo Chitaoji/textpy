@@ -536,7 +536,7 @@ class TextTree(ABC):
             p = "\\b" + p + "\\b"
         if dotall:
             f = f | re.DOTALL
-        if isinstance(pattern, SmartPattern):
+        if regex and isinstance(pattern, SmartPattern):
             return SmartPattern(p, flags=f)
         return re.compile(p, flags=f)
 
