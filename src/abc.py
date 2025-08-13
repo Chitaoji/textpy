@@ -527,9 +527,7 @@ class TextTree(ABC):
         elif isinstance(pattern, str):
             p, f = pattern, 0
         else:
-            raise TypeError(
-                f"'pattern' can not be an instance of {p.__class__.__name__!r}"
-            )
+            raise TypeError(f"invalid pattern type: {type(pattern)}")
         if not regex:
             p = re.escape(p)
         if not case_sensitive:
