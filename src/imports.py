@@ -10,9 +10,8 @@ import re
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, NamedTuple, Optional, Union
 
+from re_extensions import quote_collapse
 from typing_extensions import Self
-
-from .re_extensions import quote_collapse
 
 if TYPE_CHECKING:
     from ._typing import HistoryField, HistoryGroups

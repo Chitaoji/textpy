@@ -11,10 +11,11 @@ from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, Union
 
+from re_extensions import counted_strip, line_count, line_count_iter, rsplit
+
 from .abc import TextTree, as_path
 from .doc import NumpyFormatDocstring
 from .interaction import NULL
-from .re_extensions import counted_strip, line_count, line_count_iter, rsplit
 
 if TYPE_CHECKING:
     from .abc import Docstring

@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 
 import black
 from htmlmaster import HTMLTreeMaker
+from re_extensions import SmartPattern, line_findall
 from typing_extensions import Self
 
 from .imports import Imports
@@ -27,7 +28,6 @@ from .interaction import (
     display_params,
     make_html_tree,
 )
-from .re_extensions import SmartPattern, line_findall
 
 if TYPE_CHECKING:
     from re import Pattern

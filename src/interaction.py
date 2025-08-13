@@ -15,10 +15,10 @@ from typing import TYPE_CHECKING, Any, Callable, Literal, Optional, get_args
 
 import pandas as pd
 from htmlmaster import HTMLTableMaker, HTMLTreeMaker
+from re_extensions import smart
 from typing_extensions import Self
 
 from .css import TABLE_CSS_STYLE, TREE_CSS_STYLE
-from .re_extensions import smart
 from .utils.validator import SimpleValidator
 
 if TYPE_CHECKING:

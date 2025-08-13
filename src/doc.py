@@ -9,8 +9,9 @@ NOTE: this module is private. All functions and objects are available in the mai
 import re
 from functools import cached_property
 
+from re_extensions import rsplit
+
 from .abc import Docstring
-from .re_extensions import rsplit
 
 __all__ = ["NumpyFormatDocstring"]
 
