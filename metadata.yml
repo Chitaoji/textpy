@@ -17,8 +17,7 @@ EXTRAS:
   test:
     - pandas>=1.4.0
 SOURCE: src
-SUBMODULES:
-  - src.re_extensions
+SUBMODULES: []
 EXCLUDES:
   - examples
 CLASSIFIERS:
