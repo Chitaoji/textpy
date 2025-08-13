@@ -56,14 +56,48 @@ examples/myfile.py:30: '    book : <MyBook>'
 ```
 If you are using a jupyter notebook, you can run a cell like this:
 ```py
->>> myfile.findall("content")
+>>> myfile.findall("MyBook")
 ```
 
+<table class="textpy-table-classic">
+<thead>
+<tr>
+<th>source</th>
+<th>match</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="examples/myfile.py#L1" style="text-
+decoration:none;color:inherit">myfile</a>.<a href="examples/myfile.py#L7" style="text-
+decoration:none;color:inherit">MyBook</a>:<a href="examples/myfile.py#L7" style="text-
+decoration:none;color:inherit">7</a></td>
+<td>class <a href="examples/myfile.py#L7" style="text-
+decoration:none;color:#cccccc;background-color:#505050">MyBook</a>:</td>
+</tr>
+<tr>
+<td><a href="examples/myfile.py#L1" style="text-
+decoration:none;color:inherit">myfile</a>.<a href="examples/myfile.py#L24" style="text-
+decoration:none;color:inherit">print_my_book()</a>:<a href="examples/myfile.py#L24"
+style="text-decoration:none;color:inherit">24</a></td>
+<td>def print_my_book(book: <a href="examples/myfile.py#L24" style="text-
+decoration:none;color:#cccccc;background-color:#505050">MyBook</a>) -&gt; None:</td>
+</tr>
+<tr>
+<td><a href="examples/myfile.py#L1" style="text-
+decoration:none;color:inherit">myfile</a>.<a href="examples/myfile.py#L24" style="text-
+decoration:none;color:inherit">print_my_book()</a>:<a href="examples/myfile.py#L30"
+style="text-decoration:none;color:inherit">30</a></td>
+<td>    book : <a href="examples/myfile.py#L30" style="text-
+decoration:none;color:#cccccc;background-color:#505050">MyBook</a></td>
+</tr>
+</tbody>
+</table>
 
-Note that in the jupyter notebook case, the matched substrings are **clickable**,
-linking to where the patterns were found.
+In this case, the matched substrings are **clickable**, linking to where the patterns
+were found.
 
-## Examples
+## Usage
 ### tx.module()
 The previous demonstration introduced the core function `tx.module()`. The return value
 of `tx.module()` is a subinstance of the abstract class `tx.TextTree`, which supports
@@ -170,10 +204,10 @@ This project falls under the BSD 3-Clause License.
 
 import lazyr
 
-VERBOSE = 0
+lazyr.VERBOSE = 0
 
-lazyr.register("pandas", verbose=VERBOSE)
-lazyr.register("black", verbose=VERBOSE)
+lazyr.register("pandas")
+lazyr.register("black")
 
 # pylint: disable=wrong-import-position
 from . import abc, core, doc, interaction, texttree, utils

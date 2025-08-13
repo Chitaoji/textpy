@@ -8,10 +8,12 @@ $ pip install textpy
 
 ## Requirements
 ```txt
-lazyr>=0.0.16
-hintwith>=0.1.3
+lazyr
+hintwith
 typing-extensions
 black
+colorama
+htmlmaster
 ```
 **NOTE:** *pandas*>=1.4.0 is recommended but not necessary.
 
@@ -65,36 +67,35 @@ examples/myfile.py:30: '    book : <MyBook>'
 ```
 If you are using a jupyter notebook, you can run a cell like this:
 ```py
->>> myfile.findall("content")
+>>> myfile.findall("MyBook")
 ```
-<!--html-->
-<table id="T_19b39">
-  <thead>
-    <tr>
-      <th id="T_19b39_level0_col0" class="col_heading level0 col0" >source</th>
-      <th id="T_19b39_level0_col1" class="col_heading level0 col1" >match</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td id="T_19b39_row0_col0" class="data row0 col0" ><a href='examples/myfile.py#L7' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py#L7' style='text-decoration:none;color:inherit'>MyBook</a>:<a href='examples/myfile.py#L7' style='text-decoration:none;color:inherit'>7</a></td>
-      <td id="T_19b39_row0_col1" class="data row0 col1" >class <a href='examples/myfile.py#L7' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a>:</td>
-    </tr>
-    <tr>
-      <td id="T_19b39_row1_col0" class="data row1 col0" ><a href='examples/myfile.py#L24' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py#L24' style='text-decoration:none;color:inherit'>print_my_book()</a>:<a href='examples/myfile.py#L24' style='text-decoration:none;color:inherit'>24</a></td>
-      <td id="T_19b39_row1_col1" class="data row1 col1" >def print_my_book(book: <a href='examples/myfile.py#L24' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a>) -> None:</td>
-    </tr>
-    <tr>
-      <td id="T_19b39_row2_col0" class="data row2 col0" ><a href='examples/myfile.py#L30' style='text-decoration:none;color:inherit'>myfile</a>.<a href='examples/myfile.py#L30' style='text-decoration:none;color:inherit'>print_my_book()</a>:<a href='examples/myfile.py#L30' style='text-decoration:none;color:inherit'>30</a></td>
-      <td id="T_19b39_row2_col1" class="data row2 col1" >    book : <a href='examples/myfile.py#L30' style='text-decoration:none;color:#cccccc;background-color:#505050'>MyBook</a></td>
-    </tr>
-  </tbody>
+
+<table class="textpy-table-classic">
+<thead>
+<tr>
+<th>source</th>
+<th>match</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="examples/myfile.py#L1" style="text-decoration:none;color:inherit">myfile</a>.<a href="examples/myfile.py#L7" style="text-decoration:none;color:inherit">MyBook</a>:<a href="examples/myfile.py#L7" style="text-decoration:none;color:inherit">7</a></td>
+<td>class <a href="examples/myfile.py#L7" style="text-decoration:none;color:#cccccc;background-color:#505050">MyBook</a>:</td>
+</tr>
+<tr>
+<td><a href="examples/myfile.py#L1" style="text-decoration:none;color:inherit">myfile</a>.<a href="examples/myfile.py#L24" style="text-decoration:none;color:inherit">print_my_book()</a>:<a href="examples/myfile.py#L24" style="text-decoration:none;color:inherit">24</a></td>
+<td>def print_my_book(book: <a href="examples/myfile.py#L24" style="text-decoration:none;color:#cccccc;background-color:#505050">MyBook</a>) -&gt; None:</td>
+</tr>
+<tr>
+<td><a href="examples/myfile.py#L1" style="text-decoration:none;color:inherit">myfile</a>.<a href="examples/myfile.py#L24" style="text-decoration:none;color:inherit">print_my_book()</a>:<a href="examples/myfile.py#L30" style="text-decoration:none;color:inherit">30</a></td>
+<td>    book : <a href="examples/myfile.py#L30" style="text-decoration:none;color:#cccccc;background-color:#505050">MyBook</a></td>
+</tr>
+</tbody>
 </table>
-<!--/html-->
 
-Note that in the jupyter notebook case, the matched substrings are **clickable**, linking to where the patterns were found.
+In this case, the matched substrings are **clickable**, linking to where the patterns were found.
 
-## Examples
+## Usage
 ### tx.module()
 The previous demonstration introduced the core function `tx.module()`. The return value of `tx.module()` is a subinstance of the abstract class `tx.TextTree`, which supports various text manipulation methods:
 ```py
@@ -186,19 +187,25 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.2.1
+* New module-level functions `tx.file()` and `tx.fromstr()`.
+* Removed the deprecated function `tx.textpy()`.
+* Removed `utils.re_extensions` as a submodule, related utils are now directly import from the package `re_extensions`. User can use an instance of `re_extensions.SmartPattern` as the pattern for `TextTree.findall()`, `TextTree.replace()`, and `TextTree.delete()`.
+* After this version, the required Python version is updated to >=3.12.7. Download and install v0.1.32 if the user is under lower Python version (>=3.8.13).
+
 ### v0.1.32
-* Added `dist` in `DEFAULT_IGNORE_PATHS`.
+* Added `dist` in `DEFAULT_IGNORED_PATHS`.
 
 ### v0.1.31
 * Got ANSI escapes to work on Windows.
 
 ### v0.1.30
-* New optional paramter `include=` for `module()`.
+* New optional paramter `include=` for `tx.module()`.
 * Renamed `tx.PyText` to `tx.TextTree`; the name `PyText` will be deprecated.
 
 ### v0.1.29
 * Updated `PyText.check_format()`, which now returns a boolean value instead of None.
-* Updated the `ignore=` parameter for `module()`, which now accepts a list of path-patterns. Paths matching any of these patterns will be ignored when searching for files.
+* Updated the `ignore=` parameter for `tx.module()`, which now accepts a list of path-patterns. Paths matching any of these patterns will be ignored when searching for files.
 
 ### v0.1.28
 * Fixed issue: failed to display special characters in `*._repr_mimebundle_()`.
@@ -213,7 +220,7 @@ This project falls under the BSD 3-Clause License.
 * Created a utility class `HTMLTableMaker` in place of `Styler`; this significantly reduces the running overhead of `*._repr_mimebundle_()`.
 
 ### v0.1.26
-* Updated `utils.re_extensions`: 
+* Updated with the package `re_extensions`: 
   * bugfix for `rsplit()`;
   * new string operation `quote_collapse()`.
 
@@ -243,7 +250,7 @@ This project falls under the BSD 3-Clause License.
 * Various improvements.
 
 ### v0.1.22
-* The module-level function `textpy()` is going to be deprecated to avoid conflicts with the package name `textpy`. Please use `module()` insead.
+* The module-level function `tx.textpy()` is going to be deprecated to avoid conflicts with the package name `textpy`. Please use `tx.module()` insead.
 * New methods `PyText.replace()` and `PyText.delete()`.
 * New class `Replacer` as the return type of `PyText.replace()`, with public methods `.confirm()`, `.rollback()`, etc.
 * Added a dunder method `PyText.__truediv__()` as an alternative to `PyText.jumpto()`.

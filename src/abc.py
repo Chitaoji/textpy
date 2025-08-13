@@ -11,10 +11,12 @@ import re
 from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Union, overload
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import black
-from typing_extensions import ParamSpec, Self, deprecated
+from htmlmaster import HTMLTreeMaker
+from re_extensions import SmartPattern, line_findall
+from typing_extensions import Self
 
 from .imports import Imports
 from .interaction import (
@@ -26,7 +28,6 @@ from .interaction import (
     display_params,
     make_html_tree,
 )
-from .re_extensions import SmartPattern, line_findall
 
 if TYPE_CHECKING:
     from re import Pattern
@@ -35,47 +36,44 @@ if TYPE_CHECKING:
     from .texttree import PyContent
 
 
-__all__ = ["TextTree", "PyText", "Docstring"]
+__all__ = ["TextTree", "Docstring"]
 
 
-P = ParamSpec("P")
-
-
-class TextTree(ABC, Generic[P]):
+class TextTree(ABC):
     """
     Could store the text tree of a python module, file, function, class,
     method or non-python file.
 
     Parameters
     ----------
-    path_or_text : Union[Path, str]
+    path_or_str : Union[Path, str]
         File path, module path or file text.
     parent : TextTree, optional
         Parent node (if exists), by default None.
     start_line : int, optional
         Starting line number, by default None.
     home : Union[Path, str, None], optional
-        Specifies the home path; only takes effect when `path_or_text` is
+        Specifies the home path; only takes effect when `path_or_str` is
         relative; by default None.
     encoding : str, optional
         Specifies encoding, by default None.
-    ignore : List[str], optional
+    ignore : list[str], optional
         Subpaths to ignore, by default `DEFAULT_IGNORE_PATHS`.
-    include : List[str], optional
+    include : list[str], optional
         Non-python files to include, by default None.
 
     """
 
     def __init__(
         self,
-        path_or_text: Union[Path, str],
+        path_or_str: Union[Path, str],
         *,
         parent: Optional["TextTree"] = None,
         start_line: Optional[int] = None,
         home: Union[Path, str, None] = None,
         encoding: Optional[str] = None,
-        ignore: Optional[List[str]] = None,
-        include: Optional[List[str]] = None,
+        ignore: Optional[list[str]] = None,
+        include: Optional[list[str]] = None,
         mask: Optional[Self] = None,
     ) -> None:
         self.text: str = ""
@@ -99,7 +97,7 @@ class TextTree(ABC, Generic[P]):
             self.encoding = parent.encoding
 
         self._header: Optional[Any] = None
-        self.__texttree_post_init__(path_or_text)
+        self.__texttree_post_init__(path_or_str)
 
         if mask:
             self.path = mask.path
@@ -110,21 +108,22 @@ class TextTree(ABC, Generic[P]):
     def __repr__(self) -> None:
         return f"{self.__class__.__name__}({self.absname!r})"
 
-    def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
+    def _repr_mimebundle_(self, *_, **__) -> Optional[dict[str, str]]:
         if display_params.use_mimebundle:
-            return {"text/html": self.to_html()}
+            return {"text/html": self.to_html().make()}
+        return None
 
     def __truediv__(self, __value: "str") -> "TextTree":
         return self.jumpto(__value)
 
     @abstractmethod
-    def __texttree_post_init__(self, path_or_text: Union[Path, str]) -> None:
+    def __texttree_post_init__(self, path_or_str: Union[Path, str]) -> None:
         """
         Post init.
 
         Parameters
         ----------
-        path_or_text : Union[Path, str]
+        path_or_str : Union[Path, str]
             File path, module path or file text.
 
         """
@@ -138,8 +137,8 @@ class TextTree(ABC, Generic[P]):
     def __ge__(self, __other: Self) -> bool:
         return self.abspath >= __other.abspath
 
-    def to_html(self) -> str:
-        """Return an html string for representation."""
+    def to_html(self) -> HTMLTreeMaker:
+        """Return an HTMLTreeMaker object for representing self."""
         return make_html_tree(self)
 
     @cached_property
@@ -169,20 +168,20 @@ class TextTree(ABC, Generic[P]):
         """
 
     @cached_property
-    def children(self) -> List["TextTree"]:
+    def children(self) -> list["TextTree"]:
         """
         Children nodes.
 
         Returns
         -------
-        List[TextTree]
+        list[TextTree]
             List of the children nodes.
 
         """
         return []
 
     @cached_property
-    def children_names(self) -> List[str]:
+    def children_names(self) -> list[str]:
         """
         Children names.
 
@@ -190,14 +189,14 @@ class TextTree(ABC, Generic[P]):
 
         Returns
         -------
-        List[str]
+        list[str]
             List of the children nodes' names.
 
         """
         return [x.name for x in self.children]
 
     @cached_property
-    def children_dict(self) -> Dict[str, "TextTree"]:
+    def children_dict(self) -> dict[str, "TextTree"]:
         """
         Dictionary of children nodes.
 
@@ -205,11 +204,11 @@ class TextTree(ABC, Generic[P]):
 
         Returns
         -------
-        Dict[str, TextTree]
+        dict[str, TextTree]
             Dictionary of children nodes.
 
         """
-        children_dict: Dict[str, "TextTree"] = {}
+        children_dict: dict[str, "TextTree"] = {}
         null_cnt: int = 0
         for child, childname in zip(self.children, self.children_names):
             if childname == NULL:
@@ -329,19 +328,23 @@ class TextTree(ABC, Generic[P]):
             return False
         return True
 
-    @overload
     def findall(
-        self, pattern: "PatternType", /, *_: P.args, **kwargs: P.kwargs
-    ) -> FindTextResult: ...
-    def findall(
-        self, pattern, *, based_on: Replacer = None, **kwargs
+        self,
+        pattern: "PatternType",
+        /,
+        *,
+        whole_word: bool = False,
+        dotall: bool = False,
+        case_sensitive: bool = True,
+        regex: bool = True,
+        based_on: Optional[Replacer] = None,
     ) -> FindTextResult:
         """
         Finds all non-overlapping matches of `pattern`.
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str], SmartPattern[str]]
+        pattern : PatternType
             String pattern.
         whole_word : bool, optional
             Whether to match whole words only, by default False.
@@ -361,7 +364,9 @@ class TextTree(ABC, Generic[P]):
             Searching result.
 
         """
-        pattern = self.__pattern_trans(pattern, **kwargs)
+        pattern = self.__pattern_trans(
+            pattern, whole_word, dotall, case_sensitive, regex
+        )
         res = FindTextResult()
         if based_on and self.is_file():
             latest = self
@@ -382,24 +387,18 @@ class TextTree(ABC, Generic[P]):
                 res.join(c.findall(pattern, based_on=based_on))
         return res
 
-    @overload
     def replace(
         self,
         pattern: "PatternType",
         repl: "ReplType",
-        overwrite: bool = True,
         /,
-        *_: P.args,
-        **kwargs: P.kwargs,
-    ) -> "Replacer": ...
-    def replace(
-        self,
-        pattern,
-        repl,
-        overwrite=True,
         *,
+        overwrite: bool = True,
+        whole_word: bool = False,
+        dotall: bool = False,
+        case_sensitive: bool = True,
+        regex: bool = True,
         based_on: Optional[Replacer] = None,
-        **kwargs,
     ) -> "Replacer":
         """
         Finds all non-overlapping matches of `pattern`, and replace them with
@@ -409,7 +408,7 @@ class TextTree(ABC, Generic[P]):
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str], SmartPattern[str]]
+        pattern : PatternType
             String pattern.
         repl : ReplType
             Speficies the string to replace the patterns. If Callable, should
@@ -436,7 +435,9 @@ class TextTree(ABC, Generic[P]):
             Text replacer.
 
         """
-        pattern = self.__pattern_trans(pattern, **kwargs)
+        pattern = self.__pattern_trans(
+            pattern, whole_word, dotall, case_sensitive, regex
+        )
         replacer = Replacer()
         if self.path.suffix == ".py":
             old = None
@@ -451,32 +452,28 @@ class TextTree(ABC, Generic[P]):
         else:
             for c in self.children:
                 replacer.join(
-                    c.replace(
-                        pattern,
-                        repl,
-                        overwrite,
-                        based_on=based_on,
-                        **kwargs,
-                    )
+                    c.replace(pattern, repl, overwrite=overwrite, based_on=based_on)
                 )
         return replacer
 
-    @overload
     def delete(
         self,
         pattern: "PatternType",
-        overwrite: bool = True,
         /,
-        *_: P.args,
-        **kwargs: P.kwargs,
-    ) -> "Replacer": ...
-    def delete(self, pattern, overwrite=True, *, based_on=None, **kwargs) -> "Replacer":
+        *,
+        overwrite: bool = True,
+        whole_word: bool = False,
+        dotall: bool = False,
+        case_sensitive: bool = True,
+        regex: bool = True,
+        based_on: Optional[Replacer] = None,
+    ) -> "Replacer":
         """
         An alternative to `.replace(pattern, "", *args, **kwargs)`
 
         Parameters
         ----------
-        pattern : Union[str, Pattern[str], SmartPattern[str]]
+        pattern : PatternType
             String pattern.
         overwrite : bool, optional
             Determines whether to overwrite the original files. If False, the
@@ -499,7 +496,16 @@ class TextTree(ABC, Generic[P]):
             Text replacer.
 
         """
-        return self.replace(pattern, "", overwrite, based_on=based_on, **kwargs)
+        return self.replace(
+            pattern,
+            "",
+            overwrite=overwrite,
+            whole_word=whole_word,
+            dotall=dotall,
+            case_sensitive=case_sensitive,
+            regex=regex,
+            based_on=based_on,
+        )
 
     @cached_property
     def imports(self) -> Imports:
@@ -513,7 +519,7 @@ class TextTree(ABC, Generic[P]):
         dotall: bool = False,
         case_sensitive: bool = True,
         regex: bool = True,
-    ) -> Union["Pattern[str]", SmartPattern[str]]:
+    ) -> Union["Pattern[str]", SmartPattern]:
         if isinstance(pattern, re.Pattern):
             p, f = pattern.pattern, pattern.flags
         elif isinstance(pattern, SmartPattern):
@@ -521,9 +527,7 @@ class TextTree(ABC, Generic[P]):
         elif isinstance(pattern, str):
             p, f = pattern, 0
         else:
-            raise TypeError(
-                f"'pattern' can not be an instance of {p.__class__.__name__!r}"
-            )
+            raise TypeError(f"invalid pattern type: {type(pattern)}")
         if not regex:
             p = re.escape(p)
         if not case_sensitive:
@@ -532,28 +536,21 @@ class TextTree(ABC, Generic[P]):
             p = "\\b" + p + "\\b"
         if dotall:
             f = f | re.DOTALL
-        if isinstance(pattern, SmartPattern):
-            return SmartPattern(
-                p, flags=f, ignore=pattern.ignore, ignore_mark=pattern.ignore_mark
-            )
+        if regex and isinstance(pattern, SmartPattern):
+            return SmartPattern(p, flags=f)
         return re.compile(p, flags=f)
 
     @staticmethod
     def __pattern_expand(
-        pattern: Union["Pattern[str]", SmartPattern[str]]
-    ) -> Union["Pattern[str]", SmartPattern[str]]:
+        pattern: Union["Pattern", SmartPattern],
+    ) -> Union["Pattern", SmartPattern]:
         if pattern.flags & re.DOTALL:
             new_pattern = "[^\n]*" + pattern.pattern + "[^\n]*"
         else:
             new_pattern = ".*" + pattern.pattern + ".*"
         if isinstance(pattern, re.Pattern):
             return re.compile(new_pattern, flags=pattern.flags)
-        return SmartPattern(
-            new_pattern,
-            flags=pattern.flags,
-            ignore=pattern.ignore,
-            ignore_mark=pattern.ignore_mark,
-        )
+        return SmartPattern(new_pattern, flags=pattern.flags)
 
     def jumpto(self, target: str) -> "TextTree":
         """
@@ -597,17 +594,17 @@ class TextTree(ABC, Generic[P]):
             return self.jumpto(b)
         raise ValueError(f"{a!r} is not a child of {self.absname!r}")
 
-    def track(self) -> List["TextTree"]:
+    def track(self) -> list["TextTree"]:
         """
         Returns a list of all the parents and `self`.
 
         Returns
         -------
-        List[TextTree]
+        list[TextTree]
             List of `TextTree` instances.
 
         """
-        tracks: List["TextTree"] = []
+        tracks: list["TextTree"] = []
         obj: Optional["TextTree"] = self
         while obj is not None:
             tracks.append(obj)
@@ -639,67 +636,47 @@ class Docstring(ABC):
 
     @property
     @abstractmethod
-    def sections(self) -> Dict[str, str]:
+    def sections(self) -> dict[str, str]:
         """
         Returns the details of the docstring, each title corresponds to a
         paragraph of description.
 
         Returns
         -------
-        Dict[str, str]
+        dict[str, str]
             Dict of titles and descriptions.
 
         """
         return {}
 
 
-@overload
-def as_path(path_or_text: Path, home: Union[Path, str, None] = None) -> Path: ...
-@overload
-def as_path(
-    path_or_text: str, home: Union[Path, str, None] = None
-) -> Union[Path, str]: ...
-def as_path(
-    path_or_text: Union[Path, str], home: Union[Path, str, None] = None
-) -> Union[Path, str]:
+def as_path(path_or_str: Union[Path, str], home: Union[Path, str, None] = None) -> Path:
     """
-    If the input is a string, check if it represents an existing
-    path. If it does, convert it to a `Path` object, otherwise return
-    itself. If the input is already a `Path` object, return itself
-    directly.
+    If the input is a string, convert it to a `Path` object. If the
+    input is a `Path` object, return itself.
 
     Parameters
     ----------
-    path_or_text : Union[Path, str]
+    path_or_str : Union[Path, str]
         An instance of `Path` or a string.
     home : Union[Path, str, None], optional
-        Specifies the home path if `path_or_text` is relative, by
+        Specifies the home path if `path_or_str` is relative, by
         default None.
 
     Returns
     -------
-    Union[Path, str]
-        A path or a string.
+    Union[Path, None]
+        May be a path.
 
     """
+    if isinstance(path_or_str, str):
+        path_or_str = Path(path_or_str)
     home = Path("").cwd() if home is None else Path(home).absolute()
-    if isinstance(path_or_text, str):
-        if len(path_or_text) < 256 and (home / path_or_text).exists():
-            path_or_text = Path(path_or_text)
-        else:
-            return path_or_text
-
-    if not path_or_text.is_absolute():
-        path_or_text = home / path_or_text
-    return path_or_text
+    if not path_or_str.is_absolute():
+        path_or_str = home / path_or_str
+    return path_or_str
 
 
 def black_format(string: str) -> str:
     """Reformat a string using Black and return new contents."""
     return black.format_str(string, mode=black.FileMode())
-
-
-PyText = deprecated(
-    "tx.PyText is deprecated and will be removed in a future version "
-    "- use tx.TextTree instead"
-)(TextTree)

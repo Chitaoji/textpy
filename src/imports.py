@@ -8,11 +8,10 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 import re
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, List, NamedTuple, Optional, Union
+from typing import TYPE_CHECKING, Any, NamedTuple, Optional, Union
 
+from re_extensions import quote_collapse
 from typing_extensions import Self
-
-from .re_extensions import quote_collapse
 
 if TYPE_CHECKING:
     from ._typing import HistoryField, HistoryGroups
@@ -69,14 +68,14 @@ class Imports:
         )
 
     @cached_property
-    def children(self) -> List[Self]:
+    def children(self) -> list[Self]:
         """Children nodes."""
         if self.pymodule.is_dir():
             return [x.imports for x in self.pymodule.children]
         return []
 
     @cached_property
-    def history(self) -> List[ImportHistory]:
+    def history(self) -> list[ImportHistory]:
         """Import history."""
         if self.children:
             hist = []
@@ -97,7 +96,7 @@ class Imports:
 
     def __text2hist(
         self, pattern: str, text: str, type_check_only: bool
-    ) -> List[ImportHistory]:
+    ) -> list[ImportHistory]:
         hist = []
         for line in text.splitlines():
             if matched := re.match(pattern, line):
@@ -133,12 +132,12 @@ class Imports:
 
     @staticmethod
     def __history_groupby(
-        history: Any, by: Union["HistoryField", List["HistoryField"]]
+        history: Any, by: Union["HistoryField", list["HistoryField"]]
     ) -> "HistoryGroups":
         if isinstance(history, dict):
             return {k: Imports.__history_groupby(v, by) for k, v in history.items()}
 
-        groups: Dict[Any, List[ImportHistory]] = {}
+        groups: dict[Any, list[ImportHistory]] = {}
         if isinstance(by, str):
             key = ImportHistory._fields.index(by)
             for h in history:

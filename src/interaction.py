@@ -11,22 +11,14 @@ import re
 from dataclasses import dataclass
 from functools import cached_property, partial
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Tuple,
-    get_args,
-)
+from typing import TYPE_CHECKING, Any, Callable, Literal, Optional, get_args
 
 import pandas as pd
+from htmlmaster import HTMLTableMaker, HTMLTreeMaker
+from re_extensions import smart
 from typing_extensions import Self
 
-from .re_extensions import smart_finditer, smart_split, smart_sub
+from .css import TABLE_CSS_STYLE, TREE_CSS_STYLE
 from .utils.validator import SimpleValidator
 
 if TYPE_CHECKING:
@@ -64,9 +56,9 @@ class DisplayParams:
     use_mimebundle: bool = SimpleValidator(bool, default=True)
     skip_line_numbers: bool = SimpleValidator(bool, default=False)
 
-    def defaults(self) -> Dict[str, Any]:
+    def defaults(self) -> dict[str, Any]:
         """Returns the default values as a dict."""
-        fields: Dict[str, "Field"] = getattr(self.__class__, "__dataclass_fields__")
+        fields: dict[str, "Field"] = getattr(self.__class__, "__dataclass_fields__")
         return {k: getattr(v.default, "default") for k, v in fields.items()}
 
 
@@ -103,7 +95,7 @@ class TextFinding:
     def __ge__(self, __other: Self) -> bool:
         return self == __other or self > __other
 
-    def astuple(self) -> Tuple["TextTree", "PatternType", int, str]:
+    def astuple(self) -> tuple["TextTree", "PatternType", int, str]:
         """Converts `self` to a tuple."""
         return self.obj, self.pattern, self.nline, self.linestr
 
@@ -117,7 +109,7 @@ class FindTextResult:
         stylfunc: Optional[Callable] = None,
         reprfunc: Optional[Callable] = None,
     ) -> None:
-        self.res: List[TextFinding] = []
+        self.res: list[TextFinding] = []
         self.stylfunc = stylfunc if stylfunc else self.__style_match
         self.reprfunc = reprfunc if reprfunc else self.__default_repr
 
@@ -129,13 +121,14 @@ class FindTextResult:
                 string += f"\n{t.relpath}: "
             else:
                 string += f"\n{t.relpath}:{n}: "
-            new = smart_sub(p, partial(self.reprfunc, res), " " * t.spaces + _line)
+            new = smart.sub(p, partial(self.reprfunc, res), " " * t.spaces + _line)
             string += re.sub("\\\\x1b\\[", "\033[", new.__repr__())
         return string.lstrip()
 
-    def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
+    def _repr_mimebundle_(self, *_, **__) -> Optional[dict[str, str]]:
         if display_params.use_mimebundle:
-            return {"text/html": self.to_html()}
+            return {"text/html": self.to_html().make()}
+        return None
 
     def __bool__(self) -> bool:
         return bool(self.res)
@@ -152,7 +145,7 @@ class FindTextResult:
         """
         self.res.append(finding)
 
-    def extend(self, findings: List[TextFinding]) -> None:
+    def extend(self, findings: list[TextFinding]) -> None:
         """
         Extend a few new findings.
 
@@ -209,9 +202,9 @@ class FindTextResult:
                 df.iloc[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
-            splits = smart_split(p, _line)
+            splits = smart.split(p, _line)
             text = ""
-            for j, x in enumerate(smart_finditer(p, _line)):
+            for j, x in enumerate(smart.finditer(p, _line)):
                 text += make_plain_text(splits[j]) + self.stylfunc(res, x)
             df.iloc[i, 1] = text + make_plain_text(splits[-1])
         return df.style.hide(axis=0).set_table_styles(
@@ -221,10 +214,19 @@ class FindTextResult:
             ]
         )
 
-    def to_html(self) -> str:
-        """Return an HTML string for representation."""
+    def to_html(self) -> HTMLTableMaker:
+        """Return an HTML text for representing self."""
+        tclass = (
+            "textpy-table-classic"
+            if display_params.table_style == "classic"
+            else "textpy-table-plain"
+        )
+        style = TABLE_CSS_STYLE if display_params.table_style == "classic" else ""
         html_maker = HTMLTableMaker(
-            index=range(len(self.res)), columns=["source", "match"]
+            index=range(len(self.res)),
+            columns=["source", "match"],
+            maincls=tclass,
+            style=style,
         )
         for i, res in enumerate(sorted(self.res)):
             t, p, n, _line = res.astuple()
@@ -235,12 +237,12 @@ class FindTextResult:
                 html_maker[i, 0] += ":" + make_ahref(
                     f"{t.execpath}:{n}", str(n), color="inherit"
                 )
-            splits = smart_split(p, _line)
+            splits = smart.split(p, _line)
             text = ""
-            for j, x in enumerate(smart_finditer(p, _line)):
+            for j, x in enumerate(smart.finditer(p, _line)):
                 text += make_plain_text(splits[j]) + self.stylfunc(res, x)
             html_maker[i, 1] = text + make_plain_text(splits[-1])
-        return html_maker.make()
+        return html_maker
 
     @staticmethod
     def __default_repr(_: TextFinding, m: "Match[str]", /) -> str:
@@ -270,67 +272,6 @@ class FindTextResult:
                 bg_color=get_bg_colors()[0],
             )
         )
-
-
-@dataclass
-class HTMLTableMaker:
-    """
-    Make an HTML table.
-
-    Parameters
-    ----------
-    index : list
-        Table index.
-    columns : list
-        Table columns.
-
-    """
-
-    index: list
-    columns: list
-
-    def __post_init__(self):
-        self.data = [
-            ["" for _ in range(len(self.columns))] for _ in range(len(self.index))
-        ]
-
-    def __getitem__(self, __key: Tuple[int, int]) -> str:
-        return self.data[__key[0]][__key[1]]
-
-    def __setitem__(self, __key: Tuple[int, int], __value: str) -> None:
-        self.data[__key[0]][__key[1]] = __value
-
-    def make(self) -> str:
-        """Make a string of the HTML table."""
-        tclass = display_params.table_style
-        if tclass == "classic":
-            tstyle = """<style type="text/css">
-.table-classic th {
-  text-align: center;
-}
-.table-classic td {
-  text-align: left;
-}
-</style>
-<table class="table-classic">"""
-        else:
-            tstyle = "<table>"
-        thead = "\n      ".join(f"<th>{x}</th>" for x in self.columns)
-        rows = []
-        for x in self.data:
-            row = "</td>\n      <td>".join(x)
-            rows.append("    <tr>\n      <td>" + row + "</td>\n    </tr>\n")
-        tbody = "".join(rows)
-        return f"""{tstyle}
-  <thead>
-    <tr>
-      {thead}
-    </tr>
-  </thead>
-  <tbody>
-{tbody}  </tbody>
-</table>
-"""
 
 
 class FileEditor:
@@ -439,7 +380,7 @@ class FileEditor:
         """
         self.__count = 0
         self.__repl = repl
-        self.new_text = smart_sub(
+        self.new_text = smart.sub(
             pattern,
             self.counted_repl,
             self.based_on.new_text if self.based_on else self.pyfile.text,
@@ -459,21 +400,22 @@ class Replacer:
     """Text replacer, only as a return of `TextTree.replace()`."""
 
     def __init__(self):
-        self.editors: List[FileEditor] = []
+        self.editors: list[FileEditor] = []
         self.__confirmed = False
 
     def __repr__(self) -> str:
         return repr(self.__find_text_result)
 
-    def _repr_mimebundle_(self, *_, **__) -> Optional[Dict[str, Any]]:
+    def _repr_mimebundle_(self, *_, **__) -> Optional[dict[str, str]]:
         if display_params.use_mimebundle:
-            return {"text/html": self.to_html()}
+            return {"text/html": self.to_html().make()}
+        return None
 
     def __bool__(self) -> bool:
         return bool(self.editors)
 
-    def to_html(self) -> str:
-        """Return an HTML string for representation."""
+    def to_html(self) -> HTMLTableMaker:
+        """Return an HTML text for representing self."""
         return self.__find_text_result.to_html()
 
     def append(self, editor: FileEditor) -> None:
@@ -500,7 +442,7 @@ class Replacer:
         """
         self.editors.extend(other.editors)
 
-    def confirm(self) -> Dict[str, List[str]]:
+    def confirm(self) -> dict[str, list[str]]:
         """
         Confirm the replacement.
 
@@ -508,7 +450,7 @@ class Replacer:
 
         Returns
         -------
-        Dict[str, List[str]]
+        dict[str, list[str]]
             Infomation dictionary.
 
         Raises
@@ -524,7 +466,7 @@ class Replacer:
             log="\nTry running 'tx.module(...).replace(...)' again."
         )
 
-    def rollback(self, force: bool = False) -> Dict[str, List[str]]:
+    def rollback(self, force: bool = False) -> dict[str, list[str]]:
         """
         Rollback the replacement.
 
@@ -536,7 +478,7 @@ class Replacer:
 
         Returns
         -------
-        Dict[str, List[str]]
+        dict[str, list[str]]
             Infomation dictionary.
 
         Raises
@@ -557,8 +499,8 @@ class Replacer:
 
     def __overwrite(
         self, rb: bool = False, fc: bool = False, log: str = ""
-    ) -> Dict[str, List[str]]:
-        info: Dict[str, List[str]] = {"successful": [], "failed": []}
+    ) -> dict[str, list[str]]:
+        info: dict[str, list[str]] = {"successful": [], "failed": []}
         for e in self.editors:
             if e.is_based_on:
                 continue
@@ -615,7 +557,7 @@ class Replacer:
         return res
 
 
-def make_html_tree(tree: "TextTree") -> str:
+def make_html_tree(tree: "TextTree") -> HTMLTreeMaker:
     """
     Make an HTML tree.
 
@@ -630,134 +572,41 @@ def make_html_tree(tree: "TextTree") -> str:
         Html string.
 
     """
+    maker = __make_node(tree)
     if display_params.tree_style == "plain":
-        tstyle = "<ul>"
+        maker.set_maincls("textpy-tree-plain")
     else:
-        tstyle = """<style type="text/css">
-.tree-vertical,
-.tree-vertical ul.m,
-.tree-vertical li.m {
-    margin: 0;
-    padding: 0;
-    position: relative;
-}
-.tree-vertical {
-    margin: 0 0 1em;
-    text-align: center;
-}
-.tree-vertical,
-.tree-vertical ul.m {
-    display: table;
-}
-.tree-vertical ul.m {
-    width: 100%;
-}
-.tree-vertical li.m {
-    display: table-cell;
-    padding: .5em 0;
-    vertical-align: top;
-}
-.tree-vertical ul.s,
-.tree-vertical li.s {
-    text-align: left;
-}
-.tree-vertical li.m:before {
-    outline: solid 1px #666;
-    content: "";
-    left: 0;
-    position: absolute;
-    right: 0;
-    top: 0;
-}
-.tree-vertical li.m:first-child:before {
-    left: 50%;
-}
-.tree-vertical li.m:last-child:before {
-    right: 50%;
-}
-.tree-vertical li.m>details>summary,
-.tree-vertical li.m>span {
-    border: solid .1em #666;
-    border-radius: .2em;
-    display: inline-block;
-    margin: 0 .2em .5em;
-    padding: .2em .5em;
-    position: relative;
-}
-.tree-vertical li>details>summary { 
-    white-space: nowrap;
-}
-.tree-vertical li.m>details>summary {
-    cursor: pointer;
-}
-.tree-vertical li.m>details>summary>span.open,
-.tree-vertical li.m>details[open]>summary>span.closed {
-    display: none;
-}
-.tree-vertical li.m>details[open]>summary>span.open {
-    display: inline;
-}
-.tree-vertical ul.m:before,
-.tree-vertical li.m>details>summary:before,
-.tree-vertical li.m>span:before {
-    outline: solid 1px #666;
-    content: "";
-    height: .5em;
-    left: 50%;
-    position: absolute;
-}
-.tree-vertical ul.m:before {
-    top: -.5em;
-}
-.tree-vertical li.m>details>summary:before,
-.tree-vertical li.m>span:before {
-    top: -.56em;
-    height: .45em;
-}
-.tree-vertical>li.m {
-    margin-top: 0;
-}
-.tree-vertical>li.m:before,
-.tree-vertical>li.m:after,
-.tree-vertical>li.m>details>summary:before,
-.tree-vertical>li.m>span:before {
-    outline: none;
-}
-</style>
-<ul class="tree-vertical">"""
-    return f"{tstyle}\n{__get_li(tree)}\n</ul>"
+        maker.set_maincls("textpy-tree-vertical")
+        maker.setstyle(TREE_CSS_STYLE)
+    return maker
 
 
-def __get_li(tree: "TextTree", main: bool = True) -> str:
+def __make_node(tree: "TextTree", main: bool = True) -> HTMLTreeMaker:
     triangle = (
         ""
         if display_params.tree_style == "plain"
         else '<span class="open">▼ </span><span class="closed">▶ </span>'
     )
     if tree.is_dir() and tree.children:
-        tchidren = "\n".join(__get_li(x) for x in tree.children)
-        return (
-            f'<li class="m"><details><summary>{triangle}{make_plain_text(tree.name)}'
-            f'</summary>\n<ul class="m">\n{tchidren}\n</ul>\n</details></li>'
-        )
+        maker = HTMLTreeMaker(f"{triangle}{make_plain_text(tree.name)}", level_open=0)
+        for x in tree.children:
+            maker.add(__make_node(x))
+        return maker
 
     li_class = "m" if main else "s"
     ul_class = "m" if display_params.tree_style == "vertical" else "s"
     triangle = triangle if main else ""
     if tree.children:
-        tchidren = "\n".join(
-            __get_li(x, main=ul_class == "m")
-            for x in tree.children
-            if x.name != NULL and __is_public(x.name)
-        )
-        if tchidren:
+        maker = HTMLTreeMaker(licls=li_class, ulcls=ul_class, level_open=0)
+        for x in tree.children:
+            if x.name != NULL and __is_public(x.name):
+                maker.add(__make_node(x, main=ul_class == "m"))
+        if maker.has_child():
             name = make_plain_text(tree.name) + (".py" if tree.is_file() else "")
-            return (
-                f'<li class="{li_class}"><details><summary>{triangle}{name}</summary>'
-                f'\n<ul class="{ul_class}">\n{tchidren}\n</ul>\n</details></li>'
-            )
+            maker.setval(f"{triangle}{name}")
+            return maker
     name = make_plain_text(tree.name) + (".py" if tree.is_file() else "")
-    return f'<li class="{li_class}"><span>{name}</span></li>'
+    return HTMLTreeMaker(name, li_class, level_open=0)
 
 
 def make_ahref(
@@ -805,13 +654,13 @@ def make_plain_text(text: str) -> str:
     )
 
 
-def get_bg_colors() -> Tuple[str, str, str]:
+def get_bg_colors() -> tuple[str, str, str]:
     """
     Get background colors.
 
     Returns
     -------
-    Tuple[str,str,str]
+    tuple[str,str,str]
         Background colors.
 
     """
