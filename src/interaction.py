@@ -72,7 +72,7 @@ class TextFinding:
     obj: "TextTree"
     pattern: "PatternType"
     nline: int
-    linestr: str
+    group: str
     order: int = 0
 
     def __eq__(self, __other: Self) -> bool:
@@ -97,7 +97,7 @@ class TextFinding:
 
     def astuple(self) -> tuple["TextTree", "PatternType", int, str]:
         """Converts `self` to a tuple."""
-        return self.obj, self.pattern, self.nline, self.linestr
+        return self.obj, self.pattern, self.nline, self.group
 
 
 class FindTextResult:
