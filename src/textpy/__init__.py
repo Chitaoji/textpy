@@ -211,7 +211,7 @@ lazyr.register("black")
 
 # pylint: disable=wrong-import-position
 from . import abc, core, doc, interaction, texttree, utils
-from .__version__ import __version__
+from ._version import __version__
 from .abc import *
 from .core import *
 from .doc import *
