@@ -24,7 +24,7 @@ description = "Reads a python module and statically analyzes it."
 readme = "README.md"
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
-keywords = ["config"]
+keywords = ["text-find-and-replace"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.12"
