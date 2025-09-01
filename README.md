@@ -187,6 +187,9 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.2.2
+* Compatible with `htmlmaster==0.0.2`.
+
 ### v0.2.1
 * New module-level functions `tx.file()` and `tx.fromstr()`.
 * Removed the deprecated function `tx.textpy()`.
