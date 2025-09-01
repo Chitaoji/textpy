@@ -606,7 +606,9 @@ def __make_node(tree: "TextTree", main: bool = True) -> HTMLTreeMaker:
             maker.setval(f"{triangle}{name}")
             return maker
     name = make_plain_text(tree.name) + (".py" if tree.is_file() else "")
-    return HTMLTreeMaker(name, li_class, level_open=0)
+    maker = HTMLTreeMaker(licls=li_class, level_open=0)
+    maker.addspan(name)
+    return maker
 
 
 def make_ahref(
