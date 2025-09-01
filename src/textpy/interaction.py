@@ -225,8 +225,8 @@ class FindTextResult:
         html_maker = HTMLTableMaker(
             index=range(len(self.res)),
             columns=["source", "match"],
-            maincls=tclass,
-            style=style,
+            rootcls=tclass,
+            rootstyle=style,
         )
         for i, res in enumerate(sorted(self.res)):
             t, p, n, _line = res.astuple()
@@ -574,10 +574,10 @@ def make_html_tree(tree: "TextTree") -> HTMLTreeMaker:
     """
     maker = __make_node(tree)
     if display_params.tree_style == "plain":
-        maker.set_maincls("textpy-tree-plain")
+        maker.setrootcls("textpy-tree-plain")
     else:
-        maker.set_maincls("textpy-tree-vertical")
-        maker.setstyle(TREE_CSS_STYLE)
+        maker.setrootcls("textpy-tree-vertical")
+        maker.setrootstyle(TREE_CSS_STYLE)
     return maker
 
 

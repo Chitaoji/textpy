@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "textpy"
+version = "0.2.2"
+dependencies = [
+  "lazyr",
+  "typing-extensions",
+  "black",
+  "colorama",
+  "htmlmaster",
+  "re_extensions"
+]
+requires-python = ">=3.12"
+authors = [
+  {name = "Chitaoji", email = "2360742040@qq.com"},
+]
+maintainers = [
+  {name = "Chitaoji", email = "2360742040@qq.com"}
+]
+description = "Reads a python module and statically analyzes it."
+readme = "README.md"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+keywords = ["config"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12"
+]
+
+[project.urls]
+Documentation = "https://github.com/Chitaoji/textpy/blob/main/README.md"
+Repository = "https://github.com/Chitaoji/textpy/"
+
