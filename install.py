@@ -94,7 +94,7 @@ def _quote(readme: str) -> str:
 
 
 def _version(version: str = VERSION) -> str:
-    return f'"""Version file."""\n\n__version__ = "{version}"'
+    return f'"""Version file."""\n\n__version__ = "{version}"\n'
 
 
 class ReadmeFormatError(Exception):
