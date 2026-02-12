@@ -42,7 +42,7 @@ class SimpleValidator:
             return
         if not isinstance(value, self._type):
             raise TypeError(
-                f"invalid type for {self.name!r}: expected "
+                f"invalid type for {instance.__class__.__name__}.{self.name}: expected "
                 f"{tuple_repr(self._type, is_type=True)}; "
                 f"got {value.__class__.__name__!r} instead"
             )
@@ -51,8 +51,8 @@ class SimpleValidator:
                 self.literal = (self.literal,)
             if value not in self.literal:
                 raise ValueError(
-                    f"invalid value for {self.name!r}: expected "
-                    f"{tuple_repr(self.literal)}; got {value!r} instead"
+                    f"invalid value for {instance.__class__.__name__}.{self.name}: "
+                    f"expected {tuple_repr(self.literal)}; got {value!r} instead"
                 )
         if not self.valuer(value):
             raise ValueError(f"invalid value for {self.name!r}: {value}")
@@ -96,6 +96,8 @@ def tuple_repr(maybe_tuple: Union[Any, tuple[Any, ...]], is_type: bool = False) 
     elif len(maybe_tuple) == 1:
         return repr(maybe_tuple[0])
     elif len(maybe_tuple) == 2:
-        return "'" + "' or '".join(maybe_tuple) + "'"
+        return " or ".join(repr(x) for x in maybe_tuple)
     else:
-        return "'" + "', '".join(maybe_tuple[:-1]) + f"', or {maybe_tuple[-1]!r}"
+        return (
+            ", ".join(repr(x) for x in maybe_tuple[:-1]) + f", or {maybe_tuple[-1]!r}"
+        )
