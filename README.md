@@ -187,6 +187,9 @@ examples/myfile.py:34: '    print(<book>.content)'
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.2.4
+* The first argument of `tx.module()` is optional now, by default "".
+
 ### v0.2.3
 * Compatible with `htmlmaster==0.0.4`.
 

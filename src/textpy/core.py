@@ -27,7 +27,7 @@ just_fix_windows_console()
 
 
 def module(
-    path_or_str: Union[Path, str],
+    path_or_str: Union[Path, str] = "",
     /,
     home: Optional[Union[Path, str]] = None,
     encoding: Optional[str] = None,
@@ -41,8 +41,8 @@ def module(
 
     Parameters
     ----------
-    path_or_str : Union[Path, str]
-        File path, module path or file string.
+    path_or_str : Union[Path, str], optional
+        File path, module path or file string, by default "".
     home : Union[Path, str], optional
         Specifies the home path when `path_or_str` is relative, by default
         None.
@@ -184,15 +184,3 @@ def fromstr(string: Union[Path, str], /) -> "TextTree":
 
     """
     return PyFile(string)
-
-
-# def type_of_script() -> Literal["jupyter", "ipython", "terminal"]:
-#     """Returns the type of script."""
-#     if "IPython" in sys.modules:
-#         ipython = sys.modules["IPython"].get_ipython()
-#         ipy_str = str(type(ipython))
-#         if "zmqshell" in ipy_str:
-#             return "jupyter"
-#         if "terminal" in ipy_str:
-#             return "ipython"
-#     return "terminal"
